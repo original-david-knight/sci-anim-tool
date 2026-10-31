@@ -1,0 +1,86 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Water adds across a double bond", "size": 0.5, "position": [0, 3.3, 0] },
+
+    "ethylene": { "type": "molecule", "file": "structures/ethylene.sdf", "position": [-2.6, 0, 0], "scale": [1.4, 1.4, 1.4], "opacity": 0,
+      "groups": { "double_bond": [1, 2] } },
+    "water": { "type": "molecule", "file": "structures/water.sdf", "position": [2.6, 0, 0], "scale": [1.4, 1.4, 1.4], "opacity": 0 },
+    "ethanol": { "type": "molecule", "file": "structures/ethanol.sdf", "position": [0, -0.4, 0], "rotation": [0, 60, 0], "scale": [1.4, 1.4, 1.4],
+      "groups": { "hydroxyl": [1, 9], "carbons": [2, 3] } },
+
+    "double_caption": { "type": "text", "text": "C=C double bond", "size": 0.45, "color": "#ffd23f", "opacity": 0,
+      "attach": { "object": "ethylene", "group": "double_bond", "offset": [0, 2.3] } },
+    "double_leader": { "type": "arrow", "from": [0, 1.9], "to": [0, 0.8], "stroke": { "color": "#ffd23f", "width": 0.05 }, "tip_length": 0.25, "opacity": 0,
+      "attach": { "object": "ethylene", "group": "double_bond" } },
+    "hydroxyl_caption": { "type": "text", "text": "OH: an alcohol", "size": 0.45, "color": "#58c4dd", "align": "left", "opacity": 0,
+      "attach": { "object": "ethanol", "group": "hydroxyl", "offset": [1.8, 1.7] } },
+    "hydroxyl_leader": { "type": "arrow", "from": [1.7, 1.5], "to": [0.6, 0.5], "stroke": { "color": "#58c4dd", "width": 0.05 }, "tip_length": 0.25, "opacity": 0,
+      "attach": { "object": "ethanol", "group": "hydroxyl" } },
+
+    "say_ethylene": { "type": "text", "text": "Ethylene has a double bond between its two carbons.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_water": { "type": "text", "text": "Water brings an H and an OH.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_reaction": { "type": "text", "text": "The double bond opens, and H and OH bond to the carbons.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_ethanol": { "type": "text", "text": "The product is ethanol.", "size": 0.4, "position": [0, -3.4, 0] },
+
+    "scheme": { "type": "math", "tex": "\\mathrm{C_2H_4} + \\mathrm{H_2O} \\rightarrow \\mathrm{C_2H_5OH}", "size": 0.9, "position": [0, 0.3, 0] },
+    "scheme_words": { "type": "text", "text": "ethylene + water → ethanol", "size": 0.45, "color": "#888888", "position": [0, -0.9, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "fade", "object": "ethylene", "to": 1 }, { "type": "write", "object": "say_ethylene" }] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "highlight", "object": "ethylene", "group": "double_bond", "to": 1 },
+      { "type": "fade", "object": "double_caption", "to": 1 }, { "type": "fade", "object": "double_leader", "to": 1 }
+    ] },
+    { "type": "wait", "duration": 3 },
+    { "type": "play", "duration": 0.6, "animations": [
+      { "type": "highlight", "object": "ethylene", "group": "double_bond", "to": 0 },
+      { "type": "fade", "object": "double_caption", "to": 0 }, { "type": "fade", "object": "double_leader", "to": 0 },
+      { "type": "fade", "object": "say_ethylene", "to": 0 }
+    ] },
+
+    { "type": "play", "duration": 1.2, "animations": [{ "type": "fade", "object": "water", "to": 1 }, { "type": "write", "object": "say_water" }] },
+    { "type": "wait", "duration": 2 },
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "say_water", "to": 0 }] },
+
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "write", "object": "say_reaction" },
+      { "type": "highlight", "object": "ethylene", "group": "double_bond", "to": 1 }] },
+    { "type": "play", "duration": 3.5, "animations": [
+      { "type": "reaction", "reactants": ["ethylene", "water"], "products": ["ethanol"], "atom_map": [
+        { "reactant": { "object": "ethylene", "atom": 1 }, "product": { "object": "ethanol", "atom": 2 } },
+        { "reactant": { "object": "ethylene", "atom": 2 }, "product": { "object": "ethanol", "atom": 3 } },
+        { "reactant": { "object": "ethylene", "atom": 3 }, "product": { "object": "ethanol", "atom": 4 } },
+        { "reactant": { "object": "ethylene", "atom": 4 }, "product": { "object": "ethanol", "atom": 5 } },
+        { "reactant": { "object": "ethylene", "atom": 5 }, "product": { "object": "ethanol", "atom": 6 } },
+        { "reactant": { "object": "ethylene", "atom": 6 }, "product": { "object": "ethanol", "atom": 7 } },
+        { "reactant": { "object": "water", "atom": 1 }, "product": { "object": "ethanol", "atom": 1 } },
+        { "reactant": { "object": "water", "atom": 2 }, "product": { "object": "ethanol", "atom": 9 } },
+        { "reactant": { "object": "water", "atom": 3 }, "product": { "object": "ethanol", "atom": 8 } }
+      ] }
+    ] },
+    { "type": "wait", "duration": 1.5 },
+    { "type": "play", "duration": 0.5, "animations": [
+      { "type": "fade", "object": "say_reaction", "to": 0 },
+      { "type": "highlight", "object": "ethanol", "group": "carbons", "to": 0 }] },
+
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "highlight", "object": "ethanol", "group": "hydroxyl", "to": 1, "color": "#58c4dd" },
+      { "type": "fade", "object": "hydroxyl_caption", "to": 1 }, { "type": "fade", "object": "hydroxyl_leader", "to": 1 },
+      { "type": "write", "object": "say_ethanol" }
+    ] },
+    { "type": "wait", "duration": 2.5 },
+    { "type": "play", "duration": 0.5, "animations": [
+      { "type": "highlight", "object": "ethanol", "group": "hydroxyl", "to": 0 },
+      { "type": "fade", "object": "hydroxyl_caption", "to": 0 }, { "type": "fade", "object": "hydroxyl_leader", "to": 0 }
+    ] },
+    { "type": "play", "duration": 4, "animations": [{ "type": "rotate", "object": "ethanol", "to": [458.53, 15.565, -162.011], "easing_curve": "linear" }] },
+
+    { "type": "play", "duration": 0.8, "animations": [
+      { "type": "fade", "object": "ethanol", "to": 0 }, { "type": "fade", "object": "say_ethanol", "to": 0 }
+    ] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "write", "object": "scheme" }] },
+    { "type": "play", "duration": 1.2, "animations": [{ "type": "write", "object": "scheme_words" }] },
+    { "type": "wait", "duration": 3 }
+  ]
+}

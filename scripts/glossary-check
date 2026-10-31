@@ -1,0 +1,16 @@
+#!/bin/sh
+# Lists names in code and scene files that use a word GLOSSARY.md says to avoid.
+# scripts/glossary-check.go does the work, and says what it checks.
+#
+# Usage:
+#   scripts/glossary-check              check this branch's added lines
+#   scripts/glossary-check --base REF   check lines added since REF
+#   scripts/glossary-check --all        check every tracked file
+# Exit status is 1 when there are hits, 0 when there are none.
+#
+# It runs a build of the Go file, not `go run`, because `go run` adds an
+# "exit status 1" line of its own when there are hits.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd -P)
+go build -o "$repo/target/scripts/glossary-check" "$repo/scripts/glossary-check.go"
+SCI_ANIM_REPO=$repo exec "$repo/target/scripts/glossary-check" "$@"

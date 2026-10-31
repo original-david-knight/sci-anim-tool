@@ -1,0 +1,24 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Ubiquitin, a protein of 76 amino acids", "size": 0.5, "position": [0, 3.3, 0], "opacity": 0 },
+
+    "protein": { "type": "molecule", "file": "structures/1ubq.pdb", "scale": [0.16, 0.16, 0.16], "opacity": 0,
+      "groups": {
+        "helix": { "residues": [{ "chain": "A", "from": 23, "to": 34 }] }
+      } },
+
+    "say_helix": { "type": "text", "text": "Amino acids 23 to 34 coil into its α-helix.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "protein", "to": 1 }
+    ] },
+    { "type": "play", "duration": 8, "animations": [
+      { "type": "rotate", "object": "protein", "to": [0, 360, 0], "easing_curve": "linear" },
+      { "type": "highlight", "object": "protein", "group": "helix", "to": 1, "start": 0.1, "end": 0.25 },
+      { "type": "fade", "object": "say_helix", "to": 1, "start": 0.1, "end": 0.25 }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

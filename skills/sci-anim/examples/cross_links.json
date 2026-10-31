@@ -1,0 +1,65 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Cross-links tie a thermoset's chains together", "size": 0.5, "position": [0, 3.5, 0], "opacity": 0 },
+
+    "chain_a": { "type": "tube", "position": [0, 1.3, 0], "radius": 0.12,
+      "curve": { "x": "u", "y": "0.3*sin(1.9*u - 2.4*t)", "z": "0.3*cos(1.3*u + 1.7*t)", "u_range": [-5, 5] },
+      "material": { "type": "standard", "color": "#58c4dd" } },
+    "chain_b": { "type": "tube", "position": [0, -1.1, 0], "radius": 0.12,
+      "curve": { "x": "u", "y": "0.3*sin(2.3*u + 2.1*t + 1)", "z": "0.3*sin(1.1*u - 1.9*t)", "u_range": [-5, 5] },
+      "material": { "type": "standard", "color": "#83c167" } },
+
+    "cross_link_1": { "type": "line", "from": { "object": "chain_a", "u": -4 }, "to": { "object": "chain_b", "u": -4.3 }, "stroke": { "color": "#ffd23f", "width": 0.07 } },
+    "cross_link_2": { "type": "line", "from": { "object": "chain_a", "u": -2.2 }, "to": { "object": "chain_b", "u": -1.6 }, "stroke": { "color": "#ffd23f", "width": 0.07 } },
+    "cross_link_3": { "type": "line", "from": { "object": "chain_a", "u": -0.3 }, "to": { "object": "chain_b", "u": 0.2 }, "stroke": { "color": "#ffd23f", "width": 0.07 } },
+    "cross_link_4": { "type": "line", "from": { "object": "chain_a", "u": 1.6 }, "to": { "object": "chain_b", "u": 1.2 }, "stroke": { "color": "#ffd23f", "width": 0.07 } },
+    "cross_link_5": { "type": "line", "from": { "object": "chain_a", "u": 3.7 }, "to": { "object": "chain_b", "u": 4.1 }, "stroke": { "color": "#ffd23f", "width": 0.07 } },
+
+    "say_cross_links": { "type": "text", "text": "Each cross-link stays on its two chains however they move.", "size": 0.36, "position": [0, -3.3, 0], "opacity": 0 },
+
+    "wave_heading": { "type": "text", "text": "One point of a travelling wave", "size": 0.5, "position": [0, 3.5, 0], "opacity": 0 },
+    "ax": { "type": "axes", "x": { "range": [0, 6.2832], "spacing": 7, "label": "x" }, "y": { "range": [-2, 2], "spacing": 1, "label": "y" }, "width": 10, "height": 4, "position": [0, 0.2, 0], "opacity": 0 },
+    "wave": { "type": "function-plot", "axes": "ax", "expression": "1.5*sin(2*x - 3*t)", "stroke": { "color": "#58c4dd", "width": 0.06 }, "opacity": 0 },
+    "foot": { "type": "dot", "axes": "ax", "position": [1, 0, 0], "radius": 0.06, "fill": { "color": "#fc6255" }, "opacity": 0 },
+    "rise": { "type": "arrow", "from": { "object": "foot" }, "to": { "object": "wave", "x": 1 }, "tip_length": 0.25, "stroke": { "color": "#fc6255", "width": 0.05 } },
+    "say_rise": { "type": "text", "text": "The wave moves right, and the point at x = 1 only rises and falls.", "size": 0.36, "position": [0, -2.6, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1, "end": 0.8 },
+      { "type": "create", "object": "chain_a" },
+      { "type": "create", "object": "chain_b" }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "create", "object": "cross_link_1" },
+      { "type": "create", "object": "cross_link_2" },
+      { "type": "create", "object": "cross_link_3" },
+      { "type": "create", "object": "cross_link_4" },
+      { "type": "create", "object": "cross_link_5" }
+    ] },
+    { "type": "play", "duration": 6, "animations": [
+      { "type": "follow", "object": "chain_a", "sets": "shape" },
+      { "type": "follow", "object": "chain_b", "sets": "shape" },
+      { "type": "fade", "object": "say_cross_links", "to": 1, "end": 1 },
+      { "type": "move", "object": "chain_a", "to": [0, 1.8, 0], "start": 2, "end": 4 },
+      { "type": "rotate", "object": "chain_b", "to": [30, 0, 0], "start": 3, "end": 5 }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "heading", "to": 0 },
+      { "type": "fade", "object": "say_cross_links", "to": 0 },
+      { "type": "fade", "object": "chain_a", "to": 0 },
+      { "type": "fade", "object": "chain_b", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "wave_heading", "to": 1 },
+      { "type": "fade", "object": "ax", "to": 1 },
+      { "type": "fade", "object": "wave", "to": 1 },
+      { "type": "fade", "object": "foot", "to": 1 }
+    ] },
+    { "type": "play", "duration": 6, "animations": [
+      { "type": "follow", "object": "wave", "sets": "shape" },
+      { "type": "fade", "object": "say_rise", "to": 1, "end": 1 }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

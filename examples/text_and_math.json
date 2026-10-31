@@ -1,0 +1,41 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30, "background": "#1e1e1e" },
+  "camera": { "position": [0, 0, 10], "target": [0, 0, 0] },
+  "objects": {
+    "title": {
+      "type": "text",
+      "text": "Solving a quadratic",
+      "size": 0.7,
+      "position": [0, 3.1, 0]
+    },
+    "note": {
+      "type": "text",
+      "text": "The roots of a x² + b x + c = 0 are",
+      "font": "serif",
+      "size": 0.4,
+      "color": "#c8c8c8",
+      "position": [0, 2.1, 0]
+    },
+    "roots": {
+      "type": "math",
+      "tex": "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
+      "size": 0.9,
+      "color": "#58c4dd",
+      "position": [0, 0.6, 0]
+    },
+    "rotation": {
+      "type": "math",
+      "tex": "R(\\theta) = \\begin{pmatrix} \\cos\\theta & -\\sin\\theta \\\\ \\sin\\theta & \\cos\\theta \\end{pmatrix}",
+      "size": 0.7,
+      "color": "#fc6255",
+      "position": [0, -2.1, 0]
+    }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "title" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "note", "easing_curve": "linear" }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "write", "object": "roots" }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "write", "object": "rotation" }] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

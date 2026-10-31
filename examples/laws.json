@@ -1,0 +1,71 @@
+{
+  "objects": {
+    "title_orbit": { "type": "text", "text": "An orbit is one follow", "size": 0.5, "position": [0, 3.4, 0] },
+    "sun": { "type": "sphere", "radius": 0.45, "material": { "type": "standard", "color": "#ffd23f" }, "opacity": 0 },
+    "orbit": { "type": "tube", "radius": 0.02, "curve": { "x": "3*cos(u)", "y": "1.8*sin(u)", "z": "0", "u_range": [0, 6.283185] },
+               "material": { "type": "standard", "color": "#888888" }, "edges": "light", "opacity": 0 },
+    "earth": { "type": "sphere", "radius": 0.22, "position": [3, 0, 0], "material": { "type": "standard", "color": "#58c4dd" }, "opacity": 0 },
+    "orbit_law": { "type": "math", "tex": "x = 3\\cos\\left(\\tfrac{2\\pi t}{8}\\right),\\quad y = 1.8\\sin\\left(\\tfrac{2\\pi t}{8}\\right)", "size": 0.45, "position": [0, -3.1, 0] },
+
+    "cone": { "type": "revolution", "profile": { "type": "polygon", "points": [[0, 0], [1.3, 0], [0, 2.6]] }, "angle": 270, "position": [0, -1.3, 0],
+              "material": { "type": "standard", "color": "#83c167" }, "opacity": 0 },
+    "title_solid": { "type": "text", "text": "The camera circles a solid", "size": 0.5, "attach": { "object": "cone", "offset": [0, 4.7] }, "opacity": 0 },
+
+    "title_plot": { "type": "text", "text": "A triangle runs along a plot as it is drawn", "size": 0.5, "position": [0, 3.4, 0] },
+    "ax": { "type": "axes", "position": [-0.8, -0.6, 0], "width": 7, "height": 5,
+            "x": { "range": [-3, 3], "spacing": 1, "label": "x" }, "y": { "range": [-1, 5], "spacing": 1, "label": "y" },
+            "stroke": { "color": "#888888" }, "color": "#888888" },
+    "parabola": { "type": "function-plot", "axes": "ax", "expression": "0.38*x^2 + 1.5", "stroke": { "color": "#58c4dd", "width": 0.06 } },
+    "parabola_tex": { "type": "math", "tex": "y = 0.38\\,x^2 + 1.5", "size": 0.5, "color": "#58c4dd", "align": "left", "position": [3.2, 0.6, 0] },
+    "triangle": { "type": "polygon", "points": [[0.24, 0], [-0.13, 0.13], [-0.13, -0.13]], "fill": { "color": "#ffd23f" }, "opacity": 0,
+                "position": [-4.3, 1.8333, 0], "rotation": [0, 0, -58.0448] }
+  },
+  "timeline": [
+    { "type": "chapter", "id": "orbit", "steps": [
+      { "type": "play", "duration": 4, "animations": [
+        { "type": "write", "object": "title_orbit", "end": 1.5 },
+        { "type": "fade", "object": "sun", "to": 1, "end": 1 },
+        { "type": "fade", "object": "orbit", "to": 1, "end": 1 },
+        { "type": "fade", "object": "earth", "to": 1, "end": 1 },
+        { "type": "follow", "object": "earth", "from": "orbit", "law": { "x": "3*cos(tau*t/8)", "y": "1.8*sin(tau*t/8)", "z": "0" } }
+      ] },
+      { "type": "play", "duration": 4, "animations": [
+        { "type": "write", "object": "orbit_law", "end": 2 },
+        { "type": "follow", "object": "earth", "from": "orbit", "law": { "x": "3*cos(tau*t/8)", "y": "1.8*sin(tau*t/8)", "z": "0" } }
+      ] }
+    ] },
+    { "type": "play", "duration": 0.8, "animations": [
+      { "type": "fade", "object": "title_orbit", "to": 0 },
+      { "type": "fade", "object": "sun", "to": 0 },
+      { "type": "fade", "object": "orbit", "to": 0 },
+      { "type": "fade", "object": "earth", "to": 0 },
+      { "type": "fade", "object": "orbit_law", "to": 0 }
+    ] },
+
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "cone", "to": 1 },
+      { "type": "fade", "object": "title_solid", "to": 1 },
+      { "type": "camera-move", "to": [0, 3, 9] }
+    ] },
+    { "type": "play", "duration": 6, "animations": [
+      { "type": "follow", "sets": "camera-position", "law": { "x": "9*sin(tau*t/6)", "y": "3", "z": "9*cos(tau*t/6)" } }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "fade", "object": "cone", "to": 0 },
+      { "type": "fade", "object": "title_solid", "to": 0 },
+      { "type": "camera-move", "to": [0, 0, 10] }
+    ] },
+
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "write", "object": "title_plot" },
+      { "type": "create", "object": "ax" },
+      { "type": "fade", "object": "triangle", "to": 1, "start": 0.8 }
+    ] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "create", "object": "parabola", "easing_curve": "linear" },
+      { "type": "follow", "object": "triangle", "along": "parabola", "faces": "tangent", "easing_curve": "linear" }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [{ "type": "write", "object": "parabola_tex" }] },
+    { "type": "wait", "duration": 1.5 }
+  ]
+}

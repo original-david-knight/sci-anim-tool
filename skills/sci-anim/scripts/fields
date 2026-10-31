@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Prints each field of one object or animation type with its description, from `sci_anim schema`.
+# Usage: fields <type>, such as `fields arrow` or `fields follow`. With no type, lists every type.
+set -euo pipefail
+
+if [ $# -eq 0 ]; then
+  sci_anim schema | jq -r '.["$defs"] | "objects: \(.ObjectFile.properties.type.enum | join(" "))", "animations: \(.AnimationFile.properties.type.enum | join(" "))"'
+  exit 0
+fi
+
+sci_anim schema | jq -r --arg t "$1" '
+  .["$defs"] as $d
+  | [$d.ObjectFile, $d.AnimationFile][] | . as $parent
+  | .allOf[].then | select(.properties.type.const == $t)
+  | .properties | to_entries[] | select(.key != "type")
+  | "\(.key): \((if .value == true then $parent.properties[.key] else .value end) | .description // "" | gsub("\n"; " "))\n"' \
+  | { out=$(cat); if [ -z "$out" ]; then echo "no object or animation type named $1; run fields with no type to list them" >&2; exit 1; fi; printf '%s' "$out"; }

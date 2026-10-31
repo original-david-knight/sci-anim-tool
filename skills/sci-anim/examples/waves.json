@@ -1,0 +1,64 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Waves that travel, waves that stand", "size": 0.5, "position": [0, 3.5, 0] },
+
+    "ax": { "type": "axes", "x": { "range": [0, 6.2832], "spacing": 7, "label": "x" }, "y": { "range": [-2.5, 2.5], "spacing": 1, "label": "y" }, "width": 11, "height": 4, "position": [0, 0.6, 0] },
+
+    "travel": { "type": "function-plot", "axes": "ax", "expression": "sin(2*x - 3*t)", "stroke": { "color": "#58c4dd", "width": 0.06 } },
+    "travel_law": { "type": "math", "tex": "y = \\sin(kx - \\omega t)", "size": 0.55, "position": [0, -2.35, 0] },
+    "say_travel": { "type": "text", "text": "Every crest moves right at the speed omega over k.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "right": { "type": "function-plot", "axes": "ax", "expression": "sin(2*x - 3*t)", "stroke": { "color": "#58c4dd", "width": 0.03 }, "opacity": 0 },
+    "left": { "type": "function-plot", "axes": "ax", "expression": "sin(2*x + 3*t)", "stroke": { "color": "#fc6255", "width": 0.03 }, "opacity": 0 },
+    "stand": { "type": "function-plot", "axes": "ax", "expression": "sin(2*x - 3*t) + sin(2*x + 3*t)", "stroke": { "color": "#ffd23f", "width": 0.07 }, "opacity": 0 },
+    "stand_law": { "type": "math", "tex": "\\sin(kx - \\omega t) + \\sin(kx + \\omega t) = 2\\sin(kx)\\cos(\\omega t)", "size": 0.5, "position": [0, -2.35, 0] },
+    "say_stand": { "type": "text", "text": "Two waves running opposite ways add to one that stands still.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "square": { "type": "function-plot", "axes": "ax", "expression": "4/pi*(sin(x) + min(max(t - 1, 0), 1)*sin(3*x)/3 + min(max(t - 3, 0), 1)*sin(5*x)/5 + min(max(t - 5, 0), 1)*sin(7*x)/7 + min(max(t - 7, 0), 1)*sin(9*x)/9)", "stroke": { "color": "#83c167", "width": 0.06 } },
+    "square_law": { "type": "math", "tex": "\\frac{4}{\\pi}\\left(\\sin x + \\frac{\\sin 3x}{3} + \\frac{\\sin 5x}{5} + \\frac{\\sin 7x}{7} + \\frac{\\sin 9x}{9}\\right)", "size": 0.5, "position": [0, -2.35, 0] },
+    "say_square": { "type": "text", "text": "Each odd harmonic squares the wave a little more.", "size": 0.38, "position": [0, -3.35, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }, { "type": "create", "object": "ax" }] },
+    { "type": "chapter", "id": "travel", "steps": [
+      { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "travel" }] },
+      { "type": "play", "duration": 6, "animations": [
+        { "type": "follow", "object": "travel", "sets": "shape" },
+        { "type": "write", "object": "travel_law", "end": 1.5 },
+        { "type": "write", "object": "say_travel", "start": 1.5, "end": 3 }
+      ] },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "travel", "to": 0 },
+        { "type": "fade", "object": "travel_law", "to": 0 },
+        { "type": "fade", "object": "say_travel", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "stand", "steps": [
+      { "type": "play", "duration": 8, "animations": [
+        { "type": "follow", "object": "right", "sets": "shape", "from": "stand" },
+        { "type": "follow", "object": "left", "sets": "shape", "from": "stand" },
+        { "type": "follow", "object": "stand", "sets": "shape", "from": "stand" },
+        { "type": "fade", "object": "right", "to": 1, "end": 1 },
+        { "type": "fade", "object": "left", "to": 1, "end": 1 },
+        { "type": "fade", "object": "stand", "to": 1, "start": 1.5, "end": 2.5 },
+        { "type": "write", "object": "stand_law", "start": 2.5, "end": 4 },
+        { "type": "write", "object": "say_stand", "start": 4, "end": 5.5 }
+      ] },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "right", "to": 0 },
+        { "type": "fade", "object": "left", "to": 0 },
+        { "type": "fade", "object": "stand", "to": 0 },
+        { "type": "fade", "object": "stand_law", "to": 0 },
+        { "type": "fade", "object": "say_stand", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "square", "steps": [
+      { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "square" }, { "type": "write", "object": "square_law" }] },
+      { "type": "play", "duration": 9, "animations": [
+        { "type": "follow", "object": "square", "sets": "shape" },
+        { "type": "write", "object": "say_square", "start": 1, "end": 2.5 }
+      ] },
+      { "type": "wait", "duration": 1.5 }
+    ] }
+  ]
+}

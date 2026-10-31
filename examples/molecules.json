@@ -1,0 +1,25 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30 },
+  "camera": { "position": [0, 0, 14], "target": [0, 0, 0] },
+  "objects": {
+    "caffeine": { "type": "molecule", "file": "../tests/fixtures/pubchem/caffeine.sdf", "position": [-3.2, -0.3, 0], "scale": [0.75, 0.75, 0.75], "opacity": 0 },
+    "benzene": { "type": "molecule", "file": "../tests/fixtures/pubchem/benzene.sdf", "hydrogens": false, "position": [3.4, -0.3, 0], "scale": [1.2, 1.2, 1.2], "opacity": 0 },
+    "caffeine_title": { "type": "text", "text": "Caffeine", "position": [-3.2, 3.2, 0] },
+    "benzene_title": { "type": "text", "text": "Benzene, hydrogens hidden", "position": [3.4, 3.2, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "caffeine", "to": 1 },
+      { "type": "fade", "object": "benzene", "to": 1 },
+      { "type": "write", "object": "caffeine_title" },
+      { "type": "write", "object": "benzene_title" }
+    ] },
+    { "type": "play", "duration": 4, "animations": [
+      { "type": "rotate", "object": "caffeine", "to": [0, 360, 0], "easing_curve": "linear" },
+      { "type": "rotate", "object": "benzene", "to": [360, 0, 0], "easing_curve": "linear" },
+      { "type": "camera-move", "to": [0, 1, 10] },
+      { "type": "camera-look", "to": [0, 0.3, 0] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

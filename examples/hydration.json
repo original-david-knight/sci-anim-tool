@@ -1,0 +1,32 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30 },
+  "camera": { "position": [0, 1, 11], "target": [0, 0.5, 0] },
+  "objects": {
+    "ethylene": { "type": "molecule", "file": "../tests/fixtures/pubchem/ethylene.sdf", "position": [0, -0.5, 0] },
+    "water": { "type": "molecule", "file": "../tests/fixtures/pubchem/water.sdf", "position": [-1, 2, 0] },
+    "ethanol": { "type": "molecule", "file": "../tests/fixtures/pubchem/ethanol.sdf", "position": [0, 0.3, 0] },
+    "title": { "type": "text", "text": "Hydration of ethylene", "position": [0, 3.4, 0] },
+    "scheme": { "type": "math", "tex": "\\mathrm{C_2H_4 + H_2O \\rightarrow C_2H_5OH}", "size": 0.5, "position": [0, -3, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "title" }, { "type": "write", "object": "scheme" }] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "reaction",
+        "reactants": ["ethylene", "water"],
+        "products": ["ethanol"],
+        "atom_map": [
+        { "reactant": { "object": "ethylene", "atom": 1 }, "product": { "object": "ethanol", "atom": 2 } },
+        { "reactant": { "object": "ethylene", "atom": 2 }, "product": { "object": "ethanol", "atom": 3 } },
+        { "reactant": { "object": "ethylene", "atom": 3 }, "product": { "object": "ethanol", "atom": 4 } },
+        { "reactant": { "object": "ethylene", "atom": 4 }, "product": { "object": "ethanol", "atom": 5 } },
+        { "reactant": { "object": "ethylene", "atom": 5 }, "product": { "object": "ethanol", "atom": 6 } },
+        { "reactant": { "object": "ethylene", "atom": 6 }, "product": { "object": "ethanol", "atom": 7 } },
+        { "reactant": { "object": "water", "atom": 1 }, "product": { "object": "ethanol", "atom": 1 } },
+        { "reactant": { "object": "water", "atom": 2 }, "product": { "object": "ethanol", "atom": 9 } },
+        { "reactant": { "object": "water", "atom": 3 }, "product": { "object": "ethanol", "atom": 8 } }
+        ] }
+    ] },
+    { "type": "play", "duration": 3, "animations": [{ "type": "rotate", "object": "ethanol", "to": [0, 360, 0], "easing_curve": "linear" }] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

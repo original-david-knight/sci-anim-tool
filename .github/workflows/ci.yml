@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  WGPU_BACKEND: vulkan
+  VK_DRIVER_FILES: /usr/share/vulkan/icd.d/lvp_icd.json
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Pinned so a new Rust release cannot add a clippy lint that fails CI on unchanged code.
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - uses: Swatinem/rust-cache@v2
+      - name: Install lavapipe and ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers libvulkan1 ffmpeg jq
+      # Mesa names the manifest lvp_icd.x86_64.json on some releases and lvp_icd.json on others.
+      - run: test -f "$VK_DRIVER_FILES" || { ls /usr/share/vulkan/icd.d; exit 1; }
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo build --release --locked
+      # The tests run the skill's scene generators, which are written in Go.
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.27.3"
+          cache: false
+      # Under `ulimit -f 0` lavapipe's device memory cannot grow, so the binary dies with SIGBUS
+      # in vkCreateDevice before it reaches the PNG write the test checks.
+      - run: cargo test --release --locked --no-fail-fast -- --skip png_write_failure_cleans_owned_files_and_never_reports_finished

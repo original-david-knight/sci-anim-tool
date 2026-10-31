@@ -1,0 +1,67 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "PET: a benzene ring in the backbone", "size": 0.5, "position": [0, 3.3, 0], "opacity": 0 },
+
+    "chain": { "type": "molecule", "file": "structures/pet.sdf", "scale": [0.55, 0.55, 0.55], "opacity": 0,
+      "groups": {
+        "ring_1": [3, 4, 5, 6, 7, 8, 31, 32, 33, 34],
+        "ring_2": [15, 16, 17, 18, 19, 20, 39, 40, 41, 42],
+        "ester_1": [9, 10, 27],
+        "ester_2": [13, 14, 28],
+        "ester_3": [21, 22, 29],
+        "unit_2": [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 29, 39, 40, 41, 42, 43, 44, 45, 46],
+        "acid_end": [1, 2, 26, 30],
+        "alcohol_end": [25, 47]
+      } },
+
+    "say_ring": { "type": "text", "text": "Its backbone runs straight through each benzene ring.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_ester": { "type": "text", "text": "Ester groups, –CO–O–, join each ring to a –CH₂–CH₂–.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_unit": { "type": "text", "text": "One repeating unit: –O–CO–C₆H₄–CO–O–CH₂–CH₂–", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_ends": { "type": "text", "text": "Its ends: an acid, –COOH, and an alcohol, –OH.", "size": 0.4, "position": [0, -3.4, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "chain", "to": 1 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_ring" },
+      { "type": "highlight", "object": "chain", "group": "ring_1", "to": 1, "color": "#ffd23f" },
+      { "type": "highlight", "object": "chain", "group": "ring_2", "to": 1, "color": "#ffd23f" }
+    ] },
+    { "type": "wait", "duration": 2.5 },
+    { "type": "play", "duration": 0.6, "animations": [
+      { "type": "fade", "object": "say_ring", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ring_1", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ring_2", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_ester" },
+      { "type": "highlight", "object": "chain", "group": "ester_1", "to": 1, "color": "#58c4dd" },
+      { "type": "highlight", "object": "chain", "group": "ester_2", "to": 1, "color": "#58c4dd" },
+      { "type": "highlight", "object": "chain", "group": "ester_3", "to": 1, "color": "#58c4dd" }
+    ] },
+    { "type": "wait", "duration": 2.5 },
+    { "type": "play", "duration": 0.6, "animations": [
+      { "type": "fade", "object": "say_ester", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ester_1", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ester_2", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ester_3", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_unit" },
+      { "type": "highlight", "object": "chain", "group": "unit_2", "to": 1, "color": "#83c167" }
+    ] },
+    { "type": "wait", "duration": 3 },
+    { "type": "play", "duration": 0.6, "animations": [
+      { "type": "fade", "object": "say_unit", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "unit_2", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_ends" },
+      { "type": "highlight", "object": "chain", "group": "acid_end", "to": 1, "color": "#58c4dd" },
+      { "type": "highlight", "object": "chain", "group": "alcohol_end", "to": 1, "color": "#58c4dd" }
+    ] },
+    { "type": "wait", "duration": 3 }
+  ]
+}

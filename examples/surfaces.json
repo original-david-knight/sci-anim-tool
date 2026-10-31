@@ -1,0 +1,38 @@
+{
+  "camera": { "position": [5, 5, 10], "target": [0, -0.5, 0] },
+  "objects": {
+    "well": { "type": "surface", "position": [-3.2, 0, 0], "z": "-2*exp(-(x^2 + y^2)/2)", "x_range": [-2.5, 2.5], "y_range": [-2.5, 2.5],
+              "material": { "type": "standard", "color": "#58c4dd" } },
+    "title": { "type": "text", "text": "A surface is a height over x and y", "size": 0.5, "attach": { "object": "well", "offset": [3.2, 3.4] }, "opacity": 0 },
+    "well_tex": { "type": "math", "tex": "z = -2e^{-(x^2 + y^2)/2}", "size": 0.42, "attach": { "object": "well", "offset": [0, -2.6] }, "opacity": 0 },
+    "wave": { "type": "surface", "position": [3.2, 0, 0], "z": "0.4*sin(2*x)*cos(2*y)", "x_range": [-2.5, 2.5], "y_range": [-2.5, 2.5],
+              "material": { "type": "standard", "color": "#fc6255" } },
+    "wave_tex": { "type": "math", "tex": "z = 0.4\\sin 2x \\cos 2y", "size": 0.42, "attach": { "object": "wave", "offset": [0, -2.6] }, "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "well" },
+      { "type": "fade", "object": "title", "to": 1, "end": 1 },
+      { "type": "fade", "object": "well_tex", "to": 1, "start": 1 }
+    ] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "wave" },
+      { "type": "fade", "object": "wave_tex", "to": 1, "start": 1 }
+    ] },
+    { "type": "wait", "duration": 1 },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "camera-move", "to": [0, 5, 11] },
+      { "type": "fade", "object": "title", "to": 0, "end": 0.6 },
+      { "type": "fade", "object": "well_tex", "to": 0, "end": 0.6 },
+      { "type": "fade", "object": "wave_tex", "to": 0, "end": 0.6 }
+    ] },
+    { "type": "play", "duration": 8, "animations": [
+      { "type": "follow", "sets": "camera-position", "law": { "x": "11*sin(tau*t/8)", "y": "5", "z": "11*cos(tau*t/8)" } }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "well_tex", "to": 1 },
+      { "type": "fade", "object": "wave_tex", "to": 1 }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

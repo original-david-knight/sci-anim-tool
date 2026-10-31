@@ -1,0 +1,58 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30, "background": "#1e1e1e" },
+  "camera": { "position": [0, 0, 10], "target": [0, 0, 0] },
+  "objects": {
+    "axis": {
+      "type": "line",
+      "from": [-5, 0], "to": [5, 0],
+      "stroke": { "color": "#888888", "width": 0.03 }
+    },
+    "vector": {
+      "type": "arrow",
+      "from": [0, 0], "to": [3, 1.5],
+      "stroke": { "color": "#fc6255", "width": 0.06 }
+    },
+    "angle": {
+      "type": "arc",
+      "radius": 1, "start_angle": 0, "sweep": 26.57,
+      "stroke": { "color": "#ffff00", "width": 0.05 }
+    },
+    "box": {
+      "type": "polygon",
+      "points": [[-4.5, -2.5], [-2.5, -2.5], [-2.5, -0.5], [-4.5, -0.5]],
+      "stroke": { "color": "#58c4dd", "width": 0.06 },
+      "fill": { "color": "#1c758a", "opacity": 0.6 }
+    },
+    "disc": {
+      "type": "circle",
+      "radius": 0.8,
+      "position": [-3.5, 1.5, 0],
+      "stroke": { "color": "#58c4dd", "width": 0.06 },
+      "fill": { "color": "#1c758a" }
+    },
+    "ring": {
+      "type": "path",
+      "d": "M 2 -2 A 1 1 0 1 0 4 -2 A 1 1 0 1 0 2 -2 Z M 2.5 -2 A 0.5 0.5 0 1 0 3.5 -2 A 0.5 0.5 0 1 0 2.5 -2 Z",
+      "stroke": { "color": "#83c167", "width": 0.04 },
+      "fill": { "color": "#83c167", "opacity": 0.5, "rule": "even-odd" }
+    }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "create", "object": "axis", "easing_curve": "linear" }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "vector" },
+      { "type": "create", "object": "angle" }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "box" },
+      { "type": "create", "object": "disc" },
+      { "type": "create", "object": "ring" }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "scale", "object": "disc", "to": [1.5, 1.5, 1] }
+    ] },
+    { "type": "wait", "duration": 0.5 }
+  ]
+}

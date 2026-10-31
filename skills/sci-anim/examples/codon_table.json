@@ -1,0 +1,96 @@
+{
+ "scene_config": {
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "background": "#1e1e1e"
+ },
+ "objects": {
+  "title": {
+   "type": "text",
+   "text": "The genetic code: three bases of mRNA, one amino acid",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [0.0, 3.65, 0]
+  },
+  "codons": {
+   "type": "table",
+   "rows": [
+    ["1st", "U", "C", "A", "G", "3rd"],
+    ["U", "UUU Phe", "UCU Ser", "UAU Tyr", "UGU Cys", "U"],
+    ["", "UUC Phe", "UCC Ser", "UAC Tyr", "UGC Cys", "C"],
+    ["", "UUA Leu", "UCA Ser", "UAA Stop", "UGA Stop", "A"],
+    ["", "UUG Leu", "UCG Ser", "UAG Stop", "UGG Trp", "G"],
+    ["C", "CUU Leu", "CCU Pro", "CAU His", "CGU Arg", "U"],
+    ["", "CUC Leu", "CCC Pro", "CAC His", "CGC Arg", "C"],
+    ["", "CUA Leu", "CCA Pro", "CAA Gln", "CGA Arg", "A"],
+    ["", "CUG Leu", "CCG Pro", "CAG Gln", "CGG Arg", "G"],
+    ["A", "AUU Ile", "ACU Thr", "AAU Asn", "AGU Ser", "U"],
+    ["", "AUC Ile", "ACC Thr", "AAC Asn", "AGC Ser", "C"],
+    ["", "AUA Ile", "ACA Thr", "AAA Lys", "AGA Arg", "A"],
+    ["", "AUG Met", "ACG Thr", "AAG Lys", "AGG Arg", "G"],
+    ["G", "GUU Val", "GCU Ala", "GAU Asp", "GGU Gly", "U"],
+    ["", "GUC Val", "GCC Ala", "GAC Asp", "GGC Gly", "C"],
+    ["", "GUA Val", "GCA Ala", "GAA Glu", "GGA Gly", "A"],
+    ["", "GUG Val", "GCG Ala", "GAG Glu", "GGG Gly", "G"]
+   ],
+   "size": 0.3,
+   "padding": 0.1,
+   "position": [-1.2, -0.25, 0]
+  },
+  "start": {
+   "type": "text",
+   "text": "A ribosome starts\nreading at AUG,\nwhich codes for\nmethionine (Met)",
+   "size": 0.3,
+   "color": "#bbbbbb",
+   "position": [4.8, -1.85, 0]
+  }
+ },
+ "timeline": [
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "write",
+     "object": "title"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 4.0,
+   "animations": [
+    {
+     "type": "write",
+     "object": "codons",
+     "easing_curve": "linear"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 1.0
+  },
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "highlight",
+     "object": "codons",
+     "cell": [12, 1],
+     "to": 1
+    },
+    {
+     "type": "write",
+     "object": "start"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 2.0
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Twelve nucleobase pairs of real DNA", "size": 0.5, "position": [0, 3.3, 0], "opacity": 0 },
+
+    "dna": { "type": "molecule", "file": "structures/1bna.pdb", "rotation": [0, 90, 0], "scale": [0.21, 0.21, 0.21], "opacity": 0,
+      "groups": {
+        "pair": { "residues": [{ "chain": "A", "number": 6 }, { "chain": "B", "number": 19 }], "part": "nucleobase" }
+      } },
+
+    "say_pair": { "type": "text", "text": "The lit nucleobase pair joins adenine on one strand to thymine on the other.", "size": 0.36, "position": [0, -3.4, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "dna", "to": 1 }
+    ] },
+    { "type": "play", "duration": 8, "animations": [
+      { "type": "rotate", "object": "dna", "to": [360, 90, 0], "easing_curve": "linear" },
+      { "type": "highlight", "object": "dna", "group": "pair", "to": 1, "start": 0.1, "end": 0.25 },
+      { "type": "fade", "object": "say_pair", "to": 1, "start": 0.1, "end": 0.25 }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

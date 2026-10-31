@@ -1,0 +1,18 @@
+{
+  "scene_config": { "width": 1920, "height": 1080, "fps": 60, "background": "#1e1e1e" },
+  "camera": { "position": [0, 0, 10], "target": [0, 0, 0] },
+  "objects": {
+    "disc": {
+      "type": "circle",
+      "radius": 2.0,
+      "stroke": { "color": "#58c4dd", "width": 0.06 },
+      "fill": { "color": "#1c758a" }
+    },
+    "orb": {
+      "type": "sphere",
+      "radius": 0.8,
+      "position": [0.6, 0.4, 0.3],
+      "material": { "type": "standard", "color": "#fc6255" }
+    }
+  }
+}

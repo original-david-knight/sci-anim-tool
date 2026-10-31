@@ -1,0 +1,25 @@
+{
+  "scene_config": { "width": 1920, "height": 1080, "fps": 30, "background": "#1e1e1e" },
+  "objects": {
+    "title": { "type": "text", "text": "Derivatives to know", "size": 0.5, "position": [0, 3.2, 0] },
+    "rules": {
+      "type": "table", "size": 0.45, "rulings": "header", "align": "left", "position": [0, -0.3, 0],
+      "rows": [
+        ["Function", "Derivative"],
+        [{ "tex": "x^n" }, { "tex": "n x^{n-1}" }],
+        [{ "tex": "\\sin x" }, { "tex": "\\cos x" }],
+        [{ "tex": "e^x" }, { "tex": "e^x" }],
+        [{ "tex": "\\ln x" }, { "tex": "\\frac{1}{x}" }]
+      ]
+    }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "title" }] },
+    { "type": "play", "duration": 3, "animations": [{ "type": "write", "object": "rules" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "highlight", "object": "rules", "cell": [4, 1], "to": 1, "color": "#58c4dd" }] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "highlight", "object": "rules", "cell": [4, 1], "to": 0 },
+      { "type": "highlight", "object": "rules", "cell": [2, 1], "to": 1, "color": "#58c4dd" } ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

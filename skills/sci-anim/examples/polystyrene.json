@@ -1,0 +1,60 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Polystyrene: a benzene ring on every second carbon", "size": 0.45, "position": [0, 3.45, 0], "opacity": 0 },
+
+    "chain": { "type": "molecule", "file": "structures/polystyrene.sdf", "scale": [0.55, 0.55, 0.55], "rotation": [75, 0, -30], "opacity": 0,
+      "groups": {
+        "unit_2": [3, 4, 15, 16, 17, 18, 19, 20, 37, 38, 39, 52, 53, 54, 55, 56],
+        "ring_1": [9, 10, 11, 12, 13, 14, 47, 48, 49, 50, 51],
+        "ring_2": [15, 16, 17, 18, 19, 20, 52, 53, 54, 55, 56],
+        "ring_3": [21, 22, 23, 24, 25, 26, 57, 58, 59, 60, 61],
+        "ring_4": [27, 28, 29, 30, 31, 32, 62, 63, 64, 65, 66]
+      } },
+
+    "say_unit": { "type": "text", "text": "Each styrene gives the chain CH₂–CH, with a ring on the CH.", "size": 0.4, "position": [0, -3.45, 0] },
+    "say_sides": { "type": "text", "text": "The rings take turns above and below the backbone.", "size": 0.4, "position": [0, -3.45, 0] },
+    "say_real": { "type": "text", "text": "In most polystyrene, each ring's side is random.", "size": 0.4, "position": [0, -3.45, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "chain", "to": 1 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_unit" },
+      { "type": "highlight", "object": "chain", "group": "unit_2", "to": 1, "color": "#83c167" }
+    ] },
+    { "type": "wait", "duration": 2.5 },
+    { "type": "play", "duration": 0.6, "animations": [
+      { "type": "fade", "object": "say_unit", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "unit_2", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_sides" },
+      { "type": "highlight", "object": "chain", "group": "ring_1", "to": 1, "color": "#ffd23f" }
+    ] },
+    { "type": "play", "duration": 0.7, "animations": [
+      { "type": "highlight", "object": "chain", "group": "ring_1", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ring_2", "to": 1, "color": "#ffd23f" }
+    ] },
+    { "type": "play", "duration": 0.7, "animations": [
+      { "type": "highlight", "object": "chain", "group": "ring_2", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ring_3", "to": 1, "color": "#ffd23f" }
+    ] },
+    { "type": "play", "duration": 0.7, "animations": [
+      { "type": "highlight", "object": "chain", "group": "ring_3", "to": 0 },
+      { "type": "highlight", "object": "chain", "group": "ring_4", "to": 1, "color": "#ffd23f" }
+    ] },
+    { "type": "play", "duration": 0.7, "animations": [
+      { "type": "highlight", "object": "chain", "group": "ring_4", "to": 0 }
+    ] },
+    { "type": "wait", "duration": 1 },
+    { "type": "play", "duration": 0.5, "animations": [
+      { "type": "fade", "object": "say_sides", "to": 0 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "write", "object": "say_real" }
+    ] },
+    { "type": "wait", "duration": 3 }
+  ]
+}

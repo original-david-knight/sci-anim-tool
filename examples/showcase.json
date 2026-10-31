@@ -1,0 +1,615 @@
+{
+  "scene_config": {"width": 1920, "height": 1080, "fps": 60, "background": "#1e1e1e"},
+  "camera": {"position": [0, 0, 10], "target": [0, 0, 0]},
+  "objects": {
+    "title": {"type": "text", "text": "sci_anim", "size": 1.4, "position": [0, 0.6, 0]},
+    "tagline": {
+      "type": "text",
+      "text": "math and science animations from one JSON scene file",
+      "size": 0.4,
+      "position": [0, -0.7, 0],
+      "font": "serif",
+      "color": "#c8c8c8"
+    },
+    "math_heading": {"type": "text", "text": "Equations and plots", "size": 0.5, "position": [0, 3.3, 0]},
+    "square_tex": {"type": "math", "tex": "y = x^2", "size": 0.6, "position": [0, 0.2, 0], "color": "#58c4dd", "scale": [1.8, 1.8, 1]},
+    "quartic_tex": {"type": "math", "tex": "y = x^4", "size": 0.6, "position": [4.9, 1.9, 0], "color": "#fc6255"},
+    "ax": {
+      "type": "axes",
+      "position": [-1.3, -0.45, 0],
+      "width": 8,
+      "height": 5.4,
+      "x": {"range": [-2.5, 2.5], "spacing": 1, "label": "x"},
+      "y": {"range": [-3, 6], "spacing": 1, "label": "y"},
+      "stroke": {"color": "#888888"},
+      "color": "#888888"
+    },
+    "square_plot": {"type": "function-plot", "axes": "ax", "expression": "x^2", "stroke": {"color": "#58c4dd", "width": 0.07}},
+    "quartic_plot": {"type": "function-plot", "axes": "ax", "expression": "x^4", "stroke": {"color": "#fc6255", "width": 0.07}},
+    "map_heading": {"type": "text", "text": "A matrix acts on the plane", "size": 0.5, "position": [20, 3.3, 0]},
+    "unit_circle": {
+      "type": "circle",
+      "radius": 1.5,
+      "position": [21.6, -0.6, 0],
+      "stroke": {"color": "#58c4dd", "width": 0.05},
+      "fill": {"color": "#58c4dd", "opacity": 0.1}
+    },
+    "unit_square": {
+      "type": "polygon",
+      "points": [[0, 0], [1.5, 0], [1.5, 1.5], [0, 1.5]],
+      "position": [21.6, -0.6, 0.01],
+      "stroke": {"color": "#ffd23f", "width": 0.04},
+      "fill": {"color": "#ffd23f", "opacity": 0.2}
+    },
+    "i_vector": {
+      "type": "arrow",
+      "from": [0, 0],
+      "to": [1.5, 0],
+      "tip_length": 0.25,
+      "position": [21.6, -0.6, 0.02],
+      "stroke": {"color": "#fc6255", "width": 0.06}
+    },
+    "j_vector": {
+      "type": "arrow",
+      "from": [0, 0],
+      "to": [0, 1.5],
+      "tip_length": 0.25,
+      "position": [21.6, -0.6, 0.02],
+      "stroke": {"color": "#83c167", "width": 0.06}
+    },
+    "i_tip": {"type": "dot", "radius": 0.09, "position": [23.1, -0.6, 0.03], "fill": {"color": "#fc6255"}, "opacity": 0},
+    "j_tip": {"type": "dot", "radius": 0.09, "position": [21.6, 0.9, 0.03], "fill": {"color": "#83c167"}, "opacity": 0},
+    "i_caption": {"type": "math", "tex": "\\hat{\\imath}", "size": 0.5, "color": "#fc6255", "opacity": 0, "attach": {"object": "i_tip", "offset": [0.55, -0.35]}},
+    "j_caption": {"type": "math", "tex": "\\hat{\\jmath}", "size": 0.5, "color": "#83c167", "opacity": 0, "attach": {"object": "j_tip", "offset": [-0.4, 0.3]}},
+    "shear_tex": {"type": "math", "tex": "\\begin{pmatrix} 1 & 1 \\\\ 0 & 1 \\end{pmatrix}", "size": 0.7, "position": [15.7, -0.6, 0]},
+    "turn_tex": {"type": "math", "tex": "\\begin{pmatrix} 0 & -1 \\\\ 1 & 0 \\end{pmatrix}", "size": 0.7, "position": [15.7, -0.6, 0]},
+    "shear_text": {"type": "text", "text": "shear", "size": 0.4, "position": [15.7, 0.9, 0], "color": "#c8c8c8"},
+    "turn_text": {"type": "text", "text": "quarter turn", "size": 0.4, "position": [15.7, 0.9, 0], "color": "#c8c8c8"},
+    "chem_heading": {"type": "text", "text": "Molecules, atom groups and reactions", "size": 0.5, "position": [40, 3.3, 0]},
+    "caffeine": {
+      "type": "molecule",
+      "file": "../tests/fixtures/pubchem/caffeine.sdf",
+      "position": [40, -0.5, 0],
+      "scale": [0.75, 0.75, 0.75],
+      "groups": {"carbonyl": [1, 9]},
+      "opacity": 0
+    },
+    "carbonyl_caption": {
+      "type": "text",
+      "text": "carbonyl",
+      "size": 0.45,
+      "color": "#ffd23f",
+      "opacity": 0,
+      "attach": {"object": "caffeine", "group": "carbonyl", "offset": [-0.7, 1.7]}
+    },
+    "carbonyl_leader": {
+      "type": "arrow",
+      "from": [-0.6, 1.4],
+      "to": [-0.28, 0.75],
+      "tip_length": 0.2,
+      "stroke": {"color": "#ffd23f", "width": 0.045},
+      "opacity": 0,
+      "attach": {"object": "caffeine", "group": "carbonyl"}
+    },
+    "caffeine_text": {"type": "text", "text": "caffeine", "size": 0.4, "position": [44.4, -2.6, 0], "color": "#c8c8c8", "font": "serif"},
+    "ethylene": {
+      "type": "molecule",
+      "file": "../tests/fixtures/pubchem/ethylene.sdf",
+      "position": [36.8, -0.2, 0],
+      "scale": [1.4, 1.4, 1.4],
+      "opacity": 0,
+      "groups": {"double_bond": [1, 2]}
+    },
+    "hcl": {
+      "type": "molecule",
+      "file": "../tests/fixtures/pubchem/hydrogen-chloride.sdf",
+      "position": [43.2, -0.2, 0],
+      "scale": [1.4, 1.4, 1.4],
+      "opacity": 0
+    },
+    "chloroethane": {
+      "type": "molecule",
+      "file": "../tests/fixtures/pubchem/chloroethane.sdf",
+      "position": [40, -0.2, 0],
+      "scale": [1.4, 1.4, 1.4],
+      "groups": {"carbons": [2, 3]}
+    },
+    "double_caption": {
+      "type": "text",
+      "text": "C=C",
+      "size": 0.45,
+      "color": "#ffd23f",
+      "opacity": 0,
+      "attach": {"object": "ethylene", "group": "double_bond", "offset": [0, 1.8]}
+    },
+    "single_caption": {
+      "type": "text",
+      "text": "now C–C",
+      "size": 0.45,
+      "color": "#ffd23f",
+      "opacity": 0,
+      "attach": {"object": "chloroethane", "group": "carbons", "offset": [-0.6, 2.3]}
+    },
+    "scheme": {
+      "type": "math",
+      "tex": "\\mathrm{C_2H_4} + \\mathrm{HCl} \\rightarrow \\mathrm{C_2H_5Cl}",
+      "size": 0.55,
+      "position": [40, -3.0, 0],
+      "color": "#c8c8c8"
+    },
+    "pattern_heading": {"type": "text", "text": "One pattern, 64 copies", "size": 0.5, "position": [60, 3.3, 0]},
+    "lattice": {
+      "type": "pattern",
+      "shape": {"type": "sphere", "radius": 0.24, "material": {"type": "standard", "color": "#58c4dd"}},
+      "layout": {"type": "grid", "counts": [4, 4, 4], "spacing": 0.9},
+      "copy": {"color_share": "k/3", "to_color": "#fc6255"},
+      "position": [60, -0.2, 0],
+      "rotation": [25, 35, 0]
+    },
+    "lattice_text": {"type": "text", "text": "a simple cubic crystal", "size": 0.4, "position": [60, -3.3, 0], "color": "#c8c8c8", "font": "serif"},
+    "law_heading": {"type": "text", "text": "Motion by a law", "size": 0.5, "position": [80, 3.3, 0]},
+    "ceiling": {"type": "line", "from": [-1, 0], "to": [1, 0], "position": [77, 2.3, 0], "stroke": {"color": "#888888", "width": 0.06}},
+    "plumb": {"type": "line", "from": [0, 0], "to": [0, -3.2], "position": [77, 2.3, -0.01], "stroke": {"color": "#555555", "width": 0.02}, "opacity": 0},
+    "rod": {"type": "line", "from": [0, 0], "to": [0, -3.0], "position": [77, 2.3, 0], "rotation": [0, 0, 30], "stroke": {"color": "#ece6e2", "width": 0.04}},
+    "hinge": {"type": "dot", "radius": 0.08, "position": [77, 2.3, 0.01], "fill": {"color": "#888888"}, "opacity": 0},
+    "bob": {"type": "dot", "radius": 0.2, "position": [78.5, -0.2980762113533162, 0.01], "fill": {"color": "#fc6255"}, "opacity": 0},
+    "bob_caption": {"type": "math", "tex": "m", "size": 0.5, "color": "#fc6255", "opacity": 0, "attach": {"object": "bob", "offset": [0, -0.55]}},
+    "swing_law": {"type": "math", "tex": "\\theta(t) = 30^\\circ \\cos(\\omega t)", "size": 0.65, "position": [82.9, 1.0, 0]},
+    "omega": {"type": "math", "tex": "\\omega = \\sqrt{g / L}", "size": 0.55, "position": [82.9, -0.4, 0], "color": "#c8c8c8"},
+    "solid_heading": {"type": "text", "text": "Solids with depth", "size": 0.5, "position": [100, 3.6, 0]},
+    "mantle": {
+      "type": "revolution",
+      "position": [97.2, 0.2, 0],
+      "rotation": [0, -45, 0],
+      "angle": 270,
+      "profile": {"type": "path", "rule": "even-odd", "d": "M 0 -1.5 A 1.5 1.5 0 0 1 0 1.5 Z M 0 -0.7 A 0.7 0.7 0 0 1 0 0.7 Z"},
+      "material": {"type": "standard", "color": "#58c4dd"}
+    },
+    "core": {
+      "type": "revolution",
+      "position": [97.2, 0.2, 0],
+      "rotation": [0, -45, 0],
+      "angle": 270,
+      "profile": {"type": "path", "d": "M 0 -0.7 A 0.7 0.7 0 0 1 0 0.7 Z"},
+      "material": {"type": "standard", "color": "#fc6255"}
+    },
+    "knot": {
+      "type": "tube",
+      "position": [102.8, 0.2, 0],
+      "radius": 0.16,
+      "curve": {"x": "0.55*(sin(u) + 2*sin(2*u))", "y": "0.55*(cos(u) - 2*cos(2*u))", "z": "-0.55*sin(3*u)", "u_range": [0, 6.283185]},
+      "material": {"type": "standard", "color": "#83c167"}
+    },
+    "planet_text": {"type": "text", "text": "a revolution, cut open", "size": 0.4, "position": [97.2, -2.6, 0], "color": "#c8c8c8", "font": "serif"},
+    "knot_text": {"type": "text", "text": "a tube along a knot", "size": 0.4, "position": [102.8, -2.6, 0], "color": "#c8c8c8", "font": "serif"},
+    "axes3": {
+      "type": "3d-axes",
+      "x": {"range": [-3, 3], "length": 5, "label": "x"},
+      "y": {"range": [-3, 3], "length": 5, "label": "y"},
+      "z": {"range": [0, 8], "length": 2.9, "label": "z"},
+      "position": [120, 0, 0]
+    },
+    "bowl": {"type": "surface", "axes": "axes3", "z": "x^2 + y^2", "material": {"type": "standard", "color": "#58c4dd"}},
+    "point": {
+      "type": "sphere",
+      "axes": "axes3",
+      "radius": 0.22,
+      "position": [2.6, 0, 7.06],
+      "opacity": 0,
+      "material": {"type": "standard", "color": "#fc6255"}
+    },
+    "surface_heading": {"type": "text", "text": "A surface on 3D axes", "size": 0.5, "opacity": 0, "attach": {"object": "axes3", "offset": [0, 3.75]}},
+    "bowl_tex": {"type": "math", "tex": "z = x^2 + y^2", "size": 0.5, "color": "#58c4dd", "opacity": 0, "attach": {"object": "axes3", "offset": [4, 1.4]}},
+    "end": {"type": "text", "text": "One JSON file in, one video out", "size": 0.65, "position": [140, 0.4, 0]},
+    "end_note": {"type": "text", "text": "validate · inspect · frame · render", "size": 0.4, "position": [140, -0.8, 0], "color": "#c8c8c8", "font": "serif"}
+  },
+  "timeline": [
+    {
+      "type": "chapter",
+      "id": "title",
+      "steps": [
+        {"type": "play", "duration": 1.5, "animations": [{"type": "write", "object": "title"}]},
+        {"type": "play", "duration": 1.2, "animations": [{"type": "write", "object": "tagline"}]},
+        {"type": "wait", "duration": 0.5},
+        {
+          "type": "play",
+          "duration": 0.5,
+          "animations": [{"type": "fade", "object": "title", "to": 0}, {"type": "fade", "object": "tagline", "to": 0}]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "math",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 2.4,
+          "animations": [{"type": "write", "object": "math_heading", "end": 1.0}, {"type": "write", "object": "square_tex", "start": 0.6, "end": 2.4}]
+        },
+        {"type": "wait", "duration": 0.4},
+        {
+          "type": "play",
+          "duration": 1.6,
+          "animations": [
+            {"type": "move", "object": "square_tex", "to": [4.9, 1.9, 0]},
+            {"type": "scale", "object": "square_tex", "to": [1, 1, 1]},
+            {"type": "create", "object": "ax", "start": 0.3}
+          ]
+        },
+        {"type": "play", "duration": 1.5, "animations": [{"type": "create", "object": "square_plot"}]},
+        {
+          "type": "play",
+          "duration": 2.8,
+          "animations": [
+            {"type": "recolor", "object": "square_tex", "color": "#ffd23f", "end": 0.4},
+            {"type": "recolor", "object": "square_plot", "stroke": "#ffd23f", "end": 0.4},
+            {"type": "morph", "object": "square_tex", "into": "quartic_tex", "start": 0.6, "end": 2.8},
+            {"type": "morph", "object": "square_plot", "into": "quartic_plot", "start": 0.6, "end": 2.8}
+          ]
+        },
+        {"type": "wait", "duration": 0.8}
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "linear-algebra",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.9,
+          "animations": [
+            {"type": "fade", "object": "math_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "quartic_tex", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "ax", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "quartic_plot", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [20, 0, 10], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [20, 0, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "map_heading", "start": 1.2, "end": 1.9}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.2,
+          "animations": [{"type": "create", "object": "unit_circle"}, {"type": "create", "object": "unit_square", "start": 0.3}]
+        },
+        {
+          "type": "play",
+          "duration": 1.2,
+          "animations": [
+            {"type": "create", "object": "i_vector"},
+            {"type": "create", "object": "j_vector"},
+            {"type": "fade", "object": "i_tip", "to": 1, "start": 0.6},
+            {"type": "fade", "object": "j_tip", "to": 1, "start": 0.6},
+            {"type": "fade", "object": "i_caption", "to": 1, "start": 0.6},
+            {"type": "fade", "object": "j_caption", "to": 1, "start": 0.6}
+          ]
+        },
+        {"type": "play", "duration": 1.2, "animations": [{"type": "write", "object": "shear_tex"}, {"type": "write", "object": "shear_text"}]},
+        {
+          "type": "play",
+          "duration": 2.6,
+          "animations": [
+            {"type": "recolor", "object": "j_vector", "stroke": "#ffd23f", "end": 0.4},
+            {"type": "recolor", "object": "j_tip", "fill": "#ffd23f", "end": 0.4},
+            {"type": "recolor", "object": "j_caption", "color": "#ffd23f", "end": 0.4},
+            {
+              "type": "linear-map",
+              "objects": ["unit_circle", "unit_square", "i_vector", "j_vector", "i_tip", "j_tip"],
+              "matrix": [[1, 1], [0, 1]],
+              "origin": [21.6, -0.6],
+              "start": 0.4
+            }
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 2.6,
+          "animations": [
+            {"type": "recolor", "object": "j_vector", "stroke": "#83c167", "end": 0.4},
+            {"type": "recolor", "object": "j_tip", "fill": "#83c167", "end": 0.4},
+            {"type": "recolor", "object": "j_caption", "color": "#83c167", "end": 0.3},
+            {"type": "fade", "object": "shear_text", "to": 0, "end": 0.4},
+            {"type": "morph", "object": "shear_tex", "into": "turn_tex", "end": 0.8},
+            {"type": "write", "object": "turn_text", "start": 0.4, "end": 1.0},
+            {"type": "fade", "object": "i_caption", "to": 0, "start": 0.3, "end": 0.6},
+            {"type": "fade", "object": "j_caption", "to": 0, "start": 0.4, "end": 0.6},
+            {
+              "type": "linear-map",
+              "objects": ["unit_circle", "unit_square", "i_vector", "j_vector", "i_tip", "j_tip"],
+              "matrix": [[0, -1], [1, 0]],
+              "origin": [21.6, -0.6],
+              "route": "turn",
+              "start": 0.6
+            }
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 0.8,
+          "animations": [{"type": "fade", "object": "i_caption", "to": 1, "end": 0.4}, {"type": "fade", "object": "j_caption", "to": 1, "end": 0.4}]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "chemistry",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.9,
+          "animations": [
+            {"type": "fade", "object": "map_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "unit_circle", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "unit_square", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "i_vector", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "j_vector", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "i_tip", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "j_tip", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "i_caption", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "j_caption", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "turn_tex", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "turn_text", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [40, 0, 10], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [40, 0, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "chem_heading", "start": 1.2, "end": 1.9},
+            {"type": "fade", "object": "caffeine", "to": 1, "start": 1.2},
+            {"type": "write", "object": "caffeine_text", "start": 1.2}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 2.6,
+          "animations": [
+            {"type": "rotate", "object": "caffeine", "to": [0, 0, 25], "easing_curve": "linear"},
+            {"type": "highlight", "object": "caffeine", "group": "carbonyl", "to": 1, "color": "#ffd23f", "start": 0.6, "end": 1.2},
+            {"type": "fade", "object": "carbonyl_caption", "to": 1, "start": 0.6, "end": 1.2},
+            {"type": "fade", "object": "carbonyl_leader", "to": 1, "start": 0.6, "end": 1.2}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 0.7,
+          "animations": [
+            {"type": "highlight", "object": "caffeine", "group": "carbonyl", "to": 0},
+            {"type": "fade", "object": "carbonyl_caption", "to": 0},
+            {"type": "fade", "object": "carbonyl_leader", "to": 0},
+            {"type": "fade", "object": "caffeine", "to": 0},
+            {"type": "fade", "object": "caffeine_text", "to": 0}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.4,
+          "animations": [
+            {"type": "fade", "object": "ethylene", "to": 1, "end": 0.8},
+            {"type": "fade", "object": "hcl", "to": 1, "end": 0.8},
+            {"type": "write", "object": "scheme", "start": 0.2}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.0,
+          "animations": [
+            {"type": "highlight", "object": "ethylene", "group": "double_bond", "to": 1, "color": "#ffd23f", "end": 0.6},
+            {"type": "fade", "object": "double_caption", "to": 1, "end": 0.6}
+          ]
+        },
+        {"type": "play", "duration": 0.4, "animations": [{"type": "fade", "object": "double_caption", "to": 0}]},
+        {
+          "type": "play",
+          "duration": 2.8,
+          "animations": [
+            {
+              "type": "reaction",
+              "reactants": ["ethylene", "hcl"],
+              "products": ["chloroethane"],
+              "atom_map": [
+                {"reactant": {"object": "ethylene", "atom": 1}, "product": {"object": "chloroethane", "atom": 2}},
+                {"reactant": {"object": "ethylene", "atom": 2}, "product": {"object": "chloroethane", "atom": 3}},
+                {"reactant": {"object": "ethylene", "atom": 3}, "product": {"object": "chloroethane", "atom": 4}},
+                {"reactant": {"object": "ethylene", "atom": 4}, "product": {"object": "chloroethane", "atom": 5}},
+                {"reactant": {"object": "ethylene", "atom": 5}, "product": {"object": "chloroethane", "atom": 6}},
+                {"reactant": {"object": "ethylene", "atom": 6}, "product": {"object": "chloroethane", "atom": 7}},
+                {"reactant": {"object": "hcl", "atom": 1}, "product": {"object": "chloroethane", "atom": 1}},
+                {"reactant": {"object": "hcl", "atom": 2}, "product": {"object": "chloroethane", "atom": 8}}
+              ]
+            }
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.6,
+          "animations": [
+            {"type": "fade", "object": "single_caption", "to": 1, "end": 0.6},
+            {"type": "highlight", "object": "chloroethane", "group": "carbons", "to": 0, "start": 1.0}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "patterns",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.9,
+          "animations": [
+            {"type": "fade", "object": "chem_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "chloroethane", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "single_caption", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "scheme", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [60, 0, 10], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [60, 0, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "pattern_heading", "start": 1.2, "end": 1.9}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.8,
+          "animations": [{"type": "create", "object": "lattice", "easing_curve": "linear"}, {"type": "write", "object": "lattice_text", "start": 1.0}]
+        },
+        {
+          "type": "play",
+          "duration": 3.0,
+          "animations": [
+            {"type": "rotate", "object": "lattice", "to": [25, 215, 0], "easing_curve": "linear"},
+            {"type": "recolor", "object": "lattice", "color": "#ffd23f", "start": 1.4, "end": 2.0}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "laws",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.9,
+          "animations": [
+            {"type": "fade", "object": "pattern_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "lattice", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "lattice_text", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [80, 0, 10], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [80, 0, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "law_heading", "start": 1.2, "end": 1.9}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 1.2,
+          "animations": [
+            {"type": "create", "object": "ceiling"},
+            {"type": "create", "object": "rod"},
+            {"type": "fade", "object": "plumb", "to": 1},
+            {"type": "fade", "object": "hinge", "to": 1},
+            {"type": "fade", "object": "bob", "to": 1, "start": 0.6},
+            {"type": "fade", "object": "bob_caption", "to": 1, "start": 0.6}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 5.21,
+          "animations": [
+            {"type": "follow", "object": "rod", "sets": "rotation", "law": {"x": "0", "y": "0", "z": "30*cos(1.8083*t)"}},
+            {"type": "follow", "object": "bob", "law": {"x": "77 + 3*sin(pi/6*cos(1.8083*t))", "y": "2.3 - 3*cos(pi/6*cos(1.8083*t))", "z": "0.01"}},
+            {"type": "write", "object": "swing_law", "start": 0.3, "end": 1.8},
+            {"type": "write", "object": "omega", "start": 2.4, "end": 3.6},
+            {"type": "recolor", "object": "bob", "fill": "#ffd23f", "start": 3.1, "end": 3.5},
+            {"type": "recolor", "object": "bob_caption", "color": "#ffd23f", "start": 3.1, "end": 3.5}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "solids",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.9,
+          "animations": [
+            {"type": "fade", "object": "law_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "ceiling", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "plumb", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "rod", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "hinge", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "bob", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "bob_caption", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "swing_law", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "omega", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [100, 2.5, 11], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [100, 0.3, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "solid_heading", "start": 1.2, "end": 1.9}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 2.0,
+          "animations": [
+            {"type": "create", "object": "mantle"},
+            {"type": "create", "object": "core"},
+            {"type": "create", "object": "knot", "start": 0.4, "easing_curve": "linear"},
+            {"type": "write", "object": "planet_text", "start": 0.8},
+            {"type": "write", "object": "knot_text", "start": 0.8}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 2.4,
+          "animations": [
+            {"type": "camera-move", "to": [97, 4, 10.5]},
+            {"type": "rotate", "object": "knot", "to": [0, 120, 0]},
+            {"type": "recolor", "object": "core", "color": "#ffd23f", "start": 1.0, "end": 1.5}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "surface",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 1.8,
+          "animations": [
+            {"type": "fade", "object": "solid_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "mantle", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "core", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "knot", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "planet_text", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "knot_text", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [124.6, 9, 6.85], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [120, -0.3, 0], "start": 0.2, "end": 1.2},
+            {"type": "fade", "object": "surface_heading", "start": 1.2, "end": 1.8, "to": 1}
+          ]
+        },
+        {"type": "play", "duration": 1.6, "animations": [{"type": "create", "object": "axes3"}]},
+        {
+          "type": "play",
+          "duration": 1.8,
+          "animations": [
+            {"type": "create", "object": "bowl"},
+            {"type": "fade", "object": "bowl_tex", "to": 1, "start": 1.0},
+            {"type": "fade", "object": "point", "to": 1, "start": 1.2}
+          ]
+        },
+        {
+          "type": "play",
+          "duration": 6.5,
+          "animations": [
+            {
+              "type": "follow",
+              "sets": "camera-position",
+              "law": {"x": "120 + 8.25121*sin(0.591364 + tau*t/6.5)", "y": "9", "z": "8.25121*cos(0.591364 + tau*t/6.5)"}
+            },
+            {"type": "follow", "object": "point", "law": {"x": "2.6*exp(-t/2)*cos(t)", "y": "2.6*exp(-t/2)*sin(t)", "z": "6.76*exp(-t) + 0.3"}},
+            {"type": "recolor", "object": "point", "color": "#ffd23f", "start": 5.8, "end": 6.3}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chapter",
+      "id": "closing",
+      "steps": [
+        {
+          "type": "play",
+          "duration": 2.4,
+          "animations": [
+            {"type": "fade", "object": "axes3", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "bowl", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "point", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "surface_heading", "to": 0, "end": 0.35},
+            {"type": "fade", "object": "bowl_tex", "to": 0, "end": 0.35},
+            {"type": "camera-move", "to": [140, 0, 10], "start": 0.2, "end": 1.2},
+            {"type": "camera-look", "to": [140, 0, 0], "start": 0.2, "end": 1.2},
+            {"type": "write", "object": "end", "start": 1.2, "end": 2.4}
+          ]
+        },
+        {"type": "play", "duration": 1.0, "animations": [{"type": "write", "object": "end_note"}]},
+        {"type": "wait", "duration": 1.2}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30 },
+  "camera": { "position": [0, 0, 12], "target": [0, 0, 0] },
+  "objects": {
+    "ethylene": { "type": "molecule", "file": "../tests/fixtures/pubchem/ethylene.sdf", "position": [-2.6, 0.4, 0] },
+    "hydrogen_chloride": { "type": "molecule", "file": "../tests/fixtures/pubchem/hydrogen-chloride.sdf", "position": [2.6, 0.4, 0] },
+    "chloroethane": { "type": "molecule", "file": "../tests/fixtures/pubchem/chloroethane.sdf", "position": [0, 0, 0] },
+    "title": { "type": "text", "text": "Ethylene + HCl, chloroethane", "position": [0, 3.2, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "title" }] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "reaction",
+        "reactants": ["ethylene", "hydrogen_chloride"],
+        "products": ["chloroethane"],
+        "atom_map": [
+        { "reactant": { "object": "ethylene", "atom": 1 }, "product": { "object": "chloroethane", "atom": 2 } },
+        { "reactant": { "object": "ethylene", "atom": 2 }, "product": { "object": "chloroethane", "atom": 3 } },
+        { "reactant": { "object": "ethylene", "atom": 3 }, "product": { "object": "chloroethane", "atom": 4 } },
+        { "reactant": { "object": "ethylene", "atom": 4 }, "product": { "object": "chloroethane", "atom": 5 } },
+        { "reactant": { "object": "ethylene", "atom": 5 }, "product": { "object": "chloroethane", "atom": 6 } },
+        { "reactant": { "object": "ethylene", "atom": 6 }, "product": { "object": "chloroethane", "atom": 7 } },
+        { "reactant": { "object": "hydrogen_chloride", "atom": 1 }, "product": { "object": "chloroethane", "atom": 1 } },
+        { "reactant": { "object": "hydrogen_chloride", "atom": 2 }, "product": { "object": "chloroethane", "atom": 8 } }
+        ] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

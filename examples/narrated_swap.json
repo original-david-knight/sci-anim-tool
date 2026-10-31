@@ -1,0 +1,59 @@
+{
+  "scene_config": { "width": 1920, "height": 1080, "fps": 30 },
+  "objects": {
+    "heading": { "type": "text", "text": "Sorting", "size": 0.5, "position": [0, 3.3, 0] },
+    "box2": { "type": "polygon", "points": [[-0.7, -0.7], [0.7, -0.7], [0.7, 0.7], [-0.7, 0.7]], "position": [-3, 0, 0], "stroke": { "color": "#888888", "width": 0.06 }, "fill": { "color": "#2a2a2a" } },
+    "box6": { "type": "polygon", "points": [[-0.7, -0.7], [0.7, -0.7], [0.7, 0.7], [-0.7, 0.7]], "position": [-1, 0, 0], "stroke": { "color": "#888888", "width": 0.06 }, "fill": { "color": "#2a2a2a" } },
+    "box3": { "type": "polygon", "points": [[-0.7, -0.7], [0.7, -0.7], [0.7, 0.7], [-0.7, 0.7]], "position": [1, 0, 0], "stroke": { "color": "#888888", "width": 0.06 }, "fill": { "color": "#2a2a2a" } },
+    "box9": { "type": "polygon", "points": [[-0.7, -0.7], [0.7, -0.7], [0.7, 0.7], [-0.7, 0.7]], "position": [3, 0, 0], "stroke": { "color": "#888888", "width": 0.06 }, "fill": { "color": "#2a2a2a" } },
+    "n2": { "type": "math", "tex": "2", "size": 0.8, "attach": { "object": "box2" } },
+    "n6": { "type": "math", "tex": "6", "size": 0.8, "attach": { "object": "box6" } },
+    "n3": { "type": "math", "tex": "3", "size": 0.8, "attach": { "object": "box3" } },
+    "n9": { "type": "math", "tex": "9", "size": 0.8, "attach": { "object": "box9" } }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "write", "object": "heading" },
+      { "type": "create", "object": "box2" },
+      { "type": "create", "object": "box6" },
+      { "type": "create", "object": "box3" },
+      { "type": "create", "object": "box9" },
+      { "type": "write", "object": "n2", "start": 0.5 },
+      { "type": "write", "object": "n6", "start": 0.5 },
+      { "type": "write", "object": "n3", "start": 0.5 },
+      { "type": "write", "object": "n9", "start": 0.5 }
+    ] },
+    { "type": "chapter", "id": "compare", "min_duration": 2.6, "steps": [
+      { "type": "play", "duration": 2.6, "animations": [
+        { "type": "recolor", "object": "box6", "stroke": "#ffd23f", "fill": "#4a3f14", "end": 0.4 },
+        { "type": "recolor", "object": "box3", "stroke": "#ffd23f", "fill": "#4a3f14", "start": 0.65, "end": 1.05 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "swap", "min_duration": 2.3, "steps": [
+      { "type": "play", "duration": 2.3, "animations": [
+        { "type": "move", "object": "box6", "to": [-1, 1.6, 0], "start": 0.78, "end": 1.1 },
+        { "type": "move", "object": "box6", "to": [1, 1.6, 0], "start": 1.1, "end": 1.7 },
+        { "type": "move", "object": "box6", "to": [1, 0, 0], "start": 1.7, "end": 2.1 },
+        { "type": "move", "object": "box3", "to": [1, -1.6, 0], "start": 0.78, "end": 1.1 },
+        { "type": "move", "object": "box3", "to": [-1, -1.6, 0], "start": 1.1, "end": 1.7 },
+        { "type": "move", "object": "box3", "to": [-1, 0, 0], "start": 1.7, "end": 2.1 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "sorted", "min_duration": 3.7, "steps": [
+      { "type": "play", "duration": 3.7, "animations": [
+        { "type": "recolor", "object": "box3", "stroke": "#888888", "fill": "#2a2a2a", "start": 0.28, "end": 0.7 },
+        { "type": "recolor", "object": "box6", "stroke": "#888888", "fill": "#2a2a2a", "start": 0.28, "end": 0.7 },
+        { "type": "recolor", "object": "box2", "stroke": "#83c167", "fill": "#1f3a17", "start": 1.59, "end": 2.1 },
+        { "type": "recolor", "object": "box3", "stroke": "#83c167", "fill": "#1f3a17", "start": 1.59, "end": 2.1 },
+        { "type": "recolor", "object": "box6", "stroke": "#83c167", "fill": "#1f3a17", "start": 1.59, "end": 2.1 },
+        { "type": "recolor", "object": "box9", "stroke": "#83c167", "fill": "#1f3a17", "start": 1.59, "end": 2.1 }
+      ] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ],
+  "sounds": [
+    { "file": "voice/compare.mp3", "at": "compare" },
+    { "file": "voice/swap.mp3", "at": "swap" },
+    { "file": "voice/sorted.mp3", "at": "sorted" }
+  ]
+}

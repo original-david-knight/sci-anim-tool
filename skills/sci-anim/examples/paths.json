@@ -1,0 +1,62 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "The paths that motion leaves", "size": 0.5, "position": [0, 3.5, 0] },
+
+    "sun": { "type": "sphere", "radius": 0.4, "material": { "type": "standard", "color": "#ffd23f" }, "opacity": 0 },
+    "planet": { "type": "sphere", "radius": 0.15, "position": [0.764, 0, 0], "material": { "type": "standard", "color": "#58c4dd" }, "opacity": 0 },
+    "orbit": { "type": "trail", "object": "planet", "length": 4, "stroke": { "color": "#58c4dd", "width": 0.04 }, "opacity": 0 },
+    "say_orbit": { "type": "text", "text": "A planet's trail shows the last four seconds of its orbit.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "ground": { "type": "line", "from": [-6.5, 0], "to": [6.5, 0], "position": [0, -2.6, 0], "stroke": { "color": "#888888", "width": 0.04 }, "opacity": 0 },
+    "ball": { "type": "dot", "radius": 0.14, "position": [-6, -2.5, 0], "fill": { "color": "#fc6255" }, "opacity": 0 },
+    "flight": { "type": "trail", "object": "ball", "stroke": { "color": "#fc6255", "width": 0.04 } },
+    "say_flight": { "type": "text", "text": "A thrown ball's whole path is a parabola.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "phase": { "type": "axes", "x": { "range": [-1.2, 1.2], "spacing": 0.5, "label": "\\theta" }, "y": { "range": [-2.5, 2.5], "spacing": 1, "label": "\\omega" }, "width": 5, "height": 5, "position": [0, 0.2, 0], "opacity": 0 },
+    "state": { "type": "dot", "radius": 0.1, "axes": "phase", "position": [1, -0.2, 0], "fill": { "color": "#83c167" }, "opacity": 0 },
+    "spiral": { "type": "trail", "object": "state", "stroke": { "color": "#83c167", "width": 0.04 } },
+    "say_phase": { "type": "text", "text": "A damped swing spirals in to rest on its phase portrait.", "size": 0.38, "position": [0, -3.35, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "chapter", "id": "orbit", "steps": [
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "sun", "to": 1 },
+        { "type": "fade", "object": "planet", "to": 1 },
+        { "type": "fade", "object": "orbit", "to": 1 }
+      ] },
+      { "type": "play", "duration": 8, "animations": [
+        { "type": "follow", "object": "planet", "law": { "x": "-2.236 + 3*cos(t)", "y": "2*sin(t)", "z": "0" } },
+        { "type": "write", "object": "say_orbit", "start": 1, "end": 2.5 }
+      ] },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "sun", "to": 0 },
+        { "type": "fade", "object": "planet", "to": 0 },
+        { "type": "fade", "object": "orbit", "to": 0 },
+        { "type": "fade", "object": "say_orbit", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "flight", "steps": [
+      { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "ground", "to": 1 }, { "type": "fade", "object": "ball", "to": 1 }] },
+      { "type": "play", "duration": 1.4286, "animations": [
+        { "type": "follow", "object": "ball", "law": { "x": "-6 + 8*t", "y": "-2.5 + 7*t - 4.9*t^2", "z": "0" } },
+        { "type": "write", "object": "say_flight", "start": 0.2, "end": 1.4286 }
+      ] },
+      { "type": "wait", "duration": 1.5 },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "ground", "to": 0 },
+        { "type": "fade", "object": "ball", "to": 0 },
+        { "type": "fade", "object": "flight", "to": 0 },
+        { "type": "fade", "object": "say_flight", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "phase", "steps": [
+      { "type": "play", "duration": 1.5, "animations": [{ "type": "fade", "object": "phase", "to": 1 }, { "type": "fade", "object": "state", "to": 1 }] },
+      { "type": "play", "duration": 12, "animations": [
+        { "type": "follow", "object": "state", "law": { "x": "exp(-0.2*t)*cos(2*t)", "y": "exp(-0.2*t)*(-0.2*cos(2*t) - 2*sin(2*t))", "z": "0" } },
+        { "type": "write", "object": "say_phase", "start": 1, "end": 2.5 }
+      ] },
+      { "type": "wait", "duration": 1.5 }
+    ] }
+  ]
+}

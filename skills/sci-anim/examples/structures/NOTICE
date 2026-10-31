@@ -1,0 +1,49 @@
+ethylene.sdf, water.sdf and ethanol.sdf are copies of the ones in the sci_anim repository's `tests/fixtures/pubchem`,
+fetched from PubChem (https://pubchem.ncbi.nlm.nih.gov) on 2026-10-21 and 2026-10-22 with
+`curl -fo <name>.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d"`:
+ethylene (CID 6325), water (CID 962, fetched by `compound/cid/962`) and ethanol (CID 702).
+
+PubChem's data is in the public domain, as the NCBI policies state:
+https://www.ncbi.nlm.nih.gov/home/about/policies/
+
+methyl_radical.sdf, propyl_radical.sdf, pentyl_radical.sdf and heptyl_radical.sdf are not from
+PubChem: ../../scripts/straight_chain.go wrote them from ideal bond lengths and angles, run in this
+folder as
+
+    go run ../../scripts/straight_chain.go -radical ethylene 1 methyl_radical.sdf
+    go run ../../scripts/straight_chain.go -radical ethylene 3 propyl_radical.sdf
+    go run ../../scripts/straight_chain.go -radical ethylene 5 pentyl_radical.sdf
+    go run ../../scripts/straight_chain.go -radical ethylene 7 heptyl_radical.sdf
+
+polystyrene.sdf and pet.sdf are written the same way: a polystyrene chain of eight backbone
+carbons, and a PET chain of two repeating units and one more oxygen, so it ends in an acid and an
+alcohol:
+
+    go run ../../scripts/straight_chain.go styrene 8 polystyrene.sdf
+    go run ../../scripts/straight_chain.go ethylene-terephthalate 15 pet.sdf
+
+at_pair.sdf and gc_pair.sdf are not from PubChem either: ../../scripts/nucleobase_pair.go wrote each
+Watson-Crick nucleobase pair from the standard nucleobase geometry of Olson et al. (2001), J. Mol.
+Biol. 313, 229-237, with hydrogens at their textbook bond lengths, run in this folder as
+
+    go run ../../scripts/nucleobase_pair.go AT at_pair.sdf
+    go run ../../scripts/nucleobase_pair.go GC gc_pair.sdf
+
+1bna.pdb and 1ubq.pdb are PDB entries 1BNA (the Dickerson dodecamer, Drew et al., 1981) and 1UBQ
+(ubiquitin, Vijay-Kumar, Bugg and Cook, 1987), fetched from the RCSB Protein Data Bank
+(https://www.rcsb.org) on 2026-10-27, unchanged, with
+
+    curl -fo 1bna.pdb https://files.rcsb.org/download/1BNA.pdb
+    curl -fo 1ubq.pdb https://files.rcsb.org/download/1UBQ.pdb
+
+The PDB's data files are free of all copyright restrictions under CC0 1.0, as its usage policy
+states: https://www.rcsb.org/pages/usage-policy
+
+1kx5_dna.pdb is the DNA of PDB entry 1KX5 (the nucleosome core particle NCP147 at 1.9 Å, Davey,
+Sargent, Luger, Maeder and Richmond, 2002): its HEADER and TITLE records and the ATOM and TER
+records of its two DNA chains, I and J, 147 nucleotides each, fetched from the RCSB Protein Data
+Bank on 2026-10-27 with
+
+    curl -f https://files.rcsb.org/download/1KX5.pdb | grep -E '^(HEADER|TITLE )|^(ATOM  |TER   ).{15}[IJ]|^END' > 1kx5_dna.pdb
+
+It leaves out the eight histone chains, A to H, the manganese and chloride ions and the waters.

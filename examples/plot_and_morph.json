@@ -1,0 +1,24 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30, "background": "#1e1e1e" },
+  "objects": {
+    "ax": {
+      "type": "axes",
+      "x": { "range": [-3, 3], "spacing": 1, "label": "x" },
+      "y": { "range": [-1, 9], "spacing": 2, "label": "y" },
+      "width": 7, "height": 5, "position": [-2, 0, 0]
+    },
+    "square": { "type": "function-plot", "axes": "ax", "expression": "x^2", "stroke": { "color": "#fc6255", "width": 0.07 } },
+    "wave": { "type": "function-plot", "axes": "ax", "expression": "4 + 4*sin(2*x)", "stroke": { "color": "#58c4dd", "width": 0.07 } },
+    "line": { "type": "number-line", "range": [0, 1], "spacing": 0.25, "length": 4, "position": [4.5, -2, 0] },
+    "disc": { "type": "circle", "radius": 1, "position": [4.5, 2, 0], "stroke": { "color": "#83c167" }, "fill": { "color": "#83c167", "opacity": 0.5 } },
+    "box": { "type": "polygon", "points": [[-1, -1], [1, -1], [1, 1], [-1, 1]], "position": [4.5, 2, 0], "stroke": { "color": "#ffff00" } }
+  },
+  "timeline": [
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "ax" }, { "type": "create", "object": "line" }, { "type": "create", "object": "box" } ] },
+    { "type": "play", "duration": 2, "animations": [ { "type": "create", "object": "square" } ] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "morph", "object": "square", "into": "wave" }, { "type": "morph", "object": "box", "into": "disc" } ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

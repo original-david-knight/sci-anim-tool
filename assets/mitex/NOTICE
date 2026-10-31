@@ -1,0 +1,28 @@
+The three .typ files here are the Typst side of MiTeX, from https://github.com/mitex-rs/mitex
+at commit f69eb43b52372e141b35661c049ce522567adbf0, path packages/mitex/specs/. That is the
+commit the mitex 0.2.4 crate was published from, as its .cargo_vcs_info.json records. They
+define the functions mitex's converter writes, such as mitexsqrt and textmath, in mitex-scope.
+
+MiTeX is licensed under the Apache License 2.0, in LICENSE beside this file.
+
+mod.typ and prelude.typ are unchanged. typst-0.15.patch holds every change to
+latex/standard.typ, and applies to the upstream file with `patch -p1`:
+
+- The import of @preview/xarrow, which is GPL-3.0-only and would be fetched from the network,
+  is replaced by a one-line xarrow built on Typst's math.stretch.
+- `kai`, which Typst 0.15 removed, is replaced by K in the KaTeX logo.
+- angle.l and angle.r, which Typst 0.15 renamed, are chevron.l and chevron.r in \langle,
+  \rangle, \lang, \rang and the bra-ket commands.
+- \argmax and \argmin are written as operators, because Typst 0.15 has no argmax or argmin.
+- Vmatrix's delimiter is the one character ‖, because Typst 0.15 takes no two-character
+  delimiter "||".
+- get-tex-color, which \color, \textcolor and \colorbox call, also takes #rrggbb, and panics
+  on any other color that is not in mitex's color map, where upstream draws it uncolored.
+  src/typeset.rs turns that panic into a scene error that names the color.
+
+mitex's converter also writes 17 symbols by their names before Typst 0.15, and ignores any
+command spec it is given in favour of its built-in one. src/typeset.rs renames those 17 in the
+converter's output (TYPST_0_15_RENAMES), so the converter itself is not patched.
+
+To upgrade mitex, fetch these files at the new crate's commit, reapply the patch, and run
+`cargo test mitex_knows`, which names every command and environment that stops typesetting.

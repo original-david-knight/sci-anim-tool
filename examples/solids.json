@@ -1,0 +1,40 @@
+{
+  "camera": { "position": [0, 3, 11], "target": [0, 0.5, 0] },
+  "objects": {
+    "title": { "type": "text", "text": "A cone holds a third of its cylinder", "size": 0.45, "position": [0, 3.6, 0], "opacity": 0 },
+    "cylinder": { "type": "prism", "position": [-4.5, -1, 0],
+      "base": { "type": "circle", "radius": 1 }, "height": 2.4,
+      "material": { "type": "standard", "color": "#58c4dd" } },
+    "cone": { "type": "revolution", "position": [-1.5, -1, 0],
+      "profile": { "type": "polygon", "points": [[0, 0], [1, 0], [0, 2.4]] },
+      "material": { "type": "standard", "color": "#fc6255" } },
+    "box": { "type": "prism", "position": [1.5, -1, 0], "rotation": [0, 25, 0],
+      "base": { "type": "polygon", "points": [[-0.9, -0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, 0.9]] }, "height": 1.6,
+      "material": { "type": "standard", "color": "#83c167" } },
+    "mantle": { "type": "revolution", "position": [4.6, 0.3, 0], "rotation": [0, -45, 0], "angle": 270,
+      "profile": { "type": "path", "rule": "even-odd", "d": "M 0 -1.3 A 1.3 1.3 0 0 1 0 1.3 Z M 0 -0.6 A 0.6 0.6 0 0 1 0 0.6 Z" },
+      "material": { "type": "standard", "color": "#ffd23f" } },
+    "core": { "type": "revolution", "position": [4.6, 0.3, 0], "rotation": [0, -45, 0], "angle": 270,
+      "profile": { "type": "path", "d": "M 0 -0.6 A 0.6 0.6 0 0 1 0 0.6 Z" },
+      "material": { "type": "standard", "color": "#fc6255" } },
+    "cone_equation": { "type": "math", "tex": "V_{\\text{cone}} = \\tfrac{1}{3}\\pi r^2 h", "size": 0.6, "position": [0, -2.7, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "title", "to": 1 }] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "cylinder" },
+      { "type": "create", "object": "cone", "start": 0.5 }
+    ] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "box" },
+      { "type": "create", "object": "mantle", "start": 0.4 },
+      { "type": "create", "object": "core", "start": 0.4 }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "fade", "object": "cone_equation", "to": 1 }] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "camera-move", "to": [-4, 4.5, 10] },
+      { "type": "recolor", "object": "cone", "color": "#ffd23f", "start": 1, "end": 1.6 }
+    ] },
+    { "type": "wait", "duration": 1.5 }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A pendulum swings by a law", "size": 0.5, "position": [0, 3.4, 0] },
+
+    "ceiling": { "type": "line", "from": [-1, 0], "to": [1, 0], "position": [-3, 2.2, 0], "stroke": { "color": "#888888", "width": 0.06 } },
+    "plumb": { "type": "line", "from": [0, 0], "to": [0, -2.55], "position": [-3, 2.2, -0.01], "stroke": { "color": "#555555", "width": 0.02 }, "opacity": 0 },
+    "rod": { "type": "line", "from": [0, 0], "to": [0, -2.4], "position": [-3, 2.2, 0], "rotation": [0, 0, 30], "stroke": { "color": "#ece6e2", "width": 0.04 } },
+    "hinge": { "type": "dot", "radius": 0.08, "position": [-3, 2.2, 0.01], "fill": { "color": "#888888" }, "opacity": 0 },
+    "bob": { "type": "dot", "radius": 0.2, "position": [-1.8, 0.121539, 0.01], "fill": { "color": "#fc6255" }, "opacity": 0 },
+    "bob_caption": { "type": "math", "tex": "m", "size": 0.5, "color": "#fc6255", "attach": { "object": "bob", "offset": [0, -0.55] } },
+
+    "law": { "type": "math", "tex": "\\theta(t) = 30^\\circ \\cos(\\omega t)", "size": 0.65, "position": [2.8, 1.4, 0] },
+    "omega": { "type": "math", "tex": "\\omega = \\sqrt{g / L} \\approx 2.02\\ \\text{s}^{-1}", "size": 0.5, "position": [2.8, 0.1, 0] },
+
+    "say_angle": { "type": "text", "text": "The angle is a cosine of time.", "size": 0.4, "position": [0, -3.3, 0] },
+    "say_omega": { "type": "text", "text": "How fast it swings depends only on its length and on gravity.", "size": 0.4, "position": [0, -3.3, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "ceiling" },
+      { "type": "create", "object": "rod" },
+      { "type": "fade", "object": "plumb", "to": 1 },
+      { "type": "fade", "object": "hinge", "to": 1 },
+      { "type": "fade", "object": "bob", "to": 1, "start": 0.6 }
+    ] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "bob_caption" }] },
+    { "type": "chapter", "id": "swing", "steps": [
+      { "type": "play", "duration": 6.2, "animations": [
+        { "type": "follow", "object": "rod", "sets": "rotation", "from": "swing", "law": { "x": "0", "y": "0", "z": "30*cos(2.0218*t)" } },
+        { "type": "follow", "object": "bob", "from": "swing",
+          "law": { "x": "-3 + 2.4*sin(pi/6*cos(2.0218*t))", "y": "2.2 - 2.4*cos(pi/6*cos(2.0218*t))", "z": "0.01" } },
+        { "type": "write", "object": "law", "end": 1.5 },
+        { "type": "write", "object": "say_angle", "start": 1.5, "end": 3 }
+      ] },
+      { "type": "play", "duration": 6.2, "animations": [
+        { "type": "follow", "object": "rod", "sets": "rotation", "from": "swing", "law": { "x": "0", "y": "0", "z": "30*cos(2.0218*t)" } },
+        { "type": "follow", "object": "bob", "from": "swing",
+          "law": { "x": "-3 + 2.4*sin(pi/6*cos(2.0218*t))", "y": "2.2 - 2.4*cos(pi/6*cos(2.0218*t))", "z": "0.01" } },
+        { "type": "fade", "object": "say_angle", "to": 0, "end": 0.5 },
+        { "type": "write", "object": "omega", "start": 0.5, "end": 2 },
+        { "type": "write", "object": "say_omega", "start": 2, "end": 3.5 }
+      ] }
+    ] },
+    { "type": "wait", "duration": 1.5 }
+  ]
+}

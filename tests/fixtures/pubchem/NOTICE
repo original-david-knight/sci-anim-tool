@@ -1,0 +1,18 @@
+These structure files were fetched from PubChem (https://pubchem.ncbi.nlm.nih.gov) on 2026-10-21
+with `curl -fo <name>.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d"`:
+caffeine (CID 2519), benzene (CID 241), ethanol (CID 702) and acetylene (CID 6326).
+
+PubChem's data is in the public domain, as the NCBI policies state:
+https://www.ncbi.nlm.nih.gov/home/about/policies/
+
+`../bad/insulin-404.sdf` is what the same request returns for a compound with no 3D model
+(insulin), saved without `-f`, as an agent's `curl -o` would.
+
+`caffeine-2d.sdf` is the caffeine request without `?record_type=3d`, which gives PubChem's 2D
+record, saved unchanged.
+
+Added for step 6 (2026-10-22), same request form with `record_type=3d`: ethylene (CID 6325),
+hydrogen chloride (CID 313, saved as hydrogen-chloride.sdf) and chloroethane (CID 6337).
+Hydrogen (H2) has no 3D record: `curl -f` fails on the request.
+Water (CID 962), for ethylene + water -> ethanol, the same way with `compound/cid/962` in
+place of `compound/name/<name>`.

@@ -1,0 +1,16 @@
+The three fonts here are bundled into sci_anim unchanged, and Typst sees no others.
+
+- LibertinusSans-Regular.otf is from the Libertinus 7.051 release,
+  https://github.com/alerque/libertinus/releases/download/v7.051/Libertinus-7.051.zip
+  (sha256 4d9be29b5cb380c35af8ba967abcc752ad1e07be1f738a9789c33e0dd7478c92), static/OTF/.
+- LibertinusSerif-Regular.otf is from the typst-assets 0.15.1 crate
+  (https://github.com/typst/typst-assets), files/fonts/. It is byte for byte the file of the
+  same name in the Libertinus 7.051 release.
+- NewCMMath-Regular.otf is from the typst-assets 0.15.1 crate, files/fonts/.
+
+Libertinus Sans and Libertinus Serif are licensed under the SIL Open Font License 1.1, in
+LICENSE-OFL.txt, which is the release's OFL.txt.
+
+New Computer Modern Math is licensed under the GUST Font License 1.0, in LICENSE-GUST.txt,
+which is the GUST section of typst-assets' NOTICE. NewCM10-Regular, the one New Computer Modern
+file under GPL-3.0 with a font exception, is not bundled.

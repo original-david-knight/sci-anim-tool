@@ -1,0 +1,78 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Motion known only by its rates", "size": 0.5, "position": [0, 3.5, 0] },
+
+    "ceiling": { "type": "line", "from": [-1, 0], "to": [1, 0], "position": [-3, 2.5, 0], "stroke": { "color": "#888888", "width": 0.06 }, "opacity": 0 },
+    "bob": { "type": "dot", "radius": 0.18, "position": [-0.6699, 1.5941, 0.01], "fill": { "color": "#fc6255" }, "opacity": 0 },
+    "rod": { "type": "line", "from": [-3, 2.5], "to": { "object": "bob" }, "stroke": { "color": "#ece6e2", "width": 0.04 }, "opacity": 0 },
+    "swing": { "type": "trail", "object": "bob", "length": 3, "stroke": { "color": "#fc6255", "width": 0.03 } },
+    "pendulum_law": { "type": "math", "tex": "\\ddot\\theta = -\\frac{g}{L}\\sin\\theta - c\\,\\dot\\theta", "size": 0.55, "position": [3.4, 0.6, 0] },
+    "speed_symbol": { "type": "math", "tex": "v =", "size": 0.5, "align": "right", "position": [2.6, -0.8, 0] },
+    "speed": { "type": "readout", "decimals": 2, "unit": "\\text{ m/s}", "size": 0.5, "position": [3.7, -0.8, 0] },
+    "say_drag": { "type": "text", "text": "Only the rates are written: the swing and its drag come out of them.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "phase": { "type": "axes", "x": { "range": [0, 14], "spacing": 2, "label": "\\text{rabbits}" }, "y": { "range": [0, 9], "spacing": 3, "label": "\\text{foxes}" }, "width": 6, "height": 4.5, "position": [-2.5, -0.2, 0], "opacity": 0 },
+    "state": { "type": "dot", "radius": 0.1, "axes": "phase", "position": [10, 5, 0], "fill": { "color": "#83c167" }, "opacity": 0 },
+    "cycle": { "type": "trail", "object": "state", "stroke": { "color": "#83c167", "width": 0.03 } },
+    "rabbits_symbol": { "type": "math", "tex": "\\text{rabbits} =", "size": 0.45, "align": "right", "position": [3.6, 1, 0], "opacity": 0 },
+    "rabbits": { "type": "readout", "value": 10, "decimals": 1, "size": 0.45, "position": [4.8, 1, 0], "opacity": 0 },
+    "foxes_symbol": { "type": "math", "tex": "\\text{foxes} =", "size": 0.45, "align": "right", "position": [3.6, 0, 0], "opacity": 0 },
+    "foxes": { "type": "readout", "value": 5, "decimals": 1, "size": 0.45, "position": [4.8, 0, 0], "opacity": 0 },
+    "say_prey": { "type": "text", "text": "Foxes eat rabbits, rabbits feed foxes, and the two go round a cycle.", "size": 0.38, "position": [0, -3.35, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "chapter", "id": "drag", "steps": [
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "ceiling", "to": 1 },
+        { "type": "fade", "object": "rod", "to": 1 },
+        { "type": "fade", "object": "bob", "to": 1 }
+      ] },
+      { "type": "play", "duration": 12, "animations": [
+        { "type": "simulate",
+          "variables": { "angle": 1.2, "spin": 0 },
+          "rates": { "angle": "spin", "spin": "-9.8/2.5*sin(angle) - 0.3*spin" },
+          "sets": [
+            { "object": "bob", "position": ["-3 + 2.5*sin(angle)", "2.5 - 2.5*cos(angle)", "0.01"] },
+            { "object": "speed", "value": "abs(2.5*spin)" }
+          ] },
+        { "type": "write", "object": "pendulum_law", "end": 1.5 },
+        { "type": "write", "object": "speed_symbol", "start": 1.5, "end": 2 },
+        { "type": "write", "object": "speed", "start": 1.5, "end": 2 },
+        { "type": "write", "object": "say_drag", "start": 2, "end": 3.5 }
+      ] },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "ceiling", "to": 0 },
+        { "type": "fade", "object": "rod", "to": 0 },
+        { "type": "fade", "object": "bob", "to": 0 },
+        { "type": "fade", "object": "swing", "to": 0 },
+        { "type": "fade", "object": "pendulum_law", "to": 0 },
+        { "type": "fade", "object": "speed_symbol", "to": 0 },
+        { "type": "fade", "object": "speed", "to": 0 },
+        { "type": "fade", "object": "say_drag", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "prey", "steps": [
+      { "type": "play", "duration": 1.5, "animations": [
+        { "type": "fade", "object": "phase", "to": 1 },
+        { "type": "fade", "object": "state", "to": 1 },
+        { "type": "fade", "object": "rabbits_symbol", "to": 1 },
+        { "type": "fade", "object": "rabbits", "to": 1 },
+        { "type": "fade", "object": "foxes_symbol", "to": 1 },
+        { "type": "fade", "object": "foxes", "to": 1 }
+      ] },
+      { "type": "play", "duration": 12, "animations": [
+        { "type": "simulate",
+          "variables": { "rabbits": 10, "foxes": 5 },
+          "rates": { "rabbits": "1.1*rabbits - 0.4*rabbits*foxes", "foxes": "0.1*rabbits*foxes - 0.4*foxes" },
+          "sets": [
+            { "object": "state", "position": ["rabbits", "foxes", "0"] },
+            { "object": "rabbits", "value": "rabbits" },
+            { "object": "foxes", "value": "foxes" }
+          ] },
+        { "type": "write", "object": "say_prey", "start": 1, "end": 2.5 }
+      ] },
+      { "type": "wait", "duration": 1.5 }
+    ] }
+  ]
+}

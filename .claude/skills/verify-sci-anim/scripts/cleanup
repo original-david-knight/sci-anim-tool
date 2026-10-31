@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Tears down what one verification run started, and keeps its evidence.
+# Usage: cleanup <run folder>
+# Kills only the PIDs listed in <run>/pids (one per line, written by you when you start a
+# background render), and only while that PID is still a sci_anim or ffmpeg process.
+# Removes <run>/work/. Keeps every other file in the run folder: that is the evidence.
+set -uo pipefail
+run=${1:?usage: cleanup <run folder>}
+[ -f "$run/run.txt" ] || { echo "not a run folder (no run.txt): $run" >&2; exit 2; }
+if [ -f "$run/pids" ]; then
+  while read -r pid; do
+    [ -n "$pid" ] || continue
+    comm=$(cat "/proc/$pid/comm" 2>/dev/null || true)
+    case $comm in
+      sci_anim|ffmpeg) kill "$pid" && echo "killed $pid ($comm)";;
+      "") echo "pid $pid already gone";;
+      *) echo "pid $pid is now '$comm', not ours; left alone";;
+    esac
+  done < "$run/pids"
+fi
+rm -rf "$run/work"
+echo "finished: $(date -Is)" >> "$run/run.txt"
+echo "evidence kept in $run:"
+ls -1 "$run"

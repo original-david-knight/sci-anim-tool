@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# PreToolUse hook: blocks opening a pull request in the maintainer's clone, because the maintainer
+# merges straight to main. A contributor's clone of a fork has another origin, so it passes.
+# Reads the tool call as JSON on stdin. Exit 2 blocks the call and shows stderr to the agent.
+command=$(jq -r '.tool_input.command // empty')
+origin=$(git -C "${CLAUDE_PROJECT_DIR:-.}" remote get-url origin 2>/dev/null)
+[[ $origin == *original-david-knight/sci-anim-tool* ]] || exit 0
+# Only where a command starts, so a commit message or doc that mentions it passes.
+if grep -qE '(^|[;&|(])[[:space:]]*gh[[:space:]]+pr[[:space:]]+create([^[:alnum:]_-]|$)' <<< "$command"; then
+  echo "Blocked: the maintainer's clone opens no pull requests. AGENTS.md: the maintainer merges straight to main. Prove the change with .claude/skills/verify-sci-anim, then merge the branch into main with git and put the run folder's path in the commit message." >&2
+  exit 2
+fi
+exit 0

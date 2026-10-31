@@ -1,0 +1,37 @@
+{
+  "scene_config": { "width": 1280, "height": 720, "fps": 30, "background": "#1e1e1e" },
+  "camera": { "position": [0, 0, 10], "target": [0, 0, 0] },
+  "objects": {
+    "disc": {
+      "type": "circle",
+      "radius": 1.5,
+      "position": [-2.5, 0, 0],
+      "stroke": { "color": "#58c4dd", "width": 0.08 },
+      "fill": { "color": "#1c758a" }
+    },
+    "orb": {
+      "type": "sphere",
+      "radius": 0.7,
+      "position": [1, -1, 0],
+      "opacity": 0,
+      "material": { "type": "standard", "color": "#fc6255" }
+    }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "orb", "to": 1, "easing_curve": "linear" }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "move", "object": "orb", "to": [3, 1, 0], "easing_curve": "overshoot" }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "rotate", "object": "disc", "to": [0, 70, 0] },
+      { "type": "scale", "object": "orb", "to": [1.5, 1.5, 1.5], "easing_curve": "slow-end" }
+    ] },
+    { "type": "wait", "duration": 0.5 },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "camera-move", "to": [5, 4, 8] },
+      { "type": "camera-look", "to": [0, 0.5, 0] }
+    ] }
+  ]
+}

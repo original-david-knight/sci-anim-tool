@@ -1,0 +1,66 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Numbers that count as things move", "size": 0.5, "position": [0, 3.5, 0] },
+
+    "ground": { "type": "line", "from": [-6, 0], "to": [0, 0], "position": [0, -2.7, 0], "stroke": { "color": "#888888", "width": 0.04 }, "opacity": 0 },
+    "ball": { "type": "dot", "radius": 0.2, "position": [-3, 2.5, 0], "fill": { "color": "#fc6255" }, "opacity": 0 },
+    "speed": { "type": "readout", "decimals": 1, "unit": "\\text{ m/s}", "size": 0.4, "color": "#fc6255", "attach": { "object": "ball", "offset": [1.1, 0.4] }, "opacity": 0 },
+    "time_symbol": { "type": "math", "tex": "t =", "size": 0.5, "align": "right", "position": [3.2, 1.5, 0], "opacity": 0 },
+    "time": { "type": "readout", "decimals": 2, "unit": "\\text{ s}", "size": 0.5, "position": [4.3, 1.5, 0], "opacity": 0 },
+    "height_symbol": { "type": "math", "tex": "h =", "size": 0.5, "align": "right", "position": [3.2, 0.5, 0], "opacity": 0 },
+    "height": { "type": "readout", "value": 5, "decimals": 2, "unit": "\\text{ m}", "size": 0.5, "position": [4.3, 0.5, 0], "opacity": 0 },
+    "say_fall": { "type": "text", "text": "Slowed three times: the speed grows by 9.8 m/s each second.", "size": 0.38, "position": [0, -3.35, 0] },
+
+    "track": { "type": "line", "from": [-6, 0], "to": [6, 0], "position": [0, -1, 0], "stroke": { "color": "#888888", "width": 0.04 }, "opacity": 0 },
+    "cart": { "type": "polygon", "points": [[-0.5, 0], [0.5, 0], [0.5, 0.5], [-0.5, 0.5]], "position": [-5, -1, 0], "fill": { "color": "#58c4dd" }, "opacity": 0 },
+    "distance_symbol": { "type": "math", "tex": "d =", "size": 0.5, "align": "right", "position": [-0.2, 1.5, 0], "opacity": 0 },
+    "distance": { "type": "readout", "decimals": 1, "unit": "\\text{ m}", "size": 0.5, "position": [1, 1.5, 0], "opacity": 0 },
+    "say_cart": { "type": "text", "text": "A count with the move's easing keeps the number on the cart.", "size": 0.38, "position": [0, -3.35, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "chapter", "id": "fall", "steps": [
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "ground", "to": 1 },
+        { "type": "fade", "object": "ball", "to": 1 },
+        { "type": "fade", "object": "speed", "to": 1 },
+        { "type": "fade", "object": "time_symbol", "to": 1 },
+        { "type": "fade", "object": "time", "to": 1 },
+        { "type": "fade", "object": "height_symbol", "to": 1 },
+        { "type": "fade", "object": "height", "to": 1 }
+      ] },
+      { "type": "play", "duration": 3.0305, "animations": [
+        { "type": "follow", "object": "ball", "law": { "x": "-3", "y": "2.5 - 4.9*(t/3)^2", "z": "0" } },
+        { "type": "follow", "object": "speed", "sets": "value", "law": { "value": "9.8*t/3" } },
+        { "type": "follow", "object": "time", "sets": "value", "law": { "value": "t/3" } },
+        { "type": "follow", "object": "height", "sets": "value", "law": { "value": "5 - 4.9*(t/3)^2" } },
+        { "type": "write", "object": "say_fall", "start": 0.5, "end": 2 }
+      ] },
+      { "type": "wait", "duration": 1.5 },
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "ground", "to": 0 },
+        { "type": "fade", "object": "ball", "to": 0 },
+        { "type": "fade", "object": "speed", "to": 0 },
+        { "type": "fade", "object": "time_symbol", "to": 0 },
+        { "type": "fade", "object": "time", "to": 0 },
+        { "type": "fade", "object": "height_symbol", "to": 0 },
+        { "type": "fade", "object": "height", "to": 0 },
+        { "type": "fade", "object": "say_fall", "to": 0 }
+      ] }
+    ] },
+    { "type": "chapter", "id": "cart", "steps": [
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "fade", "object": "track", "to": 1 },
+        { "type": "fade", "object": "cart", "to": 1 },
+        { "type": "fade", "object": "distance_symbol", "to": 1 },
+        { "type": "fade", "object": "distance", "to": 1 }
+      ] },
+      { "type": "play", "duration": 4, "animations": [
+        { "type": "move", "object": "cart", "to": [4, -1, 0], "easing_curve": "slow-start" },
+        { "type": "count", "object": "distance", "to": 9, "easing_curve": "slow-start" },
+        { "type": "write", "object": "say_cart", "start": 0.5, "end": 2 }
+      ] },
+      { "type": "wait", "duration": 1.5 }
+    ] }
+  ]
+}

@@ -1,0 +1,22 @@
+These tables are what `src/element.rs` is tested against. `scripts/element-data` made them
+on 2026-10-22 from these sources, unchanged apart from the extraction.
+
+jmol_colors.tsv: atomic number, symbol and element color for elements 1 to 109, the second
+column of `elemParams` in Jmol's color table,
+https://jmol.sourceforge.net/jscolors/jmol_constants.js
+(its header says the colors are those of Jmol's JmolConstants.java, Jmol 12.1.15).
+Jmol stops at meitnerium (109), so sci_anim draws no element after it.
+
+bodr_radii.tsv: atomic number, symbol and van der Waals radius in angstroms (`bo:radiusVDW`)
+for the same elements, from the Blue Obelisk Data Repository's elements.xml at commit
+c22a200776984388564ef90536d8af24ae09d21e,
+https://raw.githubusercontent.com/BlueObelisk/bodr/c22a200776984388564ef90536d8af24ae09d21e/bodr/elements/elements.xml
+The file's metadata gives its license as MIT, and the repository's COPYING file is CC0 1.0.
+Its radii are not all Bondi's (1964): for example it gives oxygen 1.55 and nitrogen 1.6, where
+Bondi gives 1.52 and 1.55. Every element from 1 to 109 has a radius there.
+
+bodr_covalent_radii.tsv: atomic number, symbol and covalent radius in angstroms
+(`bo:radiusCovalent`) for the same elements, from the same elements.xml, extracted on 2026-10-27.
+They match Pyykkö and Atsumi's single-bond covalent radii (2009), Chem. Eur. J. 15, 186-197: for
+example carbon 0.75, nitrogen 0.71, oxygen 0.63 and phosphorus 1.11. Every element from 1 to 109
+has one there.

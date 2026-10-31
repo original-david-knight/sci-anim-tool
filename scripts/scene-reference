@@ -1,0 +1,17 @@
+#!/bin/sh
+# Writes docs/scene-reference.md, the reference of every scene-file field, from
+# the schema of this checkout. scripts/scene-reference.go does the work.
+#
+# Usage:
+#   scripts/scene-reference
+#
+# It runs `cargo run`, not the sci_anim on PATH, which may be an older build, and
+# a build of the Go file, not `go run`, which adds an "exit status" line of its own
+# when the program fails. tests/docs.rs fails when the committed page differs.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd -P)
+cd "$repo"
+go build -o target/scripts/scene-reference scripts/scene-reference.go
+cargo run --release --locked --quiet -- schema > target/scripts/schema.json
+target/scripts/scene-reference < target/scripts/schema.json > docs/scene-reference.md.new
+mv docs/scene-reference.md.new docs/scene-reference.md

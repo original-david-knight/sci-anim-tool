@@ -1,0 +1,43 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Hydrogen bonds hold the nucleobase pairs of DNA together", "size": 0.45, "position": [0, 3.55, 0], "opacity": 0 },
+
+    "at_pair": { "type": "molecule", "file": "structures/at_pair.sdf", "position": [-3.4, -0.15, 0], "scale": [0.45, 0.45, 0.45], "opacity": 0 },
+    "gc_pair": { "type": "molecule", "file": "structures/gc_pair.sdf", "position": [3.4, -0.15, 0], "scale": [0.45, 0.45, 0.45], "opacity": 0 },
+
+    "at_bond_1": { "type": "line", "from": { "object": "at_pair", "atom": 13 }, "to": { "object": "at_pair", "atom": 21 }, "stroke": { "color": "#ffd23f", "width": 0.05, "dash": [0.08, 0.06] } },
+    "at_bond_2": { "type": "line", "from": { "object": "at_pair", "atom": 26 }, "to": { "object": "at_pair", "atom": 7 }, "stroke": { "color": "#ffd23f", "width": 0.05, "dash": [0.08, 0.06] } },
+    "gc_bond_1": { "type": "line", "from": { "object": "gc_pair", "atom": 27 }, "to": { "object": "gc_pair", "atom": 6 }, "stroke": { "color": "#ffd23f", "width": 0.05, "dash": [0.08, 0.06] } },
+    "gc_bond_2": { "type": "line", "from": { "object": "gc_pair", "atom": 14 }, "to": { "object": "gc_pair", "atom": 20 }, "stroke": { "color": "#ffd23f", "width": 0.05, "dash": [0.08, 0.06] } },
+    "gc_bond_3": { "type": "line", "from": { "object": "gc_pair", "atom": 16 }, "to": { "object": "gc_pair", "atom": 19 }, "stroke": { "color": "#ffd23f", "width": 0.05, "dash": [0.08, 0.06] } },
+
+    "at_caption": { "type": "text", "text": "A–T: two hydrogen bonds", "size": 0.36, "position": [-3.4, -3.45, 0], "opacity": 0 },
+    "gc_caption": { "type": "text", "text": "G–C: three hydrogen bonds", "size": 0.36, "position": [3.4, -3.45, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "at_pair", "to": 1 },
+      { "type": "fade", "object": "gc_pair", "to": 1 }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "at_bond_1" },
+      { "type": "create", "object": "at_bond_2" },
+      { "type": "fade", "object": "at_caption", "to": 1 },
+      { "type": "create", "object": "gc_bond_1", "start": 0.3 },
+      { "type": "create", "object": "gc_bond_2", "start": 0.3 },
+      { "type": "create", "object": "gc_bond_3", "start": 0.3 },
+      { "type": "fade", "object": "gc_caption", "to": 1, "start": 0.3 }
+    ] },
+    { "type": "wait", "duration": 1 },
+    { "type": "play", "duration": 6, "animations": [
+      { "type": "rotate", "object": "at_pair", "to": [0, 360, 0], "easing_curve": "linear" },
+      { "type": "rotate", "object": "gc_pair", "to": [0, -360, 0], "easing_curve": "linear" }
+    ] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "rotate", "object": "at_pair", "to": [50, 360, 30] },
+      { "type": "rotate", "object": "gc_pair", "to": [-50, -360, -30] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

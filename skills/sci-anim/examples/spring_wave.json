@@ -1,0 +1,1380 @@
+{
+ "objects": {
+  "heading": {
+   "type": "text",
+   "text": "How a spring draws a wave",
+   "size": 0.5,
+   "position": [
+    0,
+    3.3,
+    0
+   ]
+  },
+  "heading_amplitude": {
+   "type": "text",
+   "text": "Amplitude",
+   "size": 0.5,
+   "position": [
+    0,
+    3.3,
+    0
+   ]
+  },
+  "heading_period": {
+   "type": "text",
+   "text": "Period",
+   "size": 0.5,
+   "position": [
+    0,
+    3.3,
+    0
+   ]
+  },
+  "heading_summary": {
+   "type": "text",
+   "text": "Amplitude and period",
+   "size": 0.5,
+   "position": [
+    0,
+    3.3,
+    0
+   ]
+  },
+  "ceiling": {
+   "type": "line",
+   "from": [
+    -0.85,
+    0
+   ],
+   "to": [
+    0.85,
+    0
+   ],
+   "position": [
+    -5.3,
+    2.85,
+    0
+   ],
+   "stroke": {
+    "color": "#888888",
+    "width": 0.06
+   }
+  },
+  "hatch": {
+   "type": "pattern",
+   "shape": {
+    "type": "line",
+    "from": [
+     -0.08,
+     -0.08
+    ],
+    "to": [
+     0.08,
+     0.08
+    ],
+    "stroke": {
+     "color": "#888888",
+     "width": 0.025
+    }
+   },
+   "layout": {
+    "type": "grid",
+    "counts": [
+     8,
+     1,
+     1
+    ],
+    "spacing": 0.2
+   },
+   "position": [
+    -5.3,
+    2.97,
+    0
+   ]
+  },
+  "mass": {
+   "type": "polygon",
+   "points": [
+    [
+     -0.35,
+     -0.35
+    ],
+    [
+     0.35,
+     -0.35
+    ],
+    [
+     0.35,
+     0.35
+    ],
+    [
+     -0.35,
+     0.35
+    ]
+   ],
+   "position": [
+    -5.3,
+    0,
+    0.02
+   ],
+   "fill": {
+    "color": "#58c4dd"
+   },
+   "stroke": {
+    "color": "#a8e4f2",
+    "width": 0.03
+   },
+   "opacity": 0
+  },
+  "spring": {
+   "type": "spring",
+   "from": [
+    -5.3,
+    2.85
+   ],
+   "to": {
+    "object": "mass",
+    "offset": [
+     0,
+     0.35,
+     0
+    ]
+   },
+   "turns": 8,
+   "radius": 0.22,
+   "tube_radius": 0.03,
+   "material": {
+    "type": "standard",
+    "color": "#cccccc"
+   }
+  },
+  "rest": {
+   "type": "line",
+   "from": [
+    -5.9,
+    0
+   ],
+   "to": [
+    -3.5,
+    0
+   ],
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "stroke": {
+    "color": "#888888",
+    "width": 0.025,
+    "dash": [
+     0.1,
+     0.1
+    ]
+   }
+  },
+  "rest_caption": {
+   "type": "text",
+   "text": "rest",
+   "size": 0.3,
+   "position": [
+    -6.5,
+    0,
+    0
+   ],
+   "color": "#888888"
+  },
+  "ax": {
+   "type": "axes",
+   "x": {
+    "range": [
+     0,
+     8.6
+    ],
+    "spacing": 1,
+    "label": "t\\ (\\text{s})"
+   },
+   "y": {
+    "range": [
+     -15,
+     15
+    ],
+    "spacing": 40,
+    "label": "\\text{height}"
+   },
+   "width": 9.46,
+   "height": 3.5999999999999996,
+   "position": [
+    1.3300000000000005,
+    0,
+    0
+   ]
+  },
+  "height_point": {
+   "type": "dot",
+   "axes": "ax",
+   "position": [
+    0,
+    -10,
+    0
+   ],
+   "radius": 0.09,
+   "fill": {
+    "color": "#ffffff"
+   },
+   "opacity": 0
+  },
+  "height_trail": {
+   "type": "trail",
+   "object": "height_point",
+   "stroke": {
+    "color": "#58c4dd",
+    "width": 0.06
+   }
+  },
+  "level_line": {
+   "type": "line",
+   "from": {
+    "object": "mass",
+    "offset": [
+     0.35,
+     0,
+     0
+    ]
+   },
+   "to": {
+    "object": "height_point"
+   },
+   "stroke": {
+    "color": "#888888",
+    "width": 0.025
+   },
+   "opacity": 0
+  },
+  "amplitude_top": {
+   "type": "line",
+   "from": [
+    -5.9,
+    0
+   ],
+   "to": [
+    5.73,
+    0
+   ],
+   "position": [
+    0,
+    1.2,
+    0
+   ],
+   "stroke": {
+    "color": "#ffd23f",
+    "width": 0.025,
+    "dash": [
+     0.1,
+     0.1
+    ]
+   },
+   "opacity": 0
+  },
+  "amplitude_bottom": {
+   "type": "line",
+   "from": [
+    -5.9,
+    0
+   ],
+   "to": [
+    5.73,
+    0
+   ],
+   "position": [
+    0,
+    -1.2,
+    0
+   ],
+   "stroke": {
+    "color": "#ffd23f",
+    "width": 0.025,
+    "dash": [
+     0.1,
+     0.1
+    ]
+   },
+   "opacity": 0
+  },
+  "amplitude_at_spring": {
+   "type": "arrow",
+   "from": [
+    -6.05,
+    0
+   ],
+   "to": [
+    -6.05,
+    1.2
+   ],
+   "tip_length": 0.2,
+   "stroke": {
+    "color": "#ffd23f",
+    "width": 0.05
+   }
+  },
+  "amplitude_at_spring_caption": {
+   "type": "math",
+   "tex": "A",
+   "size": 0.45,
+   "color": "#ffd23f",
+   "position": [
+    -6.45,
+    0.6,
+    0
+   ]
+  },
+  "amplitude_on_axes": {
+   "type": "arrow",
+   "from": [
+    2.1,
+    0
+   ],
+   "to": [
+    2.1,
+    1.2
+   ],
+   "tip_length": 0.2,
+   "stroke": {
+    "color": "#ffd23f",
+    "width": 0.05
+   }
+  },
+  "amplitude_on_axes_caption": {
+   "type": "math",
+   "tex": "A = 10\\text{ cm}",
+   "size": 0.45,
+   "color": "#ffd23f",
+   "position": [
+    2.1,
+    1.7999999999999998,
+    0
+   ]
+  },
+  "cycle_point": {
+   "type": "dot",
+   "axes": "ax",
+   "position": [
+    2,
+    -10,
+    0.05
+   ],
+   "radius": 0.1,
+   "fill": {
+    "color": "#83c167"
+   },
+   "opacity": 0
+  },
+  "cycle_trail": {
+   "type": "trail",
+   "object": "cycle_point",
+   "stroke": {
+    "color": "#83c167",
+    "width": 0.09
+   }
+  },
+  "cycle_line": {
+   "type": "line",
+   "from": {
+    "object": "mass",
+    "offset": [
+     0.35,
+     0,
+     0
+    ]
+   },
+   "to": {
+    "object": "cycle_point"
+   },
+   "stroke": {
+    "color": "#83c167",
+    "width": 0.03
+   },
+   "opacity": 0
+  },
+  "period_equals": {
+   "type": "math",
+   "tex": "T =",
+   "size": 0.45,
+   "color": "#83c167",
+   "align": "right",
+   "position": [
+    -0.4499999999999996,
+    -2.1,
+    0
+   ],
+   "opacity": 0
+  },
+  "stopwatch": {
+   "type": "readout",
+   "decimals": 1,
+   "unit": "\\text{ s}",
+   "size": 0.45,
+   "color": "#83c167",
+   "position": [
+    -0.04999999999999964,
+    -2.1,
+    0
+   ],
+   "opacity": 0
+  },
+  "bracket_1": {
+   "type": "path",
+   "d": "M -1.150 -1.42 L -1.150 -1.6 L 0.950 -1.6 L 0.950 -1.42",
+   "stroke": {
+    "color": "#83c167",
+    "width": 0.05
+   }
+  },
+  "bracket_2": {
+   "type": "path",
+   "d": "M 1.050 -1.42 L 1.050 -1.6 L 3.150 -1.6 L 3.150 -1.42",
+   "stroke": {
+    "color": "#83c167",
+    "width": 0.05
+   }
+  },
+  "bracket_3": {
+   "type": "path",
+   "d": "M 3.250 -1.42 L 3.250 -1.6 L 5.350 -1.6 L 5.350 -1.42",
+   "stroke": {
+    "color": "#83c167",
+    "width": 0.05
+   }
+  },
+  "say_rest": {
+   "type": "text",
+   "text": "A mass hangs on a spring, perfectly still.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_pull": {
+   "type": "text",
+   "text": "Pull it down 10 cm and hold it there.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_plot": {
+   "type": "text",
+   "text": "A point will plot its height at every moment.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_go": {
+   "type": "text",
+   "text": "Let go!",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_wave": {
+   "type": "text",
+   "text": "Up, down, up, down: the point draws a wave.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_sine": {
+   "type": "text",
+   "text": "This smooth, repeating shape is called a sine wave.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_turn": {
+   "type": "text",
+   "text": "The mass turns back at the same height every time.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_amp": {
+   "type": "text",
+   "text": "Amplitude is how far it moves from rest: 10 cm.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_time": {
+   "type": "text",
+   "text": "Now let's time one full cycle: up, then back down.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_period": {
+   "type": "text",
+   "text": "Period is the time for one full cycle: 2 seconds.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_every": {
+   "type": "text",
+   "text": "Every cycle takes the same 2 seconds.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_sum": {
+   "type": "text",
+   "text": "Amplitude: how far it moves. Period: how long a cycle takes.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  }
+ },
+ "timeline": [
+  {
+   "type": "chapter",
+   "id": "intro",
+   "steps": [
+    {
+     "type": "play",
+     "duration": 1.5,
+     "animations": [
+      {
+       "type": "write",
+       "object": "heading"
+      },
+      {
+       "type": "create",
+       "object": "ceiling"
+      },
+      {
+       "type": "create",
+       "object": "hatch"
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 1.5,
+     "animations": [
+      {
+       "type": "create",
+       "object": "spring"
+      },
+      {
+       "type": "fade",
+       "object": "mass",
+       "to": 1
+      },
+      {
+       "type": "create",
+       "object": "rest"
+      },
+      {
+       "type": "write",
+       "object": "rest_caption",
+       "start": 0.5,
+       "end": 1.5
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 1.5,
+     "animations": [
+      {
+       "type": "write",
+       "object": "say_rest"
+      }
+     ]
+    },
+    {
+     "type": "wait",
+     "duration": 2.0
+    },
+    {
+     "type": "play",
+     "duration": 0.6,
+     "animations": [
+      {
+       "type": "fade",
+       "object": "say_rest",
+       "to": 0
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 2.0,
+     "animations": [
+      {
+       "type": "move",
+       "object": "mass",
+       "to": [
+        -5.3,
+        -1.2,
+        0.02
+       ],
+       "start": 0,
+       "end": 1.6
+      },
+      {
+       "type": "write",
+       "object": "say_pull",
+       "start": 0.2,
+       "end": 1.6
+      }
+     ]
+    },
+    {
+     "type": "wait",
+     "duration": 1.5
+    },
+    {
+     "type": "play",
+     "duration": 0.6,
+     "animations": [
+      {
+       "type": "fade",
+       "object": "say_pull",
+       "to": 0
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 2.0,
+     "animations": [
+      {
+       "type": "create",
+       "object": "ax"
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 2.0,
+     "animations": [
+      {
+       "type": "fade",
+       "object": "height_point",
+       "to": 1,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "level_line",
+       "to": 1,
+       "start": 0,
+       "end": 0.8
+      },
+      {
+       "type": "write",
+       "object": "say_plot",
+       "start": 0.3,
+       "end": 1.8
+      }
+     ]
+    },
+    {
+     "type": "wait",
+     "duration": 2.0
+    },
+    {
+     "type": "play",
+     "duration": 0.6,
+     "animations": [
+      {
+       "type": "fade",
+       "object": "say_plot",
+       "to": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "chapter",
+   "id": "bounce",
+   "steps": [
+    {
+     "type": "play",
+     "duration": 8.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "follow",
+       "object": "height_point",
+       "law": {
+        "x": "t",
+        "y": "-10*cos(pi*t)",
+        "z": "0"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "write",
+       "object": "say_go",
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "say_go",
+       "to": 0,
+       "start": 2.0,
+       "end": 2.5
+      },
+      {
+       "type": "write",
+       "object": "say_wave",
+       "start": 2.7,
+       "end": 4.2
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 4.5,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "height_point",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "level_line",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "say_wave",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "write",
+       "object": "say_sine",
+       "start": 0.8,
+       "end": 2.3
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 3.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_sine",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "heading",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "write",
+       "object": "heading_amplitude",
+       "start": 0.8,
+       "end": 1.8
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_top",
+       "to": 0.8,
+       "start": 1.0,
+       "end": 2.5
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_bottom",
+       "to": 0.8,
+       "start": 1.0,
+       "end": 2.5
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 4.5,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "write",
+       "object": "say_turn",
+       "start": 0,
+       "end": 1.5
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 5.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_turn",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "create",
+       "object": "amplitude_at_spring",
+       "start": 0.6,
+       "end": 1.6
+      },
+      {
+       "type": "create",
+       "object": "amplitude_on_axes",
+       "start": 0.6,
+       "end": 1.6
+      },
+      {
+       "type": "write",
+       "object": "amplitude_at_spring_caption",
+       "start": 1.2,
+       "end": 2.0
+      },
+      {
+       "type": "write",
+       "object": "amplitude_on_axes_caption",
+       "start": 1.2,
+       "end": 2.2
+      },
+      {
+       "type": "write",
+       "object": "say_amp",
+       "start": 2.4,
+       "end": 3.9
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 3.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 4.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_amp",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "fade",
+       "object": "heading_amplitude",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "write",
+       "object": "heading_period",
+       "start": 0.6,
+       "end": 1.6
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_top",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_bottom",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "recolor",
+       "object": "height_trail",
+       "stroke": "#2f6878",
+       "start": 1.0,
+       "end": 1.6
+      },
+      {
+       "type": "write",
+       "object": "say_time",
+       "start": 1.4,
+       "end": 2.9
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 2.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "cycle_point",
+       "to": 1,
+       "start": 0,
+       "end": 0.1
+      },
+      {
+       "type": "fade",
+       "object": "cycle_line",
+       "to": 1,
+       "start": 0,
+       "end": 0.2
+      },
+      {
+       "type": "follow",
+       "object": "cycle_point",
+       "law": {
+        "x": "2 + t",
+        "y": "-10*cos(pi*(2 + t))",
+        "z": "0.05"
+       }
+      },
+      {
+       "type": "fade",
+       "object": "period_equals",
+       "to": 1,
+       "start": 0,
+       "end": 0.2
+      },
+      {
+       "type": "fade",
+       "object": "stopwatch",
+       "to": 1,
+       "start": 0,
+       "end": 0.2
+      },
+      {
+       "type": "follow",
+       "object": "stopwatch",
+       "sets": "value",
+       "law": {
+        "value": "t"
+       }
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 2.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "create",
+       "object": "bracket_1",
+       "start": 0,
+       "end": 0.8
+      },
+      {
+       "type": "fade",
+       "object": "cycle_point",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "fade",
+       "object": "cycle_line",
+       "to": 0,
+       "start": 0,
+       "end": 0.6
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 4.5,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_time",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "write",
+       "object": "say_period",
+       "start": 0.6,
+       "end": 2.1
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 4.5,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_period",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "write",
+       "object": "say_every",
+       "start": 0.6,
+       "end": 1.8
+      },
+      {
+       "type": "create",
+       "object": "bracket_2",
+       "start": 1.2,
+       "end": 2.0
+      },
+      {
+       "type": "create",
+       "object": "bracket_3",
+       "start": 2.0,
+       "end": 2.8
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 3.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "say_every",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "fade",
+       "object": "heading_period",
+       "to": 0,
+       "start": 0,
+       "end": 0.5
+      },
+      {
+       "type": "write",
+       "object": "heading_summary",
+       "start": 0.6,
+       "end": 1.6
+      },
+      {
+       "type": "recolor",
+       "object": "height_trail",
+       "stroke": "#58c4dd",
+       "start": 0,
+       "end": 0.6
+      },
+      {
+       "type": "write",
+       "object": "say_sum",
+       "start": 1.2,
+       "end": 2.7
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 5.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      }
+     ]
+    },
+    {
+     "type": "play",
+     "duration": 1.0,
+     "animations": [
+      {
+       "type": "follow",
+       "object": "mass",
+       "law": {
+        "x": "-5.3",
+        "y": "-1.2*cos(pi*t)",
+        "z": "0.02"
+       },
+       "from": "bounce"
+      },
+      {
+       "type": "fade",
+       "object": "heading_summary",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "ceiling",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "hatch",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "mass",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "spring",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "rest",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "rest_caption",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "ax",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "height_trail",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "cycle_trail",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_at_spring",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_at_spring_caption",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_on_axes",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "amplitude_on_axes_caption",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "period_equals",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "stopwatch",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "bracket_1",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "bracket_2",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "bracket_3",
+       "to": 0
+      },
+      {
+       "type": "fade",
+       "object": "say_sum",
+       "to": 0
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

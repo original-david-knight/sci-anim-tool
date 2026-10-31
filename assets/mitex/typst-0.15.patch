@@ -1,0 +1,96 @@
+--- a/latex/standard.typ
++++ b/latex/standard.typ
+@@ -1,4 +1,4 @@
+-#import "@preview/xarrow:0.2.0": xarrow
++#let xarrow(sym: none, it) = math.attach(math.stretch(sym, size: 100% + 1em), t: it)
+ 
+ #import "../prelude.typ": *
+ 
+@@ -28,13 +28,17 @@
+ } else {
+   tex.text
+ }
+-#let get-tex-color-from-arr(arr) = {
+-  mitex-color-map.at(lower(get-tex-str-from-arr(arr)), default: none)
+-}
+-#let get-tex-color(texcolor) = if texcolor.has("children") {
+-  get-tex-color-from-arr(texcolor.children)
+-} else {
+-  texcolor.text
++#let get-tex-color(texcolor) = {
++  let parts = if texcolor.has("children") { texcolor.children } else { (texcolor,) }
++  let name = parts.filter(it => it != [ ] and it != [#math.zws]).map(it => if it.has("text") { it.text } else { "?" }).sum(default: "")
++  let named = mitex-color-map.at(lower(name), default: none)
++  if named != none {
++    named
++  } else if name.match(regex("^#[0-9a-fA-F]{6}$")) != none {
++    rgb(name)
++  } else {
++    panic("sci_anim cannot read the color", name)
++  }
+ }
+ 
+ // 1. functions created to make it easier to define a spec
+@@ -368,8 +372,8 @@
+   // Limits
+   max: sym,
+   min: sym,
+-  argmax: sym,
+-  argmin: sym,
++  argmax: of-sym(math.op("arg\u{2009}max", limits: true)),
++  argmin: of-sym(math.op("arg\u{2009}min", limits: true)),
+   sup: sym,
+   inf: sym,
+   sum: sym,
+@@ -449,10 +453,10 @@
+   llbracket: define-sym("bracket.l.double"),
+   rrbracket: define-sym("bracket.r.double"),
+   angle: define-sym("angle"),
+-  lang: define-sym("angle.l"),
+-  rang: define-sym("angle.r"),
+-  langle: define-sym("angle.l"),
+-  rangle: define-sym("angle.r"),
++  lang: define-sym("chevron.l"),
++  rang: define-sym("chevron.r"),
++  langle: define-sym("chevron.l"),
++  rangle: define-sym("chevron.r"),
+   measuredangle: define-sym("angle.arc"),
+   sphericalangle: define-sym("angle.spheric"),
+   ast: define-sym("ast"),
+@@ -974,12 +978,12 @@
+   pod: define-cmd(1, handle: it => $quad (it)$),
+   "set": define-cmd(1, handle: it => $\{it\}$),
+   Set: define-cmd(1, handle: it => $lr(\{it\})$),
+-  bra: define-cmd(1, handle: it => $angle.l it|$),
+-  Bra: define-cmd(1, handle: it => $lr(angle.l it|)$),
+-  ket: define-cmd(1, handle: it => $|it angle.r$),
+-  Ket: define-cmd(1, handle: it => $lr(|it angle.r)$),
+-  braket: define-cmd(1, handle: it => $angle.l it angle.r$),
+-  Braket: define-cmd(1, handle: it => $lr(angle.l it angle.r)$),
++  bra: define-cmd(1, handle: it => $chevron.l it|$),
++  Bra: define-cmd(1, handle: it => $lr(chevron.l it|)$),
++  ket: define-cmd(1, handle: it => $|it chevron.r$),
++  Ket: define-cmd(1, handle: it => $lr(|it chevron.r)$),
++  braket: define-cmd(1, handle: it => $chevron.l it chevron.r$),
++  Braket: define-cmd(1, handle: it => $lr(chevron.l it chevron.r)$),
+   fbox: define-cmd(1, handle: it => box(stroke: 0.5pt, $it$)),
+   hbox: define-cmd(1, handle: it => it),
+   // Matrices
+@@ -988,7 +992,7 @@
+   bmatrix: matrix-handle(delim: "["),
+   Bmatrix: matrix-handle(delim: "{"),
+   vmatrix: matrix-handle(delim: "|"),
+-  Vmatrix: matrix-handle(delim: "||"),
++  Vmatrix: matrix-handle(delim: "‖"),
+   smallmatrix: matrix-handle(handle: (..args) => math.inline(math.mat.with(delim: none, ..args))),
+   array: define-env(1, kind: "is-matrix", alias: "mitexarray", handle: (arg0: ("l",), ..args) => {
+     if args.pos().len() == 0 {
+@@ -1043,7 +1047,7 @@
+   mkern: ignore-sym,
+   mathstrut: ignore-sym,
+   nonumber: ignore-sym,
+-  KaTeX: of-sym(math.upright($kai A T E X$)),
++  KaTeX: of-sym(math.upright($K a T E X$)),
+   LaTeX: of-sym(math.upright($L A T E X$)),
+   TeX: of-sym(math.upright($T E X$)),
+   middle: define-cmd(1, handle: it => math.mid(it)),

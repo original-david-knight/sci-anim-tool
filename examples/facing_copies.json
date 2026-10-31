@@ -1,0 +1,33 @@
+{
+  "objects": {
+    "strand": {"type": "tube", "curve": {"x": "0.8*cos(u)", "y": "0.12*u - 1.5", "z": "0.8*sin(u)", "u_range": [0, 25.13]}, "radius": 0.025, "material": {"type": "standard", "color": "#888888"}, "position": [-4.4, 0.3, 0]},
+    "units": {"type": "pattern", "shape": {"type": "revolution", "profile": {"type": "polygon", "points": [[0, -0.15], [0.09, -0.15], [0, 0.18]]}, "material": {"type": "standard", "color": "#ffd23f"}}, "layout": {"type": "along", "count": 16, "faces": "tangent", "curve": {"x": "0.8*cos(u)", "y": "0.12*u - 1.5", "z": "0.8*sin(u)", "u_range": [0, 25.13]}}, "copy": {"rotation": {"z": "-90"}}, "position": [-4.4, 0.3, 0]},
+    "units_label": {"type": "text", "text": "cones along a helix", "size": 0.3, "position": [-4.4, -2.2, 0]},
+    "backbone": {"type": "tube", "curve": {"x": "0.8*cos(u)", "y": "0.12*u - 1.5", "z": "0.8*sin(u)", "u_range": [0, 25.13]}, "radius": 0.025, "material": {"type": "standard", "color": "#888888"}, "position": [0, 0.3, 0]},
+    "bases": {"type": "pattern", "shape": {"type": "prism", "base": {"type": "polygon", "points": [[-0.22, -0.05], [0.22, -0.05], [0.22, 0.05], [-0.22, 0.05]]}, "height": 0.1, "material": {"type": "standard", "color": "#58c4dd"}}, "layout": {"type": "along", "count": 16, "faces": "tangent", "curve": {"x": "0.8*cos(u)", "y": "0.12*u - 1.5", "z": "0.8*sin(u)", "u_range": [0, 25.13]}}, "copy": {"rotation": {"x": "20"}, "color_share": "i/15", "to_color": "#fc6255"}, "position": [0, 0.3, 0]},
+    "bases_label": {"type": "text", "text": "prisms tilted 20 degrees", "size": 0.3, "position": [0, -2.2, 0]},
+    "wave": {"type": "tube", "curve": {"x": "1.6*u", "y": "0.9*sin(pi*u)", "z": "0", "u_range": [-1, 1]}, "radius": 0.02, "material": {"type": "standard", "color": "#888888"}, "position": [4.4, 0.3, -0.05]},
+    "flow": {"type": "pattern", "shape": {"type": "arrow", "from": [-0.2, 0], "to": [0.2, 0], "tip_length": 0.14, "stroke": {"color": "#83c167", "width": 0.05}}, "layout": {"type": "along", "count": 9, "faces": "tangent", "curve": {"x": "1.6*u", "y": "0.9*sin(pi*u)", "z": "0", "u_range": [-1, 1]}}, "position": [4.4, 0.3, 0]},
+    "flow_label": {"type": "text", "text": "arrows along a flat wave", "size": 0.3, "position": [4.4, -2.2, 0]}
+  },
+  "timeline": [
+    { "type": "play", "duration": 2, "animations": [
+      {"type": "create", "object": "strand", "end": 1},
+      {"type": "create", "object": "units", "start": 1},
+      {"type": "create", "object": "backbone", "end": 1},
+      {"type": "create", "object": "bases", "start": 1},
+      {"type": "create", "object": "wave", "end": 1},
+      {"type": "create", "object": "flow", "start": 1},
+      {"type": "write", "object": "units_label"},
+      {"type": "write", "object": "bases_label"},
+      {"type": "write", "object": "flow_label"}
+    ] },
+    { "type": "play", "duration": 4, "animations": [
+      {"type": "rotate", "object": "strand", "to": [0, 180, 0]},
+      {"type": "rotate", "object": "units", "to": [0, 180, 0]},
+      {"type": "rotate", "object": "backbone", "to": [0, 180, 0]},
+      {"type": "rotate", "object": "bases", "to": [0, 180, 0]}
+    ] },
+    {"type": "wait", "duration": 1}
+  ]
+}

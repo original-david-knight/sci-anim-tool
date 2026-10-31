@@ -1,0 +1,73 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "How steep is y = x² at x = 1?", "size": 0.5, "position": [0, 3.3, 0] },
+
+    "ax": { "type": "axes", "position": [-2.2, -0.4, 0], "width": 7, "height": 5.5,
+      "x": { "range": [-1, 3], "spacing": 1, "label": "x" },
+      "y": { "range": [-1, 9], "spacing": 2, "label": "y" },
+      "stroke": { "color": "#888888" }, "color": "#888888" },
+    "parabola": { "type": "function-plot", "axes": "ax", "expression": "x^2", "x_range": [-1, 2.9], "stroke": { "color": "#58c4dd", "width": 0.06 } },
+    "parabola_tex": { "type": "math", "tex": "y = x^2", "size": 0.5, "color": "#58c4dd", "align": "left", "position": [1.7, 1.9, 0] },
+
+    "p": { "type": "dot", "axes": "ax", "radius": 0.1, "fill": { "color": "#ffd23f" }, "position": [1, 1, 0], "opacity": 0 },
+    "q": { "type": "dot", "axes": "ax", "radius": 0.1, "fill": { "color": "#fc6255" }, "position": [2.5, 6.25, 0], "opacity": 0 },
+    "secant_far": { "type": "line", "from": [-2.725, -2.628], "to": [0.95, 1.415], "stroke": { "color": "#fc6255", "width": 0.05 } },
+    "secant_near": { "type": "line", "from": [-2.9, -2.6], "to": [0.95, 0.425], "stroke": { "color": "#fc6255", "width": 0.05 } },
+    "tangent": { "type": "line", "from": [-3.25, -2.71], "to": [0.95, -0.07], "stroke": { "color": "#ffd23f", "width": 0.05 } },
+
+    "slope_far": { "type": "math", "tex": "\\text{slope} = \\frac{\\Delta y}{\\Delta x} = 3.5", "size": 0.6, "align": "left", "position": [2.3, 0, 0] },
+    "slope_near": { "type": "math", "tex": "\\text{slope} = \\frac{\\Delta y}{\\Delta x} = 2.5", "size": 0.6, "align": "left", "position": [2.3, 0, 0] },
+    "slope_tangent": { "type": "math", "tex": "\\text{slope} = \\frac{dy}{dx} = 2", "size": 0.6, "color": "#ffd23f", "align": "left", "position": [2.3, 0, 0] },
+
+    "say_point": { "type": "text", "text": "Start at the point (1, 1).", "size": 0.4, "position": [0, -3.6, 0] },
+    "say_secant": { "type": "text", "text": "A line through a second point has a slope we can compute.", "size": 0.4, "position": [0, -3.6, 0] },
+    "say_closer": { "type": "text", "text": "Slide the second point closer to the first.", "size": 0.4, "position": [0, -3.6, 0] },
+    "say_tangent": { "type": "text", "text": "When they meet, the line just touches the curve: the tangent.", "size": 0.4, "position": [0, -3.6, 0] },
+
+    "summary": { "type": "math", "tex": "\\frac{d}{dx}\\,x^2 = 2x", "size": 1.1, "position": [0, 0.6, 0] },
+    "summary_at_1": { "type": "math", "tex": "\\text{at } x = 1:\\quad 2 \\cdot 1 = 2", "size": 0.6, "color": "#ffd23f", "position": [0, -1.2, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "ax" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "parabola" }, { "type": "write", "object": "parabola_tex" }] },
+    { "type": "wait", "duration": 1 },
+
+    { "type": "play", "duration": 1.2, "animations": [{ "type": "fade", "object": "p", "to": 1 }, { "type": "write", "object": "say_point" }] },
+    { "type": "wait", "duration": 2.5 },
+
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "say_point", "to": 0 }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "fade", "object": "q", "to": 1 }, { "type": "create", "object": "secant_far" }, { "type": "write", "object": "say_secant" }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "write", "object": "slope_far" }] },
+    { "type": "wait", "duration": 3 },
+
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "say_secant", "to": 0 }] },
+    { "type": "play", "duration": 1.2, "animations": [{ "type": "write", "object": "say_closer" }] },
+    { "type": "play", "duration": 2.5, "animations": [
+      { "type": "move", "object": "q", "to": [1.5, 2.25, 0] },
+      { "type": "morph", "object": "secant_far", "into": "secant_near" },
+      { "type": "morph", "object": "slope_far", "into": "slope_near" }
+    ] },
+    { "type": "wait", "duration": 2 },
+
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "say_closer", "to": 0 }] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "move", "object": "q", "to": [1, 1, 0] },
+      { "type": "morph", "object": "secant_near", "into": "tangent" },
+      { "type": "morph", "object": "slope_near", "into": "slope_tangent" },
+      { "type": "write", "object": "say_tangent" }
+    ] },
+    { "type": "play", "duration": 0.4, "animations": [{ "type": "fade", "object": "q", "to": 0 }] },
+    { "type": "wait", "duration": 3 },
+
+    { "type": "play", "duration": 0.8, "animations": [
+      { "type": "fade", "object": "ax", "to": 0 }, { "type": "fade", "object": "parabola", "to": 0 },
+      { "type": "fade", "object": "parabola_tex", "to": 0 }, { "type": "fade", "object": "p", "to": 0 },
+      { "type": "fade", "object": "tangent", "to": 0 }, { "type": "fade", "object": "slope_tangent", "to": 0 },
+      { "type": "fade", "object": "say_tangent", "to": 0 }
+    ] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "write", "object": "summary" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "summary_at_1" }] },
+    { "type": "wait", "duration": 3.5 }
+  ]
+}

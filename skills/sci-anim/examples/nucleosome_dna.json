@@ -1,0 +1,26 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "The DNA of a nucleosome: 147 nucleobase pairs", "size": 0.5, "position": [0, 3.45, 0], "opacity": 0 },
+
+    "dna": { "type": "molecule", "file": "structures/1kx5_dna.pdb", "representation": "space-filling", "scale": [0.05, 0.05, 0.05], "opacity": 0,
+      "groups": {
+        "strand": { "residues": [{ "chain": "J" }] }
+      } },
+
+    "say_strand": { "type": "text", "text": "One of its two strands is lit.", "size": 0.36, "position": [0, -3.3, 0], "opacity": 0 },
+    "source": { "type": "text", "text": "PDB entry 1KX5, without the eight histone proteins it wraps around", "size": 0.3, "position": [0, -3.8, 0], "color": "#b0b0b0", "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1 },
+      { "type": "fade", "object": "dna", "to": 1 },
+      { "type": "fade", "object": "source", "to": 1 }
+    ] },
+    { "type": "play", "duration": 8, "animations": [
+      { "type": "rotate", "object": "dna", "to": [0, 360, 0], "easing_curve": "linear" },
+      { "type": "highlight", "object": "dna", "group": "strand", "to": 1, "start": 0.1, "end": 0.25 },
+      { "type": "fade", "object": "say_strand", "to": 1, "start": 0.1, "end": 0.25 }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

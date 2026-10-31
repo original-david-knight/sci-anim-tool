@@ -1,0 +1,40 @@
+{
+  "camera": { "position": [0, 2, 12], "target": [0, 0, 0] },
+  "objects": {
+    "title": { "type": "text", "text": "A spring is a tube along a helix", "size": 0.45, "position": [0, 3.6, 0], "opacity": 0 },
+    "spring": { "type": "tube", "position": [-3.2, -2.4, 0], "radius": 0.07,
+      "curve": { "x": "0.8*cos(u)", "y": "0.08*u", "z": "0.8*sin(u)", "u_range": [0, 31.4159] },
+      "material": { "type": "standard", "color": "#58c4dd" } },
+    "mass": { "type": "prism", "position": [-3.2, 0.17, 0], "height": 0.9, "opacity": 0,
+      "base": { "type": "polygon", "points": [[-0.7, -0.7], [0.7, -0.7], [0.7, 0.7], [-0.7, 0.7]] },
+      "material": { "type": "standard", "color": "#83c167" } },
+    "knot": { "type": "tube", "position": [3, 0, 0], "radius": 0.16,
+      "curve": { "x": "0.6*(sin(u) + 2*sin(2*u))", "y": "0.6*(cos(u) - 2*cos(2*u))", "z": "-0.6*sin(3*u)", "u_range": [0, 6.2832] },
+      "material": { "type": "standard", "color": "#fc6255" } },
+    "knot_text": { "type": "text", "text": "A trefoil knot closes on itself", "size": 0.42, "position": [3, -2.9, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "title", "to": 1 }] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "spring", "easing_curve": "linear" },
+      { "type": "fade", "object": "mass", "to": 1, "start": 1.5 }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "scale", "object": "spring", "to": [1, 0.6, 1] },
+      { "type": "move", "object": "mass", "to": [-3.2, -0.83, 0] }
+    ] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "scale", "object": "spring", "to": [1, 1, 1], "easing_curve": "overshoot" },
+      { "type": "move", "object": "mass", "to": [-3.2, 0.17, 0], "easing_curve": "overshoot" }
+    ] },
+    { "type": "play", "duration": 2.5, "animations": [
+      { "type": "create", "object": "knot" },
+      { "type": "fade", "object": "knot_text", "to": 1, "start": 1.5 }
+    ] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "camera-move", "to": [-2, 3, 12] },
+      { "type": "rotate", "object": "knot", "to": [0, 120, 0] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

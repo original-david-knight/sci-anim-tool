@@ -1,0 +1,1321 @@
+{
+ "objects": {
+  "heading": {
+   "type": "text",
+   "text": "How ethylene becomes polyethylene",
+   "size": 0.5,
+   "position": [
+    0,
+    3.3,
+    0
+   ]
+  },
+  "chain_0": {
+   "type": "molecule",
+   "file": "structures/methyl_radical.sdf",
+   "position": [
+    -5.067,
+    -1.1223,
+    0.0
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "groups": {
+    "methyl_end": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "radical_end": [
+     1
+    ]
+   },
+   "opacity": 0
+  },
+  "chain_1": {
+   "type": "molecule",
+   "file": "structures/propyl_radical.sdf",
+   "position": [
+    -3.5488,
+    -0.6889,
+    0.0
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "groups": {
+    "methyl_end": [
+     1,
+     4,
+     5,
+     6
+    ],
+    "radical_end": [
+     3
+    ],
+    "unit_1": [
+     2,
+     3,
+     7,
+     8,
+     9,
+     10
+    ]
+   }
+  },
+  "chain_2": {
+   "type": "molecule",
+   "file": "structures/pentyl_radical.sdf",
+   "position": [
+    -2.0376,
+    -0.5806,
+    0.0
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "groups": {
+    "methyl_end": [
+     1,
+     6,
+     7,
+     8
+    ],
+    "radical_end": [
+     5
+    ],
+    "unit_1": [
+     2,
+     3,
+     9,
+     10,
+     11,
+     12
+    ],
+    "unit_2": [
+     4,
+     5,
+     13,
+     14,
+     15,
+     16
+    ]
+   }
+  },
+  "chain_3": {
+   "type": "molecule",
+   "file": "structures/heptyl_radical.sdf",
+   "position": [
+    -0.5277,
+    -0.5313,
+    0.0
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "groups": {
+    "methyl_end": [
+     1,
+     8,
+     9,
+     10
+    ],
+    "radical_end": [
+     7
+    ],
+    "unit_1": [
+     2,
+     3,
+     11,
+     12,
+     13,
+     14
+    ],
+    "unit_2": [
+     4,
+     5,
+     15,
+     16,
+     17,
+     18
+    ],
+    "unit_3": [
+     6,
+     7,
+     19,
+     20,
+     21,
+     22
+    ]
+   }
+  },
+  "ethylene_1": {
+   "type": "molecule",
+   "file": "structures/ethylene.sdf",
+   "position": [
+    -1.0967,
+    0.8,
+    0.0
+   ],
+   "rotation": [
+    0,
+    0,
+    -35.267
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "opacity": 0,
+   "groups": {
+    "double_bond": [
+     1,
+     2
+    ]
+   }
+  },
+  "ethylene_2": {
+   "type": "molecule",
+   "file": "structures/ethylene.sdf",
+   "position": [
+    1.9211,
+    0.8,
+    0.0
+   ],
+   "rotation": [
+    0,
+    0,
+    -35.267
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "opacity": 0,
+   "groups": {
+    "double_bond": [
+     1,
+     2
+    ]
+   }
+  },
+  "ethylene_3": {
+   "type": "molecule",
+   "file": "structures/ethylene.sdf",
+   "position": [
+    4.9388,
+    0.8,
+    0.0
+   ],
+   "rotation": [
+    0,
+    0,
+    -35.267
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ],
+   "opacity": 0,
+   "groups": {
+    "double_bond": [
+     1,
+     2
+    ]
+   }
+  },
+  "electron_0": {
+   "type": "text",
+   "text": "•",
+   "size": 0.9,
+   "color": "#58c4dd",
+   "opacity": 0,
+   "attach": {
+    "object": "chain_0",
+    "group": "radical_end",
+    "offset": [
+     1.061,
+     0.751
+    ]
+   }
+  },
+  "electron_1": {
+   "type": "text",
+   "text": "•",
+   "size": 0.9,
+   "color": "#58c4dd",
+   "attach": {
+    "object": "chain_1",
+    "group": "radical_end",
+    "offset": [
+     1.061,
+     0.751
+    ]
+   }
+  },
+  "electron_2": {
+   "type": "text",
+   "text": "•",
+   "size": 0.9,
+   "color": "#58c4dd",
+   "attach": {
+    "object": "chain_2",
+    "group": "radical_end",
+    "offset": [
+     1.061,
+     0.751
+    ]
+   }
+  },
+  "electron_3": {
+   "type": "text",
+   "text": "•",
+   "size": 0.9,
+   "color": "#58c4dd",
+   "attach": {
+    "object": "chain_3",
+    "group": "radical_end",
+    "offset": [
+     1.061,
+     0.751
+    ]
+   }
+  },
+  "say_radical": {
+   "type": "text",
+   "text": "An initiator gives a methyl radical, with one unpaired electron.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_ethylene": {
+   "type": "text",
+   "text": "Ethylene has a double bond between its two carbons.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_opens": {
+   "type": "text",
+   "text": "The radical opens the double bond and bonds to one carbon.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_moves": {
+   "type": "text",
+   "text": "The unpaired electron moves to the far carbon.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_unit": {
+   "type": "text",
+   "text": "That ethylene is now one unit of the chain.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_grows": {
+   "type": "text",
+   "text": "Each new radical end opens the next ethylene.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_same": {
+   "type": "text",
+   "text": "Every unit is the same: CH₂–CH₂.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_ends": {
+   "type": "text",
+   "text": "Its ends: CH₃ from the initiator, and the radical end.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "say_real": {
+   "type": "text",
+   "text": "A real chain grows thousands of units, until two radicals meet.",
+   "size": 0.4,
+   "position": [
+    0,
+    -3.4,
+    0
+   ]
+  },
+  "scheme": {
+   "type": "math",
+   "tex": "n\\,\\mathrm{CH_2{=}CH_2} \\rightarrow \\mathrm{-(CH_2{-}CH_2)_{\\mathit{n}}-}",
+   "size": 0.7,
+   "position": [
+    0,
+    2.2,
+    0
+   ]
+  }
+ },
+ "timeline": [
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "write",
+     "object": "heading"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "chain_0",
+     "to": 1
+    },
+    {
+     "type": "fade",
+     "object": "electron_0",
+     "to": 1
+    },
+    {
+     "type": "write",
+     "object": "say_radical"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 4
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_radical",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "ethylene_1",
+     "to": 1
+    },
+    {
+     "type": "write",
+     "object": "say_ethylene"
+    },
+    {
+     "type": "highlight",
+     "object": "ethylene_1",
+     "group": "double_bond",
+     "to": 1,
+     "color": "#ffd23f"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 3
+  },
+  {
+   "type": "play",
+   "duration": 0.6,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_ethylene",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "ethylene_1",
+     "group": "double_bond",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_opens"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 3.5,
+   "animations": [
+    {
+     "type": "reaction",
+     "reactants": [
+      "chain_0",
+      "ethylene_1"
+     ],
+     "products": [
+      "chain_1"
+     ],
+     "atom_map": [
+      {
+       "reactant": {
+        "object": "chain_0",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 1
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_0",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 4
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_0",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 5
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_0",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 6
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 2
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 3
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 8
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 7
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 5
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 9
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_1",
+        "atom": 6
+       },
+       "product": {
+        "object": "chain_1",
+        "atom": 10
+       }
+      }
+     ],
+     "fit": false
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 1.5
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_opens",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_moves"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 2.5
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_moves",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_unit"
+    },
+    {
+     "type": "highlight",
+     "object": "chain_1",
+     "group": "unit_1",
+     "to": 1,
+     "color": "#83c167"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 2.5
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_unit",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "ethylene_2",
+     "to": 1
+    },
+    {
+     "type": "write",
+     "object": "say_grows"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 3,
+   "animations": [
+    {
+     "type": "reaction",
+     "reactants": [
+      "chain_1",
+      "ethylene_2"
+     ],
+     "products": [
+      "chain_2"
+     ],
+     "atom_map": [
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 1
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 2
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 3
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 6
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 5
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 7
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 6
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 8
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 7
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 9
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 8
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 10
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 9
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 11
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_1",
+        "atom": 10
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 12
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 4
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 5
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 14
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 13
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 5
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 15
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_2",
+        "atom": 6
+       },
+       "product": {
+        "object": "chain_2",
+        "atom": 16
+       }
+      }
+     ],
+     "fit": false
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "ethylene_3",
+     "to": 1
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 3,
+   "animations": [
+    {
+     "type": "reaction",
+     "reactants": [
+      "chain_2",
+      "ethylene_3"
+     ],
+     "products": [
+      "chain_3"
+     ],
+     "atom_map": [
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 1
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 2
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 3
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 4
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 5
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 5
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 6
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 8
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 7
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 9
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 8
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 10
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 9
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 11
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 10
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 12
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 11
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 13
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 12
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 14
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 13
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 15
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 14
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 16
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 15
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 17
+       }
+      },
+      {
+       "reactant": {
+        "object": "chain_2",
+        "atom": 16
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 18
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 1
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 6
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 2
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 7
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 3
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 20
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 4
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 19
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 5
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 21
+       }
+      },
+      {
+       "reactant": {
+        "object": "ethylene_3",
+        "atom": 6
+       },
+       "product": {
+        "object": "chain_3",
+        "atom": 22
+       }
+      }
+     ],
+     "fit": false
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 1.5
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_grows",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_1",
+     "to": 0
+    },
+    {
+     "type": "fade",
+     "object": "electron_3",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.2,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_same"
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_1",
+     "to": 1,
+     "color": "#83c167"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 0.8,
+   "animations": [
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_1",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_2",
+     "to": 1,
+     "color": "#83c167"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 0.8,
+   "animations": [
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_2",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_3",
+     "to": 1,
+     "color": "#83c167"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 0.8,
+   "animations": [
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "unit_3",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 2,
+   "animations": [
+    {
+     "type": "write",
+     "object": "scheme"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 2
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_same",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_ends"
+    },
+    {
+     "type": "fade",
+     "object": "electron_3",
+     "to": 1
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "methyl_end",
+     "to": 1,
+     "color": "#58c4dd"
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "radical_end",
+     "to": 1,
+     "color": "#58c4dd"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 3.5
+  },
+  {
+   "type": "play",
+   "duration": 0.5,
+   "animations": [
+    {
+     "type": "fade",
+     "object": "say_ends",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "methyl_end",
+     "to": 0
+    },
+    {
+     "type": "highlight",
+     "object": "chain_3",
+     "group": "radical_end",
+     "to": 0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.5,
+   "animations": [
+    {
+     "type": "write",
+     "object": "say_real"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 3.5
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+  "objects": {
+    "lattice": {
+      "type": "pattern",
+      "shape": { "type": "sphere", "radius": 0.14, "material": { "type": "standard", "color": "#58c4dd" } },
+      "layout": { "type": "grid", "counts": [4, 4, 4], "spacing": 0.5 },
+      "copy": { "color_share": "k/3", "to_color": "#fc6255" },
+      "position": [-4.4, 1.9, 0],
+      "rotation": [35, 45, 0]
+    },
+    "lattice_label": { "type": "text", "text": "a lattice: one grid of spheres", "size": 0.32, "position": [-4.4, -0.05, 0] },
+    "dial": { "type": "circle", "radius": 1.35, "stroke": { "color": "#888888" }, "position": [0, 1.9, 0] },
+    "hours": {
+      "type": "pattern",
+      "shape": { "type": "line", "from": [0, -0.14], "to": [0, 0.14], "stroke": { "color": "#ffffff", "width": 0.05 } },
+      "layout": { "type": "ring", "count": 12, "radius": 1.1, "start_angle": 90 },
+      "copy": { "rotation": { "z": "30*i" }, "scale": { "y": "1 + step(-mod(i, 3))" } },
+      "position": [0, 1.9, 0]
+    },
+    "hours_label": { "type": "text", "text": "a ring of 12 ticks", "size": 0.32, "position": [0, -0.05, 0] },
+    "strand": {
+      "type": "tube",
+      "curve": { "x": "0.55*cos(u)", "y": "0.065*u - 1.225", "z": "0.55*sin(u)", "u_range": [0, 37.699112] },
+      "radius": 0.03,
+      "material": { "type": "standard", "color": "#888888" },
+      "position": [4.4, 1.9, 0]
+    },
+    "beads": {
+      "type": "pattern",
+      "shape": { "type": "sphere", "radius": 0.11, "material": { "type": "standard", "color": "#ffd23f" } },
+      "layout": { "type": "along", "count": 24, "curve": { "x": "0.55*cos(u)", "y": "0.065*u - 1.225", "z": "0.55*sin(u)", "u_range": [0, 37.699112] } },
+      "copy": { "color_share": "i/23", "to_color": "#83c167" },
+      "position": [4.4, 1.9, 0]
+    },
+    "beads_label": { "type": "text", "text": "24 beads along a helix", "size": 0.32, "position": [4.4, -0.05, 0] },
+    "field": {
+      "type": "pattern",
+      "shape": { "type": "arrow", "from": [-0.2, 0], "to": [0.2, 0], "tip_length": 0.12, "stroke": { "color": "#58c4dd", "width": 0.03 } },
+      "layout": { "type": "grid", "counts": [13, 4, 1], "spacing": 0.55 },
+      "copy": {
+        "rotation": { "z": "atan2(x, -y)*180/pi" },
+        "scale": { "x": "0.5 + 0.25*sqrt(x^2 + y^2)", "y": "0.5 + 0.25*sqrt(x^2 + y^2)" },
+        "color_share": "sqrt(x^2 + y^2)/3.4",
+        "to_color": "#fc6255"
+      },
+      "position": [0, -2.25, 0]
+    },
+    "field_label": { "type": "math", "tex": "\\vec{v}(x, y) = (-y,\\ x)", "size": 0.4, "position": [0, -3.65, 0] }
+  },
+  "timeline": [
+    {
+      "type": "play",
+      "duration": 3,
+      "animations": [
+        { "type": "create", "object": "lattice", "easing_curve": "linear" },
+        { "type": "create", "object": "dial", "end": 1 },
+        { "type": "create", "object": "hours", "start": 1 },
+        { "type": "create", "object": "strand", "end": 1.5 },
+        { "type": "create", "object": "beads", "start": 1.5 },
+        { "type": "create", "object": "field", "easing_curve": "linear" },
+        { "type": "write", "object": "lattice_label" },
+        { "type": "write", "object": "hours_label" },
+        { "type": "write", "object": "beads_label" },
+        { "type": "write", "object": "field_label" }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 4,
+      "animations": [
+        { "type": "rotate", "object": "lattice", "to": [35, 225, 0] },
+        { "type": "rotate", "object": "strand", "to": [0, 180, 0] },
+        { "type": "rotate", "object": "beads", "to": [0, 180, 0] },
+        { "type": "recolor", "object": "field", "stroke": "#ffffff" }
+      ]
+    },
+    { "type": "wait", "duration": 1 }
+  ]
+}

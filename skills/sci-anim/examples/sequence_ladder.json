@@ -1,0 +1,89 @@
+{
+  "objects": {
+    "title": { "type": "text", "text": "ATGCGTA and its partner strand", "size": 0.42, "position": [0, 3.55, 0] },
+    "left_rail": { "type": "line", "from": [-1.6, -2.75], "to": [-1.6, 2.75], "stroke": { "color": "#888888", "width": 0.1 } },
+    "right_rail": { "type": "line", "from": [1.6, -2.75], "to": [1.6, 2.75], "stroke": { "color": "#888888", "width": 0.1 } },
+    "left_nucleobases": {
+      "type": "pattern",
+      "shape": { "type": "line", "from": [-0.72, 0], "to": [0.72, 0], "stroke": { "color": "#888888", "width": 0.2 } },
+      "layout": { "type": "grid", "counts": [1, 7, 1], "spacing": 0.8 },
+      "copy": {
+        "palette": ["#fc6255", "#ffd23f", "#83c167", "#58c4dd"],
+        "palette_index": [0, 1, 2, 3, 2, 1, 0]
+      },
+      "position": [-0.8, 0, 0]
+    },
+    "right_nucleobases": {
+      "type": "pattern",
+      "shape": { "type": "line", "from": [-0.72, 0], "to": [0.72, 0], "stroke": { "color": "#888888", "width": 0.2 } },
+      "layout": { "type": "grid", "counts": [1, 7, 1], "spacing": 0.8 },
+      "copy": {
+        "palette": ["#fc6255", "#ffd23f", "#83c167", "#58c4dd"],
+        "palette_index": [1, 0, 3, 2, 3, 0, 1]
+      },
+      "position": [0.8, 0, 0]
+    },
+    "left_0": { "type": "text", "text": "A", "size": 0.4, "position": [-2.15, -2.4, 0] },
+    "left_1": { "type": "text", "text": "T", "size": 0.4, "position": [-2.15, -1.6, 0] },
+    "left_2": { "type": "text", "text": "G", "size": 0.4, "position": [-2.15, -0.8, 0] },
+    "left_3": { "type": "text", "text": "C", "size": 0.4, "position": [-2.15, 0, 0] },
+    "left_4": { "type": "text", "text": "G", "size": 0.4, "position": [-2.15, 0.8, 0] },
+    "left_5": { "type": "text", "text": "T", "size": 0.4, "position": [-2.15, 1.6, 0] },
+    "left_6": { "type": "text", "text": "A", "size": 0.4, "position": [-2.15, 2.4, 0] },
+    "right_0": { "type": "text", "text": "T", "size": 0.4, "position": [2.15, -2.4, 0] },
+    "right_1": { "type": "text", "text": "A", "size": 0.4, "position": [2.15, -1.6, 0] },
+    "right_2": { "type": "text", "text": "C", "size": 0.4, "position": [2.15, -0.8, 0] },
+    "right_3": { "type": "text", "text": "G", "size": 0.4, "position": [2.15, 0, 0] },
+    "right_4": { "type": "text", "text": "C", "size": 0.4, "position": [2.15, 0.8, 0] },
+    "right_5": { "type": "text", "text": "A", "size": 0.4, "position": [2.15, 1.6, 0] },
+    "right_6": { "type": "text", "text": "T", "size": 0.4, "position": [2.15, 2.4, 0] },
+    "legend_adenine": { "type": "text", "text": "A  adenine", "size": 0.36, "color": "#fc6255", "align": "left", "position": [3.6, 1.2, 0] },
+    "legend_thymine": { "type": "text", "text": "T  thymine", "size": 0.36, "color": "#ffd23f", "align": "left", "position": [3.6, 0.4, 0] },
+    "legend_guanine": { "type": "text", "text": "G  guanine", "size": 0.36, "color": "#83c167", "align": "left", "position": [3.6, -0.4, 0] },
+    "legend_cytosine": { "type": "text", "text": "C  cytosine", "size": 0.36, "color": "#58c4dd", "align": "left", "position": [3.6, -1.2, 0] }
+  },
+  "timeline": [
+    {
+      "type": "play",
+      "duration": 1.5,
+      "animations": [
+        { "type": "write", "object": "title" },
+        { "type": "create", "object": "left_rail" },
+        { "type": "create", "object": "right_rail" }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 2,
+      "animations": [
+        { "type": "create", "object": "left_nucleobases", "easing_curve": "linear" },
+        { "type": "create", "object": "right_nucleobases", "easing_curve": "linear" },
+        { "type": "write", "object": "left_0" },
+        { "type": "write", "object": "left_1" },
+        { "type": "write", "object": "left_2" },
+        { "type": "write", "object": "left_3" },
+        { "type": "write", "object": "left_4" },
+        { "type": "write", "object": "left_5" },
+        { "type": "write", "object": "left_6" },
+        { "type": "write", "object": "right_0" },
+        { "type": "write", "object": "right_1" },
+        { "type": "write", "object": "right_2" },
+        { "type": "write", "object": "right_3" },
+        { "type": "write", "object": "right_4" },
+        { "type": "write", "object": "right_5" },
+        { "type": "write", "object": "right_6" }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        { "type": "write", "object": "legend_adenine" },
+        { "type": "write", "object": "legend_thymine" },
+        { "type": "write", "object": "legend_guanine" },
+        { "type": "write", "object": "legend_cytosine" }
+      ]
+    },
+    { "type": "wait", "duration": 1.5 }
+  ]
+}

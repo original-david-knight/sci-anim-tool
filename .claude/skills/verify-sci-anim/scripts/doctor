@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Read-only check: is this checkout's sci_anim binary worth driving?
+# Usage: doctor
+# Prints one line per check, then OK or NOT OK. Exit 0 only when every required check passes.
+# It writes one tiny frame to a mktemp folder to prove the GPU path, and removes that folder.
+set -uo pipefail
+repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+bin=${SCI_ANIM:-$repo/target/release/sci_anim}
+bad=0
+pass() { echo "ok    $*"; }
+fail() { echo "FAIL  $*"; bad=1; }
+warn() { echo "warn  $*"; }
+
+echo "repo: $repo"
+if [ -x "$bin" ]; then pass "binary $bin"; else fail "no binary at $bin; run: cargo build --release"; echo "NOT OK"; exit 1; fi
+
+version=$("$bin" --version)
+head=$(git -C "$repo" rev-parse HEAD)
+built=$(echo "$version" | awk '{print $3}')
+echo "version: $version"
+if [ "$built" = "$head" ]; then pass "binary built from HEAD"; else fail "binary built from $built, HEAD is $head; run: cargo build --release"; fi
+# A binary built from a dirty tree says 'modified'; the tree now may differ again.
+newer=$(find "$repo/src" "$repo/skills" "$repo/build.rs" "$repo/Cargo.toml" "$repo/Cargo.lock" "$repo/assets" -newer "$bin" -type f 2>/dev/null | head -3)
+if [ -n "$newer" ]; then fail "sources newer than the binary: $(echo $newer); run: cargo build --release"; else pass "no source newer than the binary"; fi
+
+for tool in ffmpeg ffprobe jq; do
+  if command -v "$tool" >/dev/null; then pass "$tool on PATH"; else
+    case $tool in ffmpeg) fail "ffmpeg missing: render and check-layout contact sheets fail";; *) warn "$tool missing";; esac
+  fi
+done
+
+tmp=$(mktemp -d)
+cat > "$tmp/s.json" <<'JSON'
+{ "scene_config": { "width": 64, "height": 64 }, "objects": { "c": { "type": "circle", "radius": 1 } } }
+JSON
+"$bin" validate "$tmp/s.json" > "$tmp/v.json"; v=$?
+if [ $v -eq 0 ]; then pass "validate exit 0"; else fail "validate exit $v: $(cat "$tmp/v.json")"; fi
+"$bin" frame "$tmp/s.json" --scene-time 0 -o "$tmp/f.png" > "$tmp/f.json" 2>&1; f=$?
+if [ $f -eq 0 ] && [ -s "$tmp/f.png" ]; then pass "GPU draws a frame"; else fail "frame exit $f (no GPU?): $(cat "$tmp/f.json")"; fi
+rm -rf "$tmp"
+
+if [ $bad -eq 0 ]; then echo "OK"; else echo "NOT OK"; fi
+exit $bad

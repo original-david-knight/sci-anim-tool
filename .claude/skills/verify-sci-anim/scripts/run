@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Runs one sci_anim command the way an agent does and keeps its evidence.
+# Usage: run <run folder> <check> <sci_anim args...>
+# Writes <check>.cmd, <check>.stdout.json, <check>.stderr, <check>.exit into the run folder,
+# with <check>.stdout in place of <check>.stdout.json for check-layout, which prints lines,
+# appends one line to transcript.txt, prints the report, and exits with sci_anim's exit code.
+# Set SCI_ANIM to use another binary. Relative paths in args resolve against the current directory.
+set -uo pipefail
+run=${1:?usage: run <run folder> <check> <sci_anim args...>}
+check=${2:?usage: run <run folder> <check> <sci_anim args...>}
+shift 2
+repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+bin=${SCI_ANIM:-$repo/target/release/sci_anim}
+printf '%q ' "$bin" "$@" > "$run/$check.cmd"; echo >> "$run/$check.cmd"
+stdout=$run/$check.stdout.json
+[ "${1:-}" = check-layout ] && stdout=$run/$check.stdout
+"$bin" "$@" > "$stdout" 2> "$run/$check.stderr"
+code=$?
+echo "$code" > "$run/$check.exit"
+echo "$(date -Is) $check exit=$code $(cat "$run/$check.cmd")" >> "$run/transcript.txt"
+cat "$stdout"
+[ -s "$run/$check.stderr" ] && echo "--- stderr ($check) ---" >&2 && head -20 "$run/$check.stderr" >&2
+exit "$code"

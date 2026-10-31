@@ -1,0 +1,28 @@
+{
+  "scene_config": { "width": 1920, "height": 1080, "fps": 30, "background": "#1e1e1e" },
+  "objects": {
+    "title": { "type": "text", "text": "Plastic made each year, 1950 to 2020", "size": 0.5, "position": [0, 3.3, 0] },
+    "decades": {
+      "type": "axes",
+      "x": { "categories": ["1950", "1960", "1970", "1980", "1990", "2000", "2010", "2020"] },
+      "y": { "range": [0, 500], "spacing": 100, "label": "\\text{Mt}" },
+      "width": 10, "height": 5, "position": [0, 0, 0]
+    },
+    "plastic": {
+      "type": "bar-plot", "axes": "decades",
+      "values": [2, 8, 35, 70, 120, 213, 313, 435],
+      "fill": { "color": "#58c4dd" }
+    },
+    "source": {
+      "type": "text", "size": 0.3, "color": "#bbbbbb", "position": [0, -3.6, 0],
+      "text": "Mt is million tonnes. Sources: Geyer, Jambeck and Law, Science Advances 2017,\nvia Our World in Data, to 2010; OECD, Policy Scenarios to 2040 (2024), for 2020"
+    }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "write", "object": "title" }, { "type": "create", "object": "decades" } ] },
+    { "type": "play", "duration": 4, "animations": [ { "type": "create", "object": "plastic" } ] },
+    { "type": "play", "duration": 1, "animations": [ { "type": "write", "object": "source" } ] },
+    { "type": "wait", "duration": 2 }
+  ]
+}

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Extracts element colors, van der Waals radii and covalent radii from their
+# sources into tests/fixtures/elements. scripts/element-data.go does the work, and
+# tests/fixtures/elements/NOTICE says where to get the two source files.
+#
+# Usage:
+#   scripts/element-data JMOL_CONSTANTS_JS BODR_ELEMENTS_XML [--rust]
+#
+# It runs a build of the Go file, not `go run`, because `go run` adds an
+# "exit status 1" line of its own when the program fails.
+set -eu
+repo=$(cd "$(dirname "$0")/.." && pwd -P)
+go build -o "$repo/target/scripts/element-data" "$repo/scripts/element-data.go"
+SCI_ANIM_REPO=$repo exec "$repo/target/scripts/element-data" "$@"

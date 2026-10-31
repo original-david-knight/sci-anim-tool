@@ -1,0 +1,485 @@
+{
+ "objects": {
+  "title": {
+   "type": "text",
+   "text": "A ladder unzips rung by rung",
+   "size": 0.42,
+   "color": "#ffffff",
+   "position": [0.0, 3.55, 0]
+  },
+  "left_nucleobases": {
+   "type": "pattern",
+   "shape": {
+    "type": "line",
+    "from": [-0.72, 0],
+    "to": [0.72, 0],
+    "stroke": {
+     "color": "#888888",
+     "width": 0.2
+    }
+   },
+   "layout": {
+    "type": "grid",
+    "counts": [1, 7, 1],
+    "spacing": 0.8
+   },
+   "copy": {
+    "palette": ["#fc6255", "#ffd23f", "#83c167", "#58c4dd"],
+    "palette_index": [0, 1, 2, 3, 2, 1, 0]
+   },
+   "position": [-0.8, 0, 0]
+  },
+  "right_nucleobases": {
+   "type": "pattern",
+   "shape": {
+    "type": "line",
+    "from": [-0.72, 0],
+    "to": [0.72, 0],
+    "stroke": {
+     "color": "#888888",
+     "width": 0.2
+    }
+   },
+   "layout": {
+    "type": "grid",
+    "counts": [1, 7, 1],
+    "spacing": 0.8
+   },
+   "copy": {
+    "palette": ["#fc6255", "#ffd23f", "#83c167", "#58c4dd"],
+    "palette_index": [1, 0, 3, 2, 3, 0, 1]
+   },
+   "position": [0.8, 0, 0]
+  },
+  "left_0": {
+   "type": "text",
+   "text": "A",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, -2.4000000000000004, 0]
+  },
+  "right_0": {
+   "type": "text",
+   "text": "T",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, -2.4000000000000004, 0]
+  },
+  "left_1": {
+   "type": "text",
+   "text": "T",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, -1.6, 0]
+  },
+  "right_1": {
+   "type": "text",
+   "text": "A",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, -1.6, 0]
+  },
+  "left_2": {
+   "type": "text",
+   "text": "G",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, -0.8, 0]
+  },
+  "right_2": {
+   "type": "text",
+   "text": "C",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, -0.8, 0]
+  },
+  "left_3": {
+   "type": "text",
+   "text": "C",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, 0.0, 0]
+  },
+  "right_3": {
+   "type": "text",
+   "text": "G",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, 0.0, 0]
+  },
+  "left_4": {
+   "type": "text",
+   "text": "G",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, 0.8, 0]
+  },
+  "right_4": {
+   "type": "text",
+   "text": "C",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, 0.8, 0]
+  },
+  "left_5": {
+   "type": "text",
+   "text": "T",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, 1.6, 0]
+  },
+  "right_5": {
+   "type": "text",
+   "text": "A",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, 1.6, 0]
+  },
+  "left_6": {
+   "type": "text",
+   "text": "A",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [-2.15, 2.4000000000000004, 0]
+  },
+  "right_6": {
+   "type": "text",
+   "text": "T",
+   "size": 0.4,
+   "color": "#ffffff",
+   "position": [2.15, 2.4000000000000004, 0]
+  }
+ },
+ "timeline": [
+  {
+   "type": "play",
+   "duration": 1.0,
+   "animations": [
+    {
+     "type": "write",
+     "object": "title"
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 2.0,
+   "animations": [
+    {
+     "type": "create",
+     "object": "left_nucleobases",
+     "easing_curve": "linear"
+    },
+    {
+     "type": "create",
+     "object": "right_nucleobases",
+     "easing_curve": "linear"
+    },
+    {
+     "type": "write",
+     "object": "left_0"
+    },
+    {
+     "type": "write",
+     "object": "right_0"
+    },
+    {
+     "type": "write",
+     "object": "left_1"
+    },
+    {
+     "type": "write",
+     "object": "right_1"
+    },
+    {
+     "type": "write",
+     "object": "left_2"
+    },
+    {
+     "type": "write",
+     "object": "right_2"
+    },
+    {
+     "type": "write",
+     "object": "left_3"
+    },
+    {
+     "type": "write",
+     "object": "right_3"
+    },
+    {
+     "type": "write",
+     "object": "left_4"
+    },
+    {
+     "type": "write",
+     "object": "right_4"
+    },
+    {
+     "type": "write",
+     "object": "left_5"
+    },
+    {
+     "type": "write",
+     "object": "right_5"
+    },
+    {
+     "type": "write",
+     "object": "left_6"
+    },
+    {
+     "type": "write",
+     "object": "right_6"
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 0.5
+  },
+  {
+   "type": "play",
+   "duration": 4.0,
+   "animations": [
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 0, 0],
+     "to": [-1.2, -2.4000000000000004, 0],
+     "start": 3.0,
+     "end": 4.0
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 0, 0],
+     "to": [1.2, -2.4000000000000004, 0],
+     "start": 3.0,
+     "end": 4.0
+    },
+    {
+     "type": "move",
+     "object": "left_0",
+     "to": [-3.35, -2.4000000000000004, 0],
+     "start": 3.0,
+     "end": 4.0
+    },
+    {
+     "type": "move",
+     "object": "right_0",
+     "to": [3.35, -2.4000000000000004, 0],
+     "start": 3.0,
+     "end": 4.0
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 1, 0],
+     "to": [-1.2, -1.6, 0],
+     "start": 2.5,
+     "end": 3.5
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 1, 0],
+     "to": [1.2, -1.6, 0],
+     "start": 2.5,
+     "end": 3.5
+    },
+    {
+     "type": "move",
+     "object": "left_1",
+     "to": [-3.35, -1.6, 0],
+     "start": 2.5,
+     "end": 3.5
+    },
+    {
+     "type": "move",
+     "object": "right_1",
+     "to": [3.35, -1.6, 0],
+     "start": 2.5,
+     "end": 3.5
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 2, 0],
+     "to": [-1.2, -0.8, 0],
+     "start": 2.0,
+     "end": 3.0
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 2, 0],
+     "to": [1.2, -0.8, 0],
+     "start": 2.0,
+     "end": 3.0
+    },
+    {
+     "type": "move",
+     "object": "left_2",
+     "to": [-3.35, -0.8, 0],
+     "start": 2.0,
+     "end": 3.0
+    },
+    {
+     "type": "move",
+     "object": "right_2",
+     "to": [3.35, -0.8, 0],
+     "start": 2.0,
+     "end": 3.0
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 3, 0],
+     "to": [-1.2, 0.0, 0],
+     "start": 1.5,
+     "end": 2.5
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 3, 0],
+     "to": [1.2, 0.0, 0],
+     "start": 1.5,
+     "end": 2.5
+    },
+    {
+     "type": "move",
+     "object": "left_3",
+     "to": [-3.35, 0.0, 0],
+     "start": 1.5,
+     "end": 2.5
+    },
+    {
+     "type": "move",
+     "object": "right_3",
+     "to": [3.35, 0.0, 0],
+     "start": 1.5,
+     "end": 2.5
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 4, 0],
+     "to": [-1.2, 0.8, 0],
+     "start": 1.0,
+     "end": 2.0
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 4, 0],
+     "to": [1.2, 0.8, 0],
+     "start": 1.0,
+     "end": 2.0
+    },
+    {
+     "type": "move",
+     "object": "left_4",
+     "to": [-3.35, 0.8, 0],
+     "start": 1.0,
+     "end": 2.0
+    },
+    {
+     "type": "move",
+     "object": "right_4",
+     "to": [3.35, 0.8, 0],
+     "start": 1.0,
+     "end": 2.0
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 5, 0],
+     "to": [-1.2, 1.6, 0],
+     "start": 0.5,
+     "end": 1.5
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 5, 0],
+     "to": [1.2, 1.6, 0],
+     "start": 0.5,
+     "end": 1.5
+    },
+    {
+     "type": "move",
+     "object": "left_5",
+     "to": [-3.35, 1.6, 0],
+     "start": 0.5,
+     "end": 1.5
+    },
+    {
+     "type": "move",
+     "object": "right_5",
+     "to": [3.35, 1.6, 0],
+     "start": 0.5,
+     "end": 1.5
+    },
+    {
+     "type": "move",
+     "object": "left_nucleobases",
+     "copy": [0, 6, 0],
+     "to": [-1.2, 2.4000000000000004, 0],
+     "start": 0.0,
+     "end": 1.0
+    },
+    {
+     "type": "move",
+     "object": "right_nucleobases",
+     "copy": [0, 6, 0],
+     "to": [1.2, 2.4000000000000004, 0],
+     "start": 0.0,
+     "end": 1.0
+    },
+    {
+     "type": "move",
+     "object": "left_6",
+     "to": [-3.35, 2.4000000000000004, 0],
+     "start": 0.0,
+     "end": 1.0
+    },
+    {
+     "type": "move",
+     "object": "right_6",
+     "to": [3.35, 2.4000000000000004, 0],
+     "start": 0.0,
+     "end": 1.0
+    }
+   ]
+  },
+  {
+   "type": "play",
+   "duration": 1.0,
+   "animations": [
+    {
+     "type": "highlight",
+     "object": "left_nucleobases",
+     "copy": [0, 1, 0],
+     "to": 1
+    },
+    {
+     "type": "highlight",
+     "object": "left_nucleobases",
+     "copy": [0, 2, 0],
+     "to": 1
+    },
+    {
+     "type": "highlight",
+     "object": "left_nucleobases",
+     "copy": [0, 3, 0],
+     "to": 1
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "duration": 1.5
+  }
+ ]
+}

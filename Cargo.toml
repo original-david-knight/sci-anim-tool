@@ -1,0 +1,39 @@
+[package]
+name = "sci_anim"
+version = "0.24.0"
+edition = "2024"
+description = "Turns a scene file into an animation of math or science."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/original-david-knight/sci-anim-tool"
+readme = "README.md"
+rust-version = "1.92"
+keywords = ["animation", "math", "chemistry", "physics", "video"]
+categories = ["command-line-utilities", "multimedia::video", "science", "visualization"]
+exclude = ["/.claude", "/.github", "/docs", "AGENTS.md", "CLAUDE.md"]
+
+[dependencies]
+bytemuck = { version = "1.25", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
+glam = { version = "0.34", features = ["serde"] }
+half = "2.7"
+jsonschema = { version = "0.59", default-features = false }
+lyon = "1.0"
+mitex = "0.2.4"
+# Without `prebuilt`, mitex's build script regenerates its command spec with a `typst` program
+# when one is on PATH, so the build would depend on the machine.
+mitex-spec-gen = { version = "0.2.4", features = ["prebuilt"] }
+ttf-parser = "0.25"
+typst = "0.15.1"
+typst-layout = "0.15.1"
+kurbo = "0.13"
+png = "0.18"
+pollster = "0.4"
+schemars = { version = "1.2.3", features = ["preserve_order"] }
+# Reads structure files. Its types stop at `structure_file`.
+sdfrust = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+wgpu = "30.0.1"
+
+[dev-dependencies]
+tempfile = "3.27"

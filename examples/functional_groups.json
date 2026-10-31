@@ -1,0 +1,428 @@
+{
+  "scene_config": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "background": "#1e1e1e"
+  },
+  "camera": {
+    "position": [
+      0,
+      0,
+      17
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ]
+  },
+  "objects": {
+    "caffeine": {
+      "type": "molecule",
+      "file": "../tests/fixtures/pubchem/caffeine.sdf",
+      "groups": {
+        "carbonyl_a": [
+          1,
+          9
+        ],
+        "carbonyl_b": [
+          2,
+          10
+        ],
+        "methyl": [
+          12,
+          16,
+          17,
+          18
+        ]
+      }
+    },
+    "carbonyl_a_caption": {
+      "type": "text",
+      "text": "carbonyl",
+      "size": 0.55,
+      "color": "#ffd23f",
+      "align": "center",
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "carbonyl_a",
+        "offset": [
+          -0.89,
+          2.44
+        ]
+      }
+    },
+    "carbonyl_a_leader": {
+      "type": "arrow",
+      "from": [
+        -0.77,
+        2.11
+      ],
+      "to": [
+        -0.37,
+        1.03
+      ],
+      "stroke": {
+        "color": "#ffd23f",
+        "width": 0.05
+      },
+      "tip_length": 0.25,
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "carbonyl_a"
+      }
+    },
+    "carbonyl_b_caption": {
+      "type": "text",
+      "text": "carbonyl",
+      "size": 0.55,
+      "color": "#ffd23f",
+      "align": "center",
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "carbonyl_b",
+        "offset": [
+          0.25,
+          -2.94
+        ]
+      }
+    },
+    "carbonyl_b_leader": {
+      "type": "arrow",
+      "from": [
+        0.21,
+        -2.24
+      ],
+      "to": [
+        0.1,
+        -1.09
+      ],
+      "stroke": {
+        "color": "#ffd23f",
+        "width": 0.05
+      },
+      "tip_length": 0.25,
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "carbonyl_b"
+      }
+    },
+    "methyl_caption": {
+      "type": "text",
+      "text": "methyl",
+      "size": 0.55,
+      "color": "#7fdbff",
+      "align": "left",
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "methyl",
+        "offset": [
+          2.16,
+          1.24
+        ]
+      }
+    },
+    "methyl_leader": {
+      "type": "arrow",
+      "from": [
+        1.95,
+        1.31
+      ],
+      "to": [
+        0.91,
+        0.61
+      ],
+      "stroke": {
+        "color": "#7fdbff",
+        "width": 0.05
+      },
+      "tip_length": 0.25,
+      "opacity": 0,
+      "attach": {
+        "object": "caffeine",
+        "group": "methyl"
+      }
+    }
+  },
+  "timeline": [
+    {
+      "type": "wait",
+      "duration": 0.5
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "carbonyl_a",
+          "to": 1
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            4.444,
+            20.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_a_caption",
+          "to": 1
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_a_leader",
+          "to": 1
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1.5,
+      "animations": [
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            8.889,
+            40.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "camera-move",
+          "to": [
+            0.8,
+            0.5,
+            17
+          ]
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "carbonyl_a",
+          "to": 0
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            13.333,
+            60.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_a_caption",
+          "to": 0
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_a_leader",
+          "to": 0
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "carbonyl_b",
+          "to": 1
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            17.778,
+            80.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_b_caption",
+          "to": 1
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_b_leader",
+          "to": 1
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1.5,
+      "animations": [
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            22.222,
+            100.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "camera-move",
+          "to": [
+            0,
+            1.0,
+            16.5
+          ]
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "carbonyl_b",
+          "to": 0
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            26.667,
+            120.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_b_caption",
+          "to": 0
+        },
+        {
+          "type": "fade",
+          "object": "carbonyl_b_leader",
+          "to": 0
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "methyl",
+          "to": 1,
+          "color": "#7fdbff"
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            31.111,
+            140.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "methyl_caption",
+          "to": 1
+        },
+        {
+          "type": "fade",
+          "object": "methyl_leader",
+          "to": 1
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1.5,
+      "animations": [
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            35.556,
+            160.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "camera-move",
+          "to": [
+            -0.8,
+            0.5,
+            17
+          ]
+        }
+      ]
+    },
+    {
+      "type": "play",
+      "duration": 1,
+      "animations": [
+        {
+          "type": "highlight",
+          "object": "caffeine",
+          "group": "methyl",
+          "to": 0
+        },
+        {
+          "type": "rotate",
+          "object": "caffeine",
+          "to": [
+            0,
+            40.0,
+            180.0
+          ],
+          "easing_curve": "linear"
+        },
+        {
+          "type": "fade",
+          "object": "methyl_caption",
+          "to": 0
+        },
+        {
+          "type": "fade",
+          "object": "methyl_leader",
+          "to": 0
+        }
+      ]
+    },
+    {
+      "type": "wait",
+      "duration": 1
+    }
+  ]
+}
