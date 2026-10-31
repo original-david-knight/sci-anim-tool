@@ -44,7 +44,7 @@ fn a_kind_no_gpu_has_is_a_gpu_error_that_lists_the_gpus_there_are() {
     let (kind, run) = KINDS
         .iter()
         .map(|kind| (kind, frame(Some(kind))))
-        // A GPU of a kind can be there and still fail, as cosmic's OpenGL GPU does.
+        // A GPU of a kind can be there and still fail, as an RTX 4090's OpenGL GPU does on one desktop.
         .find(|(_, run)| {
             run.json["errors"][0]["message"]
                 .as_str()

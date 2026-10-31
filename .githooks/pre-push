@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Git pre-push hook: blocks a push whose new commits name a private word, in a commit message or an
+# added line. The words, such as the maintainer's machines, live outside the repository so this file
+# names none of them: one word a line in $SCI_ANIM_PRIVATE_WORDS, or ~/.config/sci_anim/private-words.
+# With no word list it does nothing. Turn it on in a clone with: git config core.hooksPath .githooks
+set -uo pipefail
+remote=$1
+words=${SCI_ANIM_PRIVATE_WORDS:-$HOME/.config/sci_anim/private-words}
+[ -s "$words" ] || exit 0
+zero=0000000000000000000000000000000000000000
+found=0
+while read -r _ local_sha _ _; do
+  [ "$local_sha" = "$zero" ] && continue
+  for commit in $(git rev-list "$local_sha" --not --remotes="$remote"); do
+    hits=$({ git log -1 --format=%B "$commit"; git show --format= --unified=0 "$commit" | grep '^+'; } \
+      | grep -i -w -o -F -f "$words" | sort -fu | tr '\n' ' ')
+    if [ -n "$hits" ]; then
+      echo "pre-push: commit $(git log -1 --format='%h %s' "$commit") names: $hits" >&2
+      found=1
+    fi
+  done
+done
+if [ $found -eq 1 ]; then
+  echo "pre-push: blocked. Reword those commits so they name no private word, then push again." >&2
+fi
+exit $found

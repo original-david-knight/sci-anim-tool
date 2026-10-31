@@ -20,7 +20,7 @@
 Preconditions:
 
 - Baseline preconditions from the README hold, with `RUN` set. Doctor's GPU line is `ok`.
-- For `gpu-default`, `gpu-busy` and `gpu-choice`, the machine has a discrete and an integrated GPU, such as derp1 (Intel Iris Xe and RTX 4000 Ada) or cosmic (RTX 4090 and Radeon 610M). On another machine, report those as not verified, with the GPUs `gpu-missing` lists.
+- For `gpu-default`, `gpu-busy` and `gpu-choice`, the machine has a discrete and an integrated GPU, such as a laptop with an Intel Iris Xe and an RTX 4000 Ada, or a desktop with an RTX 4090 and a Radeon 610M. On another machine, report those as not verified, with the GPUs `gpu-missing` lists.
 
 - **Default.** Run `$SKILL/scripts/run "$RUN" gpu-default-frame frame examples/timeline.json -t 1 -o "$RUN/default.png"`. Exit 0. `.gpu.kind` is `discrete` and `.gpu.name` names the discrete GPU, such as `NVIDIA RTX 4000 Ada Generation Laptop GPU`.
 - **Busy.** Make a 4K scene: `jq '.scene_config = {width: 3840, height: 2160, fps: 60}' skills/sci-anim/examples/derivative.json > "$RUN/derivative-4k.json"`. Start `nvidia-smi --query-gpu=timestamp,name,utilization.gpu --format=csv -lms 1000 > "$RUN/gpu-busy.nvidia-smi.csv" &` and keep its PID, run `$SKILL/scripts/run "$RUN" gpu-busy-render render "$RUN/derivative-4k.json" -o "$RUN/derivative-4k.mp4" --updates`, then kill that PID. Exit 0, `.gpu.kind` `discrete`, and most samples in the CSV are well above 0 %. Then render again with `--gpu integrated` as `gpu-choice-render-4k` under a second sampler: the report names the integrated GPU, the samples stay at 0 %, and the render takes longer.
@@ -32,6 +32,6 @@ Preconditions:
 
 ## Gotchas
 
-- wgpu lists each NVIDIA GPU twice, once through Vulkan and once through OpenGL as kind `other`. `--gpu other` picks the OpenGL one, which can fail with `the GPU device failed: Parent device is lost`, as it does on cosmic. That is a `gpu` error from the driver, not a missing kind.
+- wgpu lists each NVIDIA GPU twice, once through Vulkan and once through OpenGL as kind `other`. `--gpu other` picks the OpenGL one, which can fail with `the GPU device failed: Parent device is lost`, as it does on one desktop with an RTX 4090. That is a `gpu` error from the driver, not a missing kind.
 - `nvidia-smi` sees only NVIDIA GPUs. The integrated GPU's work does not show in it, so a sample at 0 % during a `--gpu integrated` render is the expected result, and the report's `.gpu` is the proof of which GPU drew.
 - `WGPU_POWER_PREF=low-power` still changes the default, and `WGPU_BACKEND` limits which drivers are listed. Unset both before you drive this feature.
