@@ -6,6 +6,10 @@ sci_anim is a command-line tool that turns a scene file into an animation of mat
 
 The animation above is [`examples/showcase.json`](examples/showcase.json), rendered with `sci_anim render` and converted to a GIF.
 
+## Inspired by manim
+
+sci_anim was inspired by [manim](https://www.manim.community/), the animation engine behind 3Blue1Brown's videos. I wanted what manim does without its Python dependency, and I needed a tool shaped for an AI agent rather than for a person writing code. sci_anim is one Rust binary. It typesets LaTeX math itself, so it needs no Python and no TeX install. A scene is a JSON file instead of a Python program, and every command answers in JSON an agent can read.
+
 ## sci_anim is built for agents
 
 sci_anim is made for a coding agent, such as Claude Code or Codex, to drive. You ask your agent for a video. The agent plans the lesson, writes the scene file, checks it, looks at its frames, fixes what is wrong, and renders. You can write scene files by hand, but most people will never open one.
@@ -45,7 +49,7 @@ The skill holds:
     - `ffmpeg` on `PATH`, for `render` and for the contact sheets of `check-layout`.
     - `jq` on `PATH`, for the skill's `scripts/fields`.
 
-    CI tests sci_anim on Linux and on macOS with Apple Silicon. On a Mac, install Rust with rustup, then run `brew install ffmpeg jq`.
+    sci_anim is developed and used on Linux. macOS is not fully tested. CI builds sci_anim and runs its tests on an Apple Silicon virtual machine, but it has not been used on a real Mac, and Intel Macs are untested. On a Mac, install Rust with rustup, then run `brew install ffmpeg jq`. If something breaks, please open an issue.
 
 2. Install sci_anim:
 
