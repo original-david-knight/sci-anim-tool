@@ -246,6 +246,8 @@ fn project_installs_at_the_root_of_the_repository_holding_the_current_directory(
     std::fs::create_dir_all(repo.join(".claude")).unwrap();
     std::fs::create_dir_all(repo.join("src/deep")).unwrap();
     std::fs::create_dir_all(&home).unwrap();
+    // The report names the real path of the current directory. macOS's temp folder sits under a symlink.
+    let repo = repo.canonicalize().unwrap();
 
     let (exit, report) = install_in(&repo.join("src/deep"), &home, &["--project"]);
 

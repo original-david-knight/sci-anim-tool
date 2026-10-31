@@ -17,7 +17,7 @@ stdout=$run/$check.stdout.json
 "$bin" "$@" > "$stdout" 2> "$run/$check.stderr"
 code=$?
 echo "$code" > "$run/$check.exit"
-echo "$(date -Is) $check exit=$code $(cat "$run/$check.cmd")" >> "$run/transcript.txt"
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) $check exit=$code $(cat "$run/$check.cmd")" >> "$run/transcript.txt"
 cat "$stdout"
 [ -s "$run/$check.stderr" ] && echo "--- stderr ($check) ---" >&2 && head -20 "$run/$check.stderr" >&2
 exit "$code"

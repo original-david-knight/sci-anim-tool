@@ -10,7 +10,8 @@ run=${1:?usage: cleanup <run folder>}
 if [ -f "$run/pids" ]; then
   while read -r pid; do
     [ -n "$pid" ] || continue
-    comm=$(cat "/proc/$pid/comm" 2>/dev/null || true)
+    comm=$(ps -p "$pid" -o comm= 2>/dev/null || true)
+    comm=${comm##*/}
     case $comm in
       sci_anim|ffmpeg) kill "$pid" && echo "killed $pid ($comm)";;
       "") echo "pid $pid already gone";;
@@ -19,6 +20,6 @@ if [ -f "$run/pids" ]; then
   done < "$run/pids"
 fi
 rm -rf "$run/work"
-echo "finished: $(date -Is)" >> "$run/run.txt"
+echo "finished: $(date +%Y-%m-%dT%H:%M:%S%z)" >> "$run/run.txt"
 echo "evidence kept in $run:"
 ls -1 "$run"

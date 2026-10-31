@@ -41,11 +41,11 @@ The skill holds:
 
 1. Install the requirements:
     - Rust 1.92 or later, to build sci_anim.
-    - A GPU with a Vulkan driver, or Mesa's lavapipe software driver, to draw frames. `validate`, `inspect`, `stages` and `schema` need no GPU.
+    - A GPU to draw frames. On Linux that is a GPU with a Vulkan driver, or Mesa's lavapipe software driver on a machine with no GPU. On macOS it is the Mac's own GPU, through Metal. `validate`, `inspect`, `stages` and `schema` need no GPU.
     - `ffmpeg` on `PATH`, for `render` and for the contact sheets of `check-layout`.
     - `jq` on `PATH`, for the skill's `scripts/fields`.
 
-    Linux is the platform sci_anim is tested on.
+    CI tests sci_anim on Linux and on macOS with Apple Silicon. On a Mac, install Rust with rustup, then run `brew install ffmpeg jq`.
 
 2. Install sci_anim:
 

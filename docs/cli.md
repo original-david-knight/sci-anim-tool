@@ -44,7 +44,7 @@ A report that worked has `"status": "ok"` and names its `command`. A report that
 
 ## Choose a GPU
 
-`frame`, `frames`, `render` and `check-layout` draw on the GPU. They take a discrete GPU when the machine has one, then an integrated one, then any other. Mesa's lavapipe software driver works on a machine with no GPU, at a lower frame rate.
+`frame`, `frames`, `render` and `check-layout` draw on the GPU. They take a discrete GPU when the machine has one, then an integrated one, then any other. Mesa's lavapipe software driver works on a Linux machine with no GPU, at a lower frame rate. Lavapipe is Linux only, so on macOS `--gpu cpu` is a `gpu` error. A Mac's GPU draws through Metal and reports its kind as `integrated`.
 
 `--gpu <KIND>` draws on the first GPU of one kind instead. A kind the machine has no GPU of is a `gpu` error that lists the GPUs it has.
 

@@ -17,7 +17,7 @@ cargo clippy --locked --all-targets -- -D warnings
 
 CI runs all four. The code uses rustfmt's default layout, so run `cargo fmt` before you commit.
 
-Many tests draw frames, so they need a GPU with a Vulkan driver. Mesa's lavapipe software driver also works, and CI uses it. Under lavapipe, `png_write_failure_cleans_owned_files_and_never_reports_finished` fails because lavapipe cannot create a device under `ulimit -f 0`, so CI skips that one test.
+Many tests draw frames, so they need a GPU: one with a Vulkan driver on Linux, or the Mac's own GPU through Metal on macOS. On Linux, Mesa's lavapipe software driver also works, and CI uses it. CI also runs every test on macOS with Apple Silicon. Under lavapipe, `png_write_failure_cleans_owned_files_and_never_reports_finished` fails because lavapipe cannot create a device under `ulimit -f 0`, so CI skips that one test.
 
 ## Use the glossary's words
 
