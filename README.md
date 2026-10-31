@@ -8,7 +8,7 @@ The animation above is [`examples/showcase.json`](examples/showcase.json), rende
 
 ## Inspired by manim
 
-sci_anim was inspired by [manim](https://www.manim.community/), the animation engine behind 3Blue1Brown's videos. I wanted what manim does without its Python dependency, and I needed a tool shaped for an AI agent rather than for a person writing code. sci_anim is one Rust binary. It typesets LaTeX math itself, so it needs no Python and no TeX install. A scene is a JSON file instead of a Python program, and every command answers in JSON an agent can read.
+sci_anim was inspired by [manim](https://www.manim.community/), the animation engine behind 3Blue1Brown's videos. It draws the same kind of animation without manim's Python dependency, and it is shaped for an AI agent rather than for a person writing code. sci_anim is one Rust binary. It typesets LaTeX math itself, so it needs no Python and no TeX install. A scene is a JSON file instead of a Python program, and every command answers in JSON an agent can read.
 
 ## sci_anim is built for agents
 
