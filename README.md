@@ -118,27 +118,27 @@ Each video below is one scene, narrated, with sound.
 
 Text in two fonts, math typeset from LaTeX, an equation that morphs into the next, and a table with a highlighted cell:
 
-https://github.com/user-attachments/assets/2637afba-c908-4be3-967c-699e88709030
+https://github.com/user-attachments/assets/c17b0882-e19d-410e-b7f2-f5b6164057df
 
 Axes and a number line, a function plot that morphs into another, a triangle that follows a plot as it is created, and a bar plot on a category axis:
 
-https://github.com/user-attachments/assets/04ce03ea-a3bb-47d9-9681-7d50d34e7b65
+https://github.com/user-attachments/assets/43ab87d3-1c54-4d4a-9499-1f16abf2b927
 
 A linear map that carries a circle, a square and the basis vectors through a shear and a quarter turn:
 
-https://github.com/user-attachments/assets/d3344ae5-4515-4064-8ba0-c844004673e2
+https://github.com/user-attachments/assets/9dab2fc2-b05f-4353-beff-50e05ba253d0
 
 Caffeine read from a PubChem structure file, an atom group highlighted and captioned, and a reaction that moves each atom into its product:
 
-https://github.com/user-attachments/assets/82f1ea8d-a123-4ca1-9241-2fd75a358d75
+https://github.com/user-attachments/assets/df0d5152-dd39-4f6d-831c-266227d6c23b
 
 Lit solids made from flat shapes, a revolution cut open, tubes along a helix and a knot, and a surface on 3D axes while the camera circles it:
 
-https://github.com/user-attachments/assets/0d940d90-4e26-441c-bf43-f0c78de472ed
+https://github.com/user-attachments/assets/c825d930-d6ef-4170-b473-1e56381ebfbb
 
 Moves, turns, scales, recolors and fades on a timeline, a pendulum swung by a law, three patterns of copies, and a change that starts on a spoken word:
 
-https://github.com/user-attachments/assets/467979e0-3940-4fc9-a279-b7e75126bf69
+https://github.com/user-attachments/assets/8b5f5993-afc2-48ad-a9d9-8d9204a881d1
 
 ## Commands
 
