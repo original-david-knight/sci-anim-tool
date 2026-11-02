@@ -16,9 +16,9 @@ Read every file the video needs before you write any JSON. Each path is relative
 | anything (always) | `references/instructional-videos.md`, then `references/motion.md` |
 | text, equations, shapes, plots, bar plots of data, tables such as the genetic code, geometry, or matrices and linear maps | `references/math.md` |
 | molecules, atom groups, reactions, polymers, hydrogen bonds and nucleobase pairs, or proteins and DNA from PDB files | `references/chemistry.md` |
-| solids: boxes, cylinders, cones, spheres, planets, orbits, knots, surfaces and functions of two variables, 3D axes, or anything with depth | `references/solids.md` |
+| solids: boxes, cylinders, cones, spheres, planets, orbits, knots, surfaces and functions of two variables, crystals with flat faces, mirror images, 3D axes, or anything with depth | `references/solids.md` |
 | repetition: a crystal lattice, ruler or clock ticks, a ring of atoms or charges, beads along a curve, a vector field of arrows, or rungs colored by a sequence | `references/patterns.md` |
-| physics: waves, forces on a body, springs, the path a body leaves, a number that counts as it changes, or motion known by its rates | `references/physics.md` |
+| physics: waves, polarized light, forces on a body, springs, the path a body leaves, a number that counts as it changes, or motion known by its rates | `references/physics.md` |
 | a narrator's voice, music, or any sound | `references/narration.md` |
 | frames to lay over other footage or images | `references/overlays.md` |
 
@@ -110,6 +110,8 @@ Each validates and passes `check-layout`. `examples/spring_wave.go` writes `exam
 | `examples/pet.json` | demo: a PET chain of two units, with its backbone rings, ester groups, one repeating unit and its acid and alcohol ends lit in turn | a ring in the backbone, atom groups for parts of a repeating unit |
 | `examples/pendulum.json` | demo: a pendulum's rod and bob swing by laws | a swing by a law |
 | `examples/waves.json` | demo: a travelling wave, a standing wave, a Fourier series | shape laws |
+| `examples/polarized_light.json` | demo: a polarized wave whose plane turns by 60 degrees through a tube of sugar solution, then a right-handed and a left-handed helix of circularly polarized light | a wave in space as a tube, a faded solid that shows what is inside it, the plane and its angle marked, text attached under a turned camera |
+| `examples/tartrate_crystals.json` | demo: Pasteur's two tartrate crystals, mirror images with their small slanted face at opposite corners, then one turned a half turn | a crystal of flat faces as two surfaces, a mirror image by a negative `scale` |
 | `examples/forces.json` | demo: force arrows riding a sliding block, and a mass on a spring | ends on objects, springs |
 | `examples/cross_links.json` | demo: cross-links between two wiggling chains, then an arrow that rides one point of a travelling wave | ends on a tube's curve at a `u` and on a plot's curve at an `x` (sci_anim 0.13.0 or later) |
 | `examples/nucleobase_pairs.json` | demo: an A-T nucleobase pair and a G-C nucleobase pair turning, joined by two and three dashed hydrogen bonds | ends on atoms, dashed strokes, structure files written by `scripts/nucleobase_pair.go` (sci_anim 0.14.0 or later) |
