@@ -4,11 +4,13 @@
 //! Both draw the same way, as `Drawing`: one stroked path of axis lines and ticks, and the filled
 //! glyphs of every tick label and axis label. A create draws the rulings along their length and
 //! then fades the labels in, as it draws a stroke and then a fill, so `mesh` has no new curve
-//! code. A plot reads `Axes::to_local` and `Axes::to_data` and nothing else of an axes.
+//! code. A plot reads where data lands along each axis, in data or in the axis scale, and nothing
+//! else of an axes.
 
 use glam::{Mat4, Vec2, Vec3};
 use kurbo::{Affine, BezPath, Point, Rect};
-use serde::Serialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::mesh::{BoundingBox, corners};
 use crate::path::Path;
@@ -25,12 +27,16 @@ pub(crate) const LABEL_GAP: f32 = 0.12;
 /// Half the height of a digit as a share of the text size, to center a label on its tick.
 const HALF_DIGIT_HEIGHT: f32 = 0.35;
 
-/// One axis: the data values it shows, the spacing of its ticks, and how long it is in the
-/// object's own units. The axis runs across a box centered on the object's position.
+/// One axis: the data values it shows, how it lays them along its length, the spacing of its
+/// ticks, and how long it is in the object's own units. The axis runs across a box centered on
+/// the object's position.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Axis {
     min: f64,
     max: f64,
+    scale: AxisScale,
+    /// The distance between ticks in the axis scale: data units on a linear axis, powers of ten
+    /// on a log axis.
     spacing: f64,
     length: f32,
     /// Where the other axis crosses this one: 0 or the nearest end of the range, and the low
@@ -38,25 +44,81 @@ pub struct Axis {
     crossing: f64,
 }
 
+/// How an axis lays data values along its length. `linear`, the default, puts equal steps of
+/// value at equal steps along it. `log` puts each power of ten an equal step along it, so a
+/// value 1000 times another sits three such steps past it. The variants carry no doc comments,
+/// for the reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum AxisScale {
+    #[default]
+    Linear,
+    Log,
+}
+
+impl AxisScale {
+    fn is_linear(&self) -> bool {
+        *self == AxisScale::Linear
+    }
+
+    /// Where `value` lies in this scale: the value itself, or its power of ten.
+    fn scaled(self, value: f64) -> f64 {
+        match self {
+            AxisScale::Linear => value,
+            AxisScale::Log => value.log10(),
+        }
+    }
+
+    fn unscaled(self, scaled: f64) -> f64 {
+        match self {
+            AxisScale::Linear => scaled,
+            AxisScale::Log => 10f64.powf(scaled),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum AxisError {
     /// `range` does not have its lowest value first, or has a value that is not a number.
     EmptyRange,
+    /// A log axis' range starts at 0 or below, where no power of ten lies.
+    NotAboveZero,
+    /// A log axis' spacing is not a whole number of powers of ten.
+    NotWholePowers,
     /// The spacing gives more than `MAX_TICKS` ticks.
     TooManyTicks(usize),
 }
 
 impl Axis {
-    /// `spacing` is the data distance between ticks, or `None` for a round number that gives
-    /// about five.
-    pub fn new(min: f64, max: f64, spacing: Option<f64>, length: f32) -> Result<Axis, AxisError> {
+    /// `spacing` is the distance between ticks in the axis scale, or `None` for a round number
+    /// that gives about five: data units on a linear axis, and on a log axis a whole number of
+    /// powers of ten, one when that gives five or fewer.
+    pub fn new(
+        min: f64,
+        max: f64,
+        scale: AxisScale,
+        spacing: Option<f64>,
+        length: f32,
+    ) -> Result<Axis, AxisError> {
         if !(min.is_finite() && max.is_finite() && min < max) {
             return Err(AxisError::EmptyRange);
         }
-        let spacing = spacing.unwrap_or_else(|| nice_spacing(max - min));
+        if scale == AxisScale::Log && min <= 0.0 {
+            return Err(AxisError::NotAboveZero);
+        }
+        let span = scale.scaled(max) - scale.scaled(min);
+        let spacing = match (scale, spacing) {
+            (_, Some(spacing)) => spacing,
+            (AxisScale::Linear, None) => nice_spacing(span),
+            (AxisScale::Log, None) => nice_spacing(span).max(1.0),
+        };
+        if scale == AxisScale::Log && spacing.fract() != 0.0 {
+            return Err(AxisError::NotWholePowers);
+        }
         let axis = Axis {
             min,
             max,
+            scale,
             spacing,
             length,
             crossing: 0.0f64.clamp(min, max),
@@ -75,6 +137,7 @@ impl Axis {
         Axis {
             min,
             max: count as f64 - 0.5,
+            scale: AxisScale::Linear,
             spacing: 1.0,
             length,
             crossing: min,
@@ -85,39 +148,91 @@ impl Axis {
         (self.min, self.max)
     }
 
+    pub fn scale(&self) -> AxisScale {
+        self.scale
+    }
+
     pub fn spacing(&self) -> f64 {
         self.spacing
     }
 
-    /// The own length one data unit spans along the axis, before the object's scale.
+    /// Whether the axis can place `value`: any value on a linear axis, and a value above 0 on a
+    /// log axis.
+    pub fn places(&self, value: f64) -> bool {
+        self.scale == AxisScale::Linear || value > 0.0
+    }
+
+    /// Where `value` lies in the axis scale, along which data lands evenly: the value itself on
+    /// a linear axis and its power of ten on a log axis.
+    pub fn scaled(&self, value: f64) -> f64 {
+        self.scale.scaled(value)
+    }
+
+    pub fn unscaled(&self, scaled: f64) -> f64 {
+        self.scale.unscaled(scaled)
+    }
+
+    /// The range in the axis scale.
+    pub fn scaled_range(&self) -> (f64, f64) {
+        (self.scaled(self.min), self.scaled(self.max))
+    }
+
+    /// The own length one step of the axis scale spans along the axis, before the object's
+    /// scale: one data unit on a linear axis, one power of ten on a log axis.
     pub fn unit(&self) -> f64 {
-        f64::from(self.length) / (self.max - self.min)
+        let (low, high) = self.scaled_range();
+        f64::from(self.length) / (high - low)
     }
 
     /// Where a data value lands along the axis: `-length / 2` at the lowest value and
-    /// `length / 2` at the highest, and beyond them outside the range.
+    /// `length / 2` at the highest, and beyond them outside the range. On a log axis a value at
+    /// or below 0 has no place, and lands at NaN.
     pub fn to_local(self, value: f64) -> f32 {
-        (((value - self.min) / (self.max - self.min) - 0.5) * f64::from(self.length)) as f32
+        self.scaled_to_local(self.scaled(value))
+    }
+
+    /// Where a value in the axis scale lands along the axis.
+    pub fn scaled_to_local(self, scaled: f64) -> f32 {
+        let (low, high) = self.scaled_range();
+        (((scaled - low) / (high - low) - 0.5) * f64::from(self.length)) as f32
     }
 
     pub fn to_data(self, local: f32) -> f64 {
-        (f64::from(local) / f64::from(self.length) + 0.5) * (self.max - self.min) + self.min
+        let (low, high) = self.scaled_range();
+        self.unscaled((f64::from(local) / f64::from(self.length) + 0.5) * (high - low) + low)
     }
 
-    /// Every multiple of the spacing in the range, so ticks sit on round values whatever the
-    /// range starts at.
+    /// Every multiple of the spacing in the range of the axis scale, so ticks sit on round
+    /// values whatever the range starts at: on a log axis, at powers of ten.
     pub fn ticks(&self) -> impl Iterator<Item = f64> + '_ {
-        let first = (self.min / self.spacing - 1e-9).ceil() as i64;
-        let last = (self.max / self.spacing + 1e-9).floor() as i64;
-        (first..=last).map(|k| k as f64 * self.spacing)
+        let (low, high) = self.scaled_range();
+        let first = (low / self.spacing - 1e-9).ceil() as i64;
+        let last = (high / self.spacing + 1e-9).floor() as i64;
+        (first..=last).map(|k| match self.scale {
+            AxisScale::Linear => k as f64 * self.spacing,
+            // Read from its decimal form, so 10^-6 is the double nearest 0.000001, as a range
+            // written 1e-6 is.
+            AxisScale::Log => format!("1e{}", k * self.spacing as i64)
+                .parse()
+                .expect("a power of ten in decimal form parses"),
+        })
     }
 
     pub(crate) fn crossing(&self) -> f64 {
         self.crossing
     }
 
-    /// A tick's value with as many decimals as the spacing has, such as `-1.5` or `20`.
+    /// A tick's value as LaTeX math: on a linear axis with as many decimals as the spacing has,
+    /// such as `-1.5` or `20`, and on a log axis as a power of ten, such as `10^{-6}`.
     pub(crate) fn label(&self, value: f64) -> String {
+        match self.scale {
+            AxisScale::Linear => self.number(value),
+            AxisScale::Log => format!("10^{{{}}}", self.number(value.log10())),
+        }
+    }
+
+    /// `value` with as many decimals as the spacing has, and no negative zero.
+    fn number(&self, value: f64) -> String {
         let decimals = (0..=8).find(|d| {
             let scaled = self.spacing * 10f64.powi(*d);
             (scaled - scaled.round()).abs() <= 1e-9 * scaled.abs().max(1.0)
@@ -588,6 +703,15 @@ impl Axes {
         (self.x.to_data(local.x), self.y.to_data(local.y))
     }
 
+    /// The first coordinate of `data` that its axis cannot place, a value at or below 0 on a log
+    /// axis, as the axis' name and the value, or `None` when both axes place theirs.
+    pub fn unplaced(&self, (x, y): (f64, f64)) -> Option<(&'static str, f64)> {
+        [("x", &self.x, x), ("y", &self.y, y)]
+            .into_iter()
+            .find(|(_, axis, value)| !axis.places(*value))
+            .map(|(name, _, value)| (name, value))
+    }
+
     /// The first two neighboring category labels that come nearer than a quarter of the label
     /// size, which the frame would show run together as one word, or `None`.
     pub fn crowded_categories(&self, label_size: f32) -> Option<(&str, &str)> {
@@ -616,7 +740,7 @@ impl Axes {
         let world =
             |data: (f64, f64)| object_to_world.transform_point3(self.to_local(data).extend(0.0));
         let unit = |axis: &Axis, along: Vec3| {
-            object_to_world.transform_vector3(along * (axis.length / (axis.max - axis.min) as f32))
+            object_to_world.transform_vector3(along * axis.unit() as f32)
         };
         let spot = |data| Spot {
             world: world(data),
@@ -642,6 +766,7 @@ impl Axes {
             .collect();
         let axis_report = |which: &'static str, axis: &Axis| AxisReport {
             range: [axis.min, axis.max],
+            scale: axis.scale,
             spacing: axis.spacing,
             label_bounding_box: self.drawing.axis_label_bounding_box(
                 which,
@@ -653,7 +778,7 @@ impl Axes {
         AxesReport {
             x: axis_report("x", &self.x),
             y: axis_report("y", &self.y),
-            zero: spot((0.0, 0.0)),
+            zero: spot((self.x.unscaled(0.0), self.y.unscaled(0.0))),
             x_unit: unit(&self.x, Vec3::X),
             y_unit: unit(&self.y, Vec3::Y),
             ticks,
@@ -727,6 +852,7 @@ impl NumberLine {
         NumberLineReport {
             axis: AxisReport {
                 range: [self.axis.min, self.axis.max],
+                scale: self.axis.scale,
                 spacing: self.axis.spacing,
                 label_bounding_box: self.drawing.axis_label_bounding_box(
                     "x",
@@ -736,9 +862,7 @@ impl NumberLine {
                 categories: None,
             },
             zero: spot(0.0),
-            unit: object_to_world.transform_vector3(
-                Vec3::X * (self.axis.length / (self.axis.max - self.axis.min) as f32),
-            ),
+            unit: object_to_world.transform_vector3(Vec3::X * self.axis.unit() as f32),
             ticks: self
                 .axis
                 .ticks()
@@ -769,10 +893,12 @@ pub struct NumberLineReport {
 pub struct AxesReport {
     pub x: AxisReport,
     pub y: AxisReport,
-    /// The data point (0, 0), the zero of both axes, even where it lies outside the ranges.
+    /// The data point (0, 0), the zero of both axes, even where it lies outside the ranges. On a
+    /// log axis its coordinate is 1 instead, the power of ten 10^0.
     pub zero: Spot,
     /// The world vector that one data unit along x adds, so data (x, y) is at
-    /// `zero.world + x * x_unit + y * y_unit`.
+    /// `zero.world + x * x_unit + y * y_unit`. On a log axis it is the vector one power of ten
+    /// adds, and log10 of the value takes the value's place in the sum.
     pub x_unit: Vec3,
     pub y_unit: Vec3,
     pub ticks: Vec<Tick>,
@@ -781,6 +907,10 @@ pub struct AxesReport {
 #[derive(Debug, Serialize)]
 pub struct AxisReport {
     pub range: [f64; 2],
+    /// How the axis lays values along its length: `log`, or left out for `linear`.
+    #[serde(skip_serializing_if = "AxisScale::is_linear")]
+    pub scale: AxisScale,
+    /// The distance between ticks: data units on a linear axis, powers of ten on a log axis.
     pub spacing: f64,
     /// The bounding box of the axis label. Left out when the axis has none.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -825,7 +955,7 @@ mod tests {
     use super::*;
 
     fn axis(min: f64, max: f64, spacing: Option<f64>, length: f32) -> Axis {
-        Axis::new(min, max, spacing, length).unwrap()
+        Axis::new(min, max, AxisScale::Linear, spacing, length).unwrap()
     }
 
     #[test]
@@ -940,20 +1070,88 @@ mod tests {
     #[test]
     fn a_bad_range_or_spacing_is_refused() {
         assert_eq!(
-            Axis::new(1.0, 1.0, None, 1.0).unwrap_err(),
+            Axis::new(1.0, 1.0, AxisScale::Linear, None, 1.0).unwrap_err(),
             AxisError::EmptyRange
         );
         assert_eq!(
-            Axis::new(2.0, 1.0, None, 1.0).unwrap_err(),
+            Axis::new(2.0, 1.0, AxisScale::Linear, None, 1.0).unwrap_err(),
             AxisError::EmptyRange
         );
         assert_eq!(
-            Axis::new(f64::NAN, 1.0, None, 1.0).unwrap_err(),
+            Axis::new(f64::NAN, 1.0, AxisScale::Linear, None, 1.0).unwrap_err(),
             AxisError::EmptyRange
         );
         assert_eq!(
-            Axis::new(0.0, 1000.0, Some(1.0), 1.0).unwrap_err(),
+            Axis::new(0.0, 1000.0, AxisScale::Linear, Some(1.0), 1.0).unwrap_err(),
             AxisError::TooManyTicks(1001)
         );
+    }
+
+    #[test]
+    fn a_log_axis_ticks_each_power_of_ten_evenly_and_labels_it_as_a_power() {
+        let y = Axis::new(1e-6, 1.0, AxisScale::Log, None, 6.0).unwrap();
+
+        assert_eq!(
+            y.ticks().collect::<Vec<_>>(),
+            [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0]
+        );
+        assert_eq!(
+            y.ticks().map(|v| y.label(v)).collect::<Vec<_>>(),
+            [
+                "10^{-6}", "10^{-5}", "10^{-4}", "10^{-3}", "10^{-2}", "10^{-1}", "10^{0}"
+            ]
+        );
+        let along: Vec<f32> = y.ticks().map(|v| y.to_local(v)).collect();
+        for (local, expected) in along.iter().zip([-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]) {
+            assert!((local - expected).abs() < 1e-6, "{along:?}");
+        }
+        assert!(
+            (y.to_local(0.002) - 2f32.log10()).abs() < 1e-5,
+            "0.002 lies log10(2) of a power of ten past 10^-3, at the middle of the axis"
+        );
+        assert!((y.to_data(1.0) - 0.01).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_log_axis_over_many_powers_of_ten_ticks_every_few() {
+        let y = Axis::new(1e-30, 1.0, AxisScale::Log, None, 6.0).unwrap();
+        assert_eq!(y.spacing(), 5.0);
+        assert_eq!(
+            y.ticks().map(|v| y.label(v)).collect::<Vec<_>>(),
+            [
+                "10^{-30}", "10^{-25}", "10^{-20}", "10^{-15}", "10^{-10}", "10^{-5}", "10^{0}"
+            ]
+        );
+        let every_other = Axis::new(1.0, 1e4, AxisScale::Log, Some(2.0), 4.0).unwrap();
+        assert_eq!(every_other.ticks().collect::<Vec<_>>(), [1.0, 1e2, 1e4]);
+    }
+
+    #[test]
+    fn a_log_axis_refuses_a_range_reaching_0_and_a_fraction_of_a_power() {
+        for low in [0.0, -1.0] {
+            assert_eq!(
+                Axis::new(low, 10.0, AxisScale::Log, None, 1.0).unwrap_err(),
+                AxisError::NotAboveZero
+            );
+        }
+        assert_eq!(
+            Axis::new(1.0, 100.0, AxisScale::Log, Some(0.5), 1.0).unwrap_err(),
+            AxisError::NotWholePowers
+        );
+        let axes = Axes::new(
+            Axis::new(1.0, 10.0, AxisScale::Log, None, 1.0).unwrap(),
+            Axis::new(-1.0, 1.0, AxisScale::Linear, None, 1.0).unwrap(),
+            None,
+            None,
+            Appearance {
+                stroke: Stroke::default(),
+                color: Color { r: 0, g: 0, b: 0 },
+                label_size: 0.3,
+            },
+        )
+        .unwrap();
+        assert_eq!(axes.unplaced((5.0, -1.0)), None, "y is linear");
+        assert_eq!(axes.unplaced((0.0, 0.5)), Some(("x", 0.0)));
+        assert_eq!(axes.unplaced((-2.0, 0.5)), Some(("x", -2.0)));
     }
 }

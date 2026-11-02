@@ -45,6 +45,13 @@ impl ObjectFile {
             );
             return Err(("position", SceneErrorCode::PlacedByAxes, message).into());
         }
+        if let PlacedBy::DataPoint(axes_id) = &placed_by
+            && let Some((axis, value)) =
+                DataToWorld::of(&placed[axes_id]).unplaced(self.transform.position)
+        {
+            let message = unplaced("the position", axes_id, axis, value);
+            return Err(("position", SceneErrorCode::OutOfRange, message).into());
+        }
         Ok(Object {
             transform: self.transform,
             opacity: self.opacity,
@@ -547,6 +554,7 @@ pub(super) fn shape(
             for (which, file) in [("x", &x), ("y", &y), ("z", &z)] {
                 let one = AxisFile {
                     range: file.range,
+                    scale: AxisScale::Linear,
                     spacing: file.spacing,
                     label: None,
                 };
@@ -580,6 +588,7 @@ pub(super) fn shape(
             };
             let one = AxisFile {
                 range,
+                scale: AxisScale::Linear,
                 spacing,
                 label: None,
             };
@@ -623,6 +632,18 @@ pub(super) fn shape(
         } => {
             let (axes_id, axes) = find_axes(&axes, placed)?;
             let points: Vec<(f64, f64)> = points.into_iter().map(|[x, y]| (x, y)).collect();
+            if let Some((k, (axis, value))) = points
+                .iter()
+                .enumerate()
+                .find_map(|(k, &point)| Some((k, axes.unplaced(point)?)))
+            {
+                let message = unplaced(&format!("point {k}"), &axes_id, axis, value);
+                return Err(Faults(vec![(
+                    format!("points/{k}"),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                )]));
+            }
             let path = plot::points_path(axes, &points).map_err(plot_error("points"))?;
             placed_by = PlacedBy::Axes(axes_id);
             Shape::Flat {
@@ -638,6 +659,18 @@ pub(super) fn shape(
             stroke,
         } => {
             let (axes_id, found) = find_axes(&axes, placed)?;
+            if let Some((k, &value)) = values
+                .iter()
+                .enumerate()
+                .find(|(_, value)| !found.y.places(**value))
+            {
+                let message = unplaced(&format!("bar {k}"), &axes_id, "y", value);
+                return Err(Faults(vec![(
+                    format!("values/{k}"),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                )]));
+            }
             let bar_plot =
                 BarPlot::new(found, &values, fill, stroke).map_err(|error| match error {
                     BarPlotError::NoCategories => (
@@ -1269,6 +1302,14 @@ fn undashed(stroke: Stroke, what: &str) -> Result<Stroke, Fault> {
     Ok(stroke)
 }
 
+/// The message for a value that a log axis of the axes `axes_id` cannot place: `what`, such as
+/// `point 3`, has `value` along `axis`.
+pub(super) fn unplaced(what: &str, axes_id: &ObjectId, axis: &str, value: f64) -> String {
+    format!(
+        "{what} has {axis} = {value}, and the {axis} axis of `{axes_id}` is a log axis, which places only values above 0; give a value above 0, or leave out that axis' `scale` for a linear axis"
+    )
+}
+
 pub(super) fn axis(which: &str, file: &AxisFile, length: Positive) -> Result<Axis, Fault> {
     let (range_field, spacing_field) = match which {
         "x" => ("x/range", "x/spacing"),
@@ -1283,8 +1324,10 @@ pub(super) fn axis(which: &str, file: &AxisFile, length: Positive) -> Result<Axi
             "`spacing` must be more than 0".to_string(),
         ));
     }
-    Axis::new(file.range[0], file.range[1], file.spacing, length.get()).map_err(|error| match error {
+    Axis::new(file.range[0], file.range[1], file.scale, file.spacing, length.get()).map_err(|error| match error {
         AxisError::EmptyRange => (range_field, SceneErrorCode::Invalid, "`range` must give its lowest value first, and the two must differ".to_string()),
+        AxisError::NotAboveZero => (range_field, SceneErrorCode::OutOfRange, format!("a log axis shows only values above 0, where powers of ten lie, and `range` starts at {}; start it above 0, such as at 1e-6, or leave `scale` out for a linear axis", file.range[0])),
+        AxisError::NotWholePowers => (spacing_field, SceneErrorCode::Invalid, format!("a log axis puts its ticks at powers of ten, so its `spacing` is a whole number of them, and {} is not; write 1 for a tick at every power of ten, or 2 for every other", file.spacing.unwrap_or_default())),
         AxisError::TooManyTicks(count) => {
             (spacing_field, SceneErrorCode::Invalid, format!("this spacing gives {count} ticks over the range, and an axis draws at most {}; use a larger `spacing`", crate::axes::MAX_TICKS))
         }

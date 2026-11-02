@@ -463,7 +463,7 @@ _Avoid_: power preference (except wgpu's `PowerPreference`), device type (except
 ### Plots
 
 **Axes**:
-An object that shows two axes with ticks and tick labels in a box of its `width` and `height`, centered on its position. Data coordinates map linearly onto the box, and each axis crosses the other at 0, or at the nearest end of the other's range, except that the y axis stands at the low end of a category axis. A create draws the axis lines and ticks along their length, then fades the labels in.
+An object that shows two axes with ticks and tick labels in a box of its `width` and `height`, centered on its position. Data coordinates map onto the box by the axis scale of each axis, and each axis crosses the other at 0, or at the nearest end of the other's range, except that the y axis stands at the low end of a category axis. A create draws the axis lines and ticks along their length, then fades the labels in.
 _Avoid_: grid (for axes), coordinate system, plane (for axes), chart, graph
 
 **Number line**:
@@ -474,6 +474,10 @@ _Avoid_: ruler
 The lowest and highest data value an axis shows, in the field `range`.
 _Avoid_: domain, limits, extent
 
+**Axis scale**:
+How an axis of axes lays data values along its length, in the field `scale`: `linear`, the default, puts equal steps of value at equal steps along it, and `log` puts each power of ten an equal step along it, with its ticks at powers of ten. A log axis shows and places only values above 0. Axes with both axes log draw a log-log plot, on which a power law is a straight line.
+_Avoid_: axis type, axis transform, logarithmic axis
+
 **Category axis**:
 An x axis of axes that shows `categories` in order instead of a range of numbers. Category k, counted from 0, sits at data x = k and is one data unit wide, and the y axis stands at the category axis' low end.
 _Avoid_: categorical axis, discrete axis, ordinal axis, band scale
@@ -483,11 +487,11 @@ One named place along a category axis, with a tick and its label in plain text b
 _Avoid_: bin (for a category), bucket, class (for a category), group (a group is atoms)
 
 **Tick**:
-A short stroke across an axis at a multiple of its `spacing`, the distance in data units between ticks, or at each category of a category axis.
+A short stroke across an axis at a multiple of its `spacing`, the distance in data units between ticks, or in powers of ten on a log axis, or at each category of a category axis.
 _Avoid_: mark, notch, step (a step is the timeline's)
 
 **Tick label**:
-The number typeset in math beside a tick, with as many decimals as the spacing has, or on a category axis the category's label in plain text. It sits below, above, left or right of its tick, or in the corner below and left of where the axes cross. On 3D axes it faces the camera, and the tick where the axes cross has none. An axis label is LaTeX math in the field `label`, set at the high end of its axis.
+The number typeset in math beside a tick, with as many decimals as the spacing has, or on a log axis its power of ten, such as `10^{3}`, or on a category axis the category's label in plain text. It sits below, above, left or right of its tick, or in the corner below and left of where the axes cross. On 3D axes it faces the camera, and the tick where the axes cross has none. An axis label is LaTeX math in the field `label`, set at the high end of its axis.
 _Avoid_: tick text
 
 **Crossed label**:

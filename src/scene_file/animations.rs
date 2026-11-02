@@ -1325,6 +1325,15 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                     message,
                 ));
             }
+            if let PlacedBy::DataPoint(axes_id) = &start.objects[&object_id].placed_by
+                && let Some((axis, value)) = DataToWorld::of(&start.objects[axes_id]).unplaced(to)
+            {
+                return Err(SceneError::new(
+                    path.field("to"),
+                    SceneErrorCode::OutOfRange,
+                    unplaced("`to`", axes_id, axis, value),
+                ));
+            }
             Change::Move {
                 object_id,
                 member,

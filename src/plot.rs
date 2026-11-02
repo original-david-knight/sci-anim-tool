@@ -37,9 +37,9 @@ const SAMPLE_TOLERANCE: f64 = 5e-4;
 /// A step halved `MAX_DEPTH` times that still rises or falls by this share of the axes' height
 /// is a jump, as `step(x)` makes at 0 and `mod(x, 1)` at each whole x, and the curve breaks there.
 const JUMP_SHARE: f64 = 1e-2;
-
 /// The graph of `function` over `x_range` (clipped to the axes' own x range), in the axes' local
-/// space.
+/// space. It is sampled and cut in the axes' scales, so on a log axis the samples lie evenly
+/// along it and a straight piece between two samples is straight on the frame.
 pub fn function_path(
     axes: &Axes,
     function: &Expression,
@@ -50,16 +50,18 @@ pub fn function_path(
     if lo >= hi {
         return Err(PlotError::OutsideAxes);
     }
-    let (y_min, y_max) = axes.y.range();
+    let (lo, hi) = (axes.x.scaled(lo), axes.x.scaled(hi));
+    let (y_min, y_max) = axes.y.scaled_range();
     let height = y_max - y_min;
+    let sample = |x: f64| (x, axes.y.scaled(function.eval(&[axes.x.unscaled(x)])));
     let mut samples: Vec<(f64, f64)> = Vec::new();
     let steps = FIRST_SAMPLES;
     let at = |k: usize| lo + (hi - lo) * k as f64 / steps as f64;
-    samples.push((at(0), function.eval(&[at(0)])));
+    samples.push(sample(at(0)));
     for k in 1..=steps {
-        let b = (at(k), function.eval(&[at(k)]));
+        let b = sample(at(k));
         refine(
-            function,
+            &sample,
             *samples.last().expect("a first sample"),
             b,
             0,
@@ -75,8 +77,9 @@ pub fn function_path(
 /// Subdivides `a` to `b` until the curve between them is straight to within the tolerance, a
 /// whole box-crossing step is a jump, or the budget is spent. Pushes the samples strictly between,
 /// and a NaN sample, which breaks the curve, where a step halved to the limit still jumps.
+/// `sample` gives the point of the curve at an x, both in the axes' scales.
 fn refine(
-    f: &Expression,
+    sample: &impl Fn(f64) -> (f64, f64),
     a: (f64, f64),
     b: (f64, f64),
     depth: u32,
@@ -102,7 +105,7 @@ fn refine(
         return;
     }
     let mid_x = (a.0 + b.0) / 2.0;
-    let mid = (mid_x, f.eval(&[mid_x]));
+    let mid = sample(mid_x);
     let opposite_outside =
         a_known && b_known && ((above(a.1) && below(b.1)) || (below(a.1) && above(b.1)));
     let straight = a_known
@@ -112,22 +115,28 @@ fn refine(
     if straight && !opposite_outside {
         return;
     }
-    refine(f, a, mid, depth + 1, y_range, height, out);
+    refine(sample, a, mid, depth + 1, y_range, height, out);
     out.push(mid);
-    refine(f, mid, b, depth + 1, y_range, height, out);
+    refine(sample, mid, b, depth + 1, y_range, height, out);
 }
 
-/// The line through `points` in order, in data coordinates, clipped to the axes' box.
+/// The line through `points` in order, in data coordinates, clipped to the axes' box. Each
+/// piece is straight in the axes' scales, so on a log axis it is straight on the frame too.
 pub fn points_path(axes: &Axes, points: &[(f64, f64)]) -> Result<Path, PlotError> {
-    runs_to_path(axes, clip(points, axes))
+    let scaled: Vec<(f64, f64)> = points
+        .iter()
+        .map(|&(x, y)| (axes.x.scaled(x), axes.y.scaled(y)))
+        .collect();
+    runs_to_path(axes, clip(&scaled, axes))
 }
 
 /// Splits the polyline `samples` into runs inside the axes' box. A NaN sample ends a run, and
 /// so does a step that goes from one side of the box to the other with both ends outside it,
 /// which is a jump and not a steep curve because refinement has already halved it to the limit.
+/// The samples and the runs are in the axes' scales.
 fn clip(samples: &[(f64, f64)], axes: &Axes) -> Vec<Vec<(f64, f64)>> {
-    let (x0, x1) = axes.x.range();
-    let (y0, y1) = axes.y.range();
+    let (x0, x1) = axes.x.scaled_range();
+    let (y0, y1) = axes.y.scaled_range();
     let mut runs: Vec<Vec<(f64, f64)>> = Vec::new();
     let mut run: Vec<(f64, f64)> = Vec::new();
     let end_run = |run: &mut Vec<(f64, f64)>, runs: &mut Vec<Vec<(f64, f64)>>| {
@@ -203,13 +212,14 @@ fn clip_segment(
     })
 }
 
+/// `runs` are in the axes' scales.
 fn runs_to_path(axes: &Axes, runs: Vec<Vec<(f64, f64)>>) -> Result<Path, PlotError> {
     let mut bez = BezPath::new();
     for run in &runs {
         let mut local = run
             .iter()
-            .map(|&p| axes.to_local(p))
-            .map(|v: Vec2| kurbo::Point::new(f64::from(v.x), f64::from(v.y)));
+            .map(|&(x, y)| (axes.x.scaled_to_local(x), axes.y.scaled_to_local(y)))
+            .map(|(x, y)| kurbo::Point::new(f64::from(x), f64::from(y)));
         bez.move_to(local.next().expect("a run has points"));
         local.for_each(|p| bez.line_to(p));
     }
@@ -486,7 +496,7 @@ mod tests {
     use kurbo::PathEl;
 
     use super::*;
-    use crate::axes::{Appearance, Axis};
+    use crate::axes::{Appearance, Axis, AxisScale};
     use crate::scene::{Color, Stroke};
 
     fn axes(x: (f64, f64), y: (f64, f64), width: f32, height: f32) -> Axes {
@@ -500,8 +510,28 @@ mod tests {
             label_size: 0.3,
         };
         Axes::new(
-            Axis::new(x.0, x.1, Some(1.0), width).unwrap(),
-            Axis::new(y.0, y.1, Some(1.0), height).unwrap(),
+            Axis::new(x.0, x.1, AxisScale::Linear, Some(1.0), width).unwrap(),
+            Axis::new(y.0, y.1, AxisScale::Linear, Some(1.0), height).unwrap(),
+            None,
+            None,
+            appearance,
+        )
+        .unwrap()
+    }
+
+    fn log_axes(x: (f64, f64), y: (f64, f64), width: f32, height: f32) -> Axes {
+        let appearance = Appearance {
+            stroke: Stroke::default(),
+            color: Color {
+                r: 255,
+                g: 255,
+                b: 255,
+            },
+            label_size: 0.3,
+        };
+        Axes::new(
+            Axis::new(x.0, x.1, AxisScale::Log, None, width).unwrap(),
+            Axis::new(y.0, y.1, AxisScale::Log, None, height).unwrap(),
             None,
             None,
             appearance,
@@ -683,6 +713,72 @@ mod tests {
             parts[0].last().unwrap(),
             &(0.5, 2.0),
             "cut where the segment from data (2, 2) to (3, 6) meets y = 4"
+        );
+    }
+
+    /// On log x and log y axes a power law is a straight line, with a slope of its power, and
+    /// its samples lie evenly along the x axis however many powers of ten it spans.
+    #[test]
+    fn x_squared_on_log_log_axes_is_a_straight_line() {
+        // Local x is log10 x and local y is log10 y in a 4 by 8 box.
+        let axes = log_axes((1e-2, 1e2), (1e-4, 1e4), 4.0, 8.0);
+
+        let parts = lines(&function("x^2", &axes));
+
+        assert_eq!(parts.len(), 1);
+        let line = &parts[0];
+        for &(x, y) in line {
+            assert!(
+                (y - 2.0 * x).abs() < 1e-4,
+                "({x}, {y}) is off the line y = 2x"
+            );
+        }
+        let (first, last) = (line[0], line[line.len() - 1]);
+        assert!((first.0 + 2.0).abs() < 1e-4 && (last.0 - 2.0).abs() < 1e-4);
+        let widest = line
+            .windows(2)
+            .map(|pair| pair[1].0 - pair[0].0)
+            .fold(0.0, f64::max);
+        assert!(
+            widest < 4.0 / 32.0,
+            "the widest step along x is {widest}, so the samples bunch up at one end"
+        );
+    }
+
+    /// A curve that falls to 0 or below has no place on a log y axis, so it stops where it leaves
+    /// the box, as it would at any edge.
+    #[test]
+    fn a_curve_below_0_on_a_log_axis_stops_at_the_box() {
+        let appearance = Appearance {
+            stroke: Stroke::default(),
+            color: Color {
+                r: 255,
+                g: 255,
+                b: 255,
+            },
+            label_size: 0.3,
+        };
+        let axes = Axes::new(
+            Axis::new(-4.0, 4.0, AxisScale::Linear, None, 8.0).unwrap(),
+            Axis::new(0.1, 10.0, AxisScale::Log, None, 2.0).unwrap(),
+            None,
+            None,
+            appearance,
+        )
+        .unwrap();
+
+        let parts = lines(&function("x", &axes));
+
+        assert_eq!(parts.len(), 1);
+        assert!(parts[0].iter().all(|(x, y)| x.is_finite() && y.is_finite()));
+        let (low, high) = (parts[0][0], parts[0][parts[0].len() - 1]);
+        assert!(
+            (low.0 - 0.1).abs() < 1e-2 && (low.1 + 1.0).abs() < 1e-6,
+            "the curve enters at the bottom edge, x = 0.1: {low:?}"
+        );
+        assert!(
+            (high.0 - 4.0).abs() < 1e-6 && (high.1 - 4f64.log10()).abs() < 1e-3,
+            "{high:?}"
         );
     }
 }

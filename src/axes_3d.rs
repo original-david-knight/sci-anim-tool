@@ -315,6 +315,7 @@ impl Axes3d {
                 .and_then(|label| label_box(&label.of));
             AxisReport {
                 range: [low, high],
+                scale: self.axes[k].scale(),
                 spacing: self.axes[k].spacing(),
                 label_bounding_box,
                 categories: None,
@@ -493,11 +494,20 @@ pub struct Axes3dReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::axes::AxisScale;
     use crate::scene::Color;
 
     fn axes(ranges: [(f64, f64); 3], lengths: [f32; 3]) -> Axes3d {
-        let axes =
-            [0, 1, 2].map(|k| Axis::new(ranges[k].0, ranges[k].1, Some(1.0), lengths[k]).unwrap());
+        let axes = [0, 1, 2].map(|k| {
+            Axis::new(
+                ranges[k].0,
+                ranges[k].1,
+                AxisScale::Linear,
+                Some(1.0),
+                lengths[k],
+            )
+            .unwrap()
+        });
         let appearance = Appearance {
             stroke: Stroke::default(),
             color: Color {

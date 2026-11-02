@@ -59,6 +59,15 @@ impl<'a> DataToWorld<'a> {
         self.own_to_world.transform_point3(own)
     }
 
+    /// The first coordinate of `data` that a log axis cannot place, a value at or below 0, as
+    /// the axis' name and the value, or `None`. 3D axes are linear and place every value.
+    pub fn unplaced(&self, data: Vec3) -> Option<(&'static str, f64)> {
+        match self.to_own {
+            ToOwn::Axes(axes) => axes.unplaced((f64::from(data.x), f64::from(data.y))),
+            ToOwn::Axes3d(_) => None,
+        }
+    }
+
     /// The data coordinates of a world point, or `None` while the axes are scaled flat and have
     /// none.
     pub fn data(&self, world: Vec3) -> Option<Vec3> {
