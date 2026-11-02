@@ -43,11 +43,12 @@ use crate::reaction::{AtomPairFile, Reaction};
 use crate::readout::Readout;
 use crate::scene::{
     Align, Camera, CellPadding, Color, CopyCount, Decimals, Duration, EdgeShade, FieldOfView, Fill,
-    FillRule, FiniteNumber, Font, Material, MatrixEntry, Object, ObjectId, OriginCoordinate,
-    PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig, SecondsIntoStep, Shape, Solid,
-    Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
+    FillRule, FiniteNumber, Font, Material, MatrixEntry, MirrorPlane, Object, ObjectId,
+    OriginCoordinate, PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig,
+    SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
 };
 use crate::simulate::{Set, Simulate};
+use crate::skeletal_formula::{self, Look, SkeletalFormula};
 use crate::space_curve::{self, SpaceCurve, SpaceCurveError};
 use crate::structure_file::{self, StructureFileError};
 use crate::surface::{Placing, Sampling, Surface, SurfaceError};
@@ -663,10 +664,12 @@ impl SceneFile {
         let mut ended = Vec::new();
         for (id, mut object) in others.into_iter().chain(plots) {
             let groups_file: BTreeMap<String, GroupAtoms> = match &mut object.shape {
-                ShapeFile::Molecule { groups, .. } => std::mem::take(groups)
-                    .into_iter()
-                    .map(|(id, atoms)| (id, atoms.into_group_atoms()))
-                    .collect(),
+                ShapeFile::Molecule { groups, .. } | ShapeFile::SkeletalFormula { groups, .. } => {
+                    std::mem::take(groups)
+                        .into_iter()
+                        .map(|(id, atoms)| (id, atoms.into_group_atoms()))
+                        .collect()
+                }
                 _ => BTreeMap::new(),
             };
             let attach = object.attach.take();
@@ -687,6 +690,17 @@ impl SceneFile {
                             *representation,
                         ) {
                             Ok(read) => *groups = read,
+                            Err(found) => errors.extend(found),
+                        }
+                    }
+                    if let Shape::SkeletalFormula(formula) = &mut object.shape {
+                        match Groups::read(
+                            &JsonPath::root().field("objects").field(&id).field("groups"),
+                            &groups_file,
+                            &formula.molecule,
+                            Representation::BallAndStick { hydrogens: true },
+                        ) {
+                            Ok(read) => formula.groups = read,
                             Err(found) => errors.extend(found),
                         }
                     }

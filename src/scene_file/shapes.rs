@@ -665,7 +665,7 @@ pub(super) fn shape(
             ..
         } => {
             let molecule = structure_file::read(&base.join(&file))
-                .map_err(structure_file_error(&file, base))?;
+                .map_err(structure_file_error(&file, base, "3d"))?;
             let representation = match representation {
                 RepresentationFile::BallAndStick => Representation::BallAndStick { hydrogens },
                 RepresentationFile::SpaceFilling => Representation::SpaceFilling { hydrogens },
@@ -697,6 +697,33 @@ pub(super) fn shape(
                 groups: Groups::default(),
                 glows: BTreeMap::new(),
             }
+        }
+        ShapeFile::SkeletalFormula {
+            file,
+            bond_length,
+            size,
+            stroke_width,
+            color,
+            font,
+            mirror,
+            ..
+        } => {
+            let structure = structure_file::read_2d(&base.join(&file))
+                .map_err(structure_file_error(&file, base, "2d"))?;
+            let of_bond = |share: f32| {
+                Positive::try_from(f64::from(share * bond_length.get())).expect("positive")
+            };
+            let look = Look {
+                bond_length,
+                size: size.unwrap_or_else(|| of_bond(skeletal_formula::DEFAULT_SIZE)),
+                stroke_width: stroke_width
+                    .unwrap_or_else(|| of_bond(skeletal_formula::DEFAULT_STROKE_WIDTH)),
+                color,
+                font,
+            };
+            Shape::SkeletalFormula(
+                SkeletalFormula::new(structure, look, mirror).map_err(typeset_error("file"))?,
+            )
         }
         ShapeFile::Pattern {
             shape: one,
@@ -831,6 +858,9 @@ fn not_one_shape(shape: &ShapeFile) -> Option<&'static str> {
         }
         ShapeFile::Molecule { .. } => {
             "a `molecule` is many atoms, not one shape; draw atoms as a pattern of a `sphere`, or write a separate `molecule` object for each"
+        }
+        ShapeFile::SkeletalFormula { .. } => {
+            "a `skeletal-formula` is many bonds and atom symbols, not one shape; write a separate `skeletal-formula` object for each"
         }
         ShapeFile::Axes { .. } | ShapeFile::NumberLine { .. } | ShapeFile::Axes3d { .. } => {
             "axes and a number line are many lines and labels, not one shape; write a separate object for each"
@@ -1667,7 +1697,7 @@ fn atom_trace(trace: &AtomTraceFile, base: &std::path::Path) -> Result<Vec<[f64;
         ));
     }
     let molecule =
-        structure_file::read(&base.join(file)).map_err(structure_file_error(file, base))?;
+        structure_file::read(&base.join(file)).map_err(structure_file_error(file, base, "3d"))?;
     let chains: Vec<char> = molecule
         .residues()
         .iter()
@@ -1744,6 +1774,7 @@ fn atom_trace(trace: &AtomTraceFile, base: &std::path::Path) -> Result<Vec<[f64;
 fn structure_file_error<'a>(
     file: &'a str,
     base: &'a std::path::Path,
+    record_type: &'a str,
 ) -> impl Fn(StructureFileError) -> (&'static str, SceneErrorCode, String) + 'a {
     move |error| match error {
         StructureFileError::Unreadable(source) => {
@@ -1754,7 +1785,7 @@ fn structure_file_error<'a>(
                 )
             } else {
                 format!(
-                    "from PubChem with `curl -fo {file} \"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d\"`"
+                    "from PubChem with `curl -fo {file} \"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type={record_type}\"`"
                 )
             };
             let message = format!(

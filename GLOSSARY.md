@@ -265,7 +265,7 @@ A change to one object, or to the camera, over its span of the step that plays i
 _Avoid_: transition, tween, effect
 
 **Member**:
-One part of an object that an animation can change apart from the rest of the object, named in a field beside the animation's `object`: an atom group of a molecule by `group`, a cell of a table by `cell`, a copy of a pattern by `copy`, and a bar of a bar plot by `bar`. A highlight lights any member. A move and a fade change a copy, and a recolor a copy or a bar. A copy's moved position is in its pattern's own space, so the pattern's own move still carries it, and a copy's own opacity shows under the pattern's object opacity. The colors a recolor gives a copy or a bar are its own: a later recolor of the whole object leaves them.
+One part of an object that an animation can change apart from the rest of the object, named in a field beside the animation's `object`: an atom group of a molecule or a skeletal formula by `group`, a cell of a table by `cell`, a copy of a pattern by `copy`, and a bar of a bar plot by `bar`. A highlight lights any member. A move and a fade change a copy, and a recolor a copy or a bar. A copy's moved position is in its pattern's own space, so the pattern's own move still carries it, and a copy's own opacity shows under the pattern's object opacity. The colors a recolor gives a copy or a bar are its own: a later recolor of the whole object leaves them.
 _Avoid_: part (a path's part is one run of it), piece (a path's piece), element (an element is chemical), child, sub-object, selection, target (a target is a morph's or the camera's), item
 
 **Change**:
@@ -277,11 +277,11 @@ An animation that eases a readout's value to its `to` over its span, shaped by i
 _Avoid_: tween (for a count), increment, ChangeDecimalToValue, value change
 
 **Create**:
-An animation that draws a flat shape or grows a solid over its span. A flat shape's stroke is drawn along its path by length over the first half, then its fill fades in over the second half, and a shape with a stroke and no fill draws its stroke over the whole span. A solid's operation runs from nothing to all of it: a prism rises to its height, a revolution and a sphere turn through their angle, a tube is drawn along its space curve by length, and a surface rises from its flat rectangle to its heights. Axes, a number line and 3D axes draw their lines and ticks along their length, then fade their labels in. A pattern's copies are created in index order, each starting a little after the one before. An object with a create shows nothing before the create starts, and is created once. A pattern's copy whose shape has no stroke fades its fill in over its share. A molecule, any other flat shape with no stroke, and text, math and tables, which are written, cannot be created.
+An animation that draws a flat shape or grows a solid over its span. A flat shape's stroke is drawn along its path by length over the first half, then its fill fades in over the second half, and a shape with a stroke and no fill draws its stroke over the whole span. A solid's operation runs from nothing to all of it: a prism rises to its height, a revolution and a sphere turn through their angle, a tube is drawn along its space curve by length, and a surface rises from its flat rectangle to its heights. Axes, a number line and 3D axes draw their lines and ticks along their length, then fade their labels in. A pattern's copies are created in index order, each starting a little after the one before. An object with a create shows nothing before the create starts, and is created once. A pattern's copy whose shape has no stroke fades its fill in over its share. A molecule, any other flat shape with no stroke, and text, math, tables and skeletal formulas, which are written, cannot be created.
 _Avoid_: reveal, show creation, draw border
 
 **Write**:
-An animation that draws a text or math object glyph by glyph over its span, a few glyphs at a time: each glyph's pen along its path, then its fill fading in while the pen thins away. A table's rulings are drawn along their length over the first fifth of the span, and its cells written over the rest. A write changes the created share, as a create does. An object with a write shows nothing before the write starts, and is written once. Only text, math and tables are written, and they are never created.
+An animation that draws a text or math object glyph by glyph over its span, a few glyphs at a time: each glyph's pen along its path, then its fill fading in while the pen thins away. A table's rulings are drawn along their length over the first fifth of the span, and its cells written over the rest. A skeletal formula's bonds are drawn along their path over the first three fifths, each wedge filling as the stroke passes its outline, and its atom symbols written over the rest. A write changes the created share, as a create does. An object with a write shows nothing before the write starts, and is written once. Only text, math, tables and skeletal formulas are written, and they are never created.
 _Avoid_: create (for text and math), typewriter, reveal
 
 **Pen**:
@@ -793,7 +793,7 @@ _Avoid_: profile (a revolution's), section (alone), slice, outline (a stroke)
 ### Atom groups
 
 **Atom group**:
-Some atoms of one molecule object, named in the molecule's `groups` by their atom numbers, or on a molecule read from a PDB file by their residues, so a highlight or a caption can point at them. A group may hold hidden atoms. It changes nothing about how the molecule draws.
+Some atoms of one molecule or skeletal formula object, named in its `groups` by their atom numbers, or on a molecule read from a PDB file by their residues, so a highlight or a caption can point at them. A group may hold hidden atoms. It changes nothing about how the molecule draws.
 _Avoid_: functional group (a chemist's meaning, which the tool does not check), selection, residue (a group may hold residues' atoms, but is not one), fragment
 
 **Residue pick**:
@@ -809,11 +809,11 @@ The mean position of an atom group's shown atoms, or of all its atoms when none 
 _Avoid_: anchor (alignment avoids it), centroid (the whole molecule's), pivot
 
 **Highlight**:
-An animation that takes the glow of a member, an atom group, a table's cell, a pattern's copy or a bar plot's bar, to a glow share over its span, in a color the scene sets or the color the glow already has. A glow at glow share 0 shows no color, so it lights up in the highlight's color from the start of the span. Lighting a member in and out takes two highlights, as a fade in and out takes two fades.
+An animation that takes the glow of a member, an atom group of a molecule or a skeletal formula, a table's cell, a pattern's copy or a bar plot's bar, to a glow share over its span, in a color the scene sets or the color the glow already has. A glow at glow share 0 shows no color, so it lights up in the highlight's color from the start of the span. Lighting a member in and out takes two highlights, as a fade in and out takes two fades.
 _Avoid_: select, emphasize, indicate, flash
 
 **Glow**:
-The see-through shell around a lit atom group's shown atoms and the bonds between them, or the see-through fill of a lit cell's rectangle behind its text and rulings, a see-through box a little larger than a lit flat copy, behind its stroke and around its fill, a see-through frame around a lit bar that fills its category's width, or a see-through shell around a lit solid copy, in one color. A highlight lights it, and a reaction carries a group's glow to the products. The element colors of the atoms inside show through it, and where two shells overlap it is no brighter. A group's representation sets how its glow looks: in ball-and-stick a faint film standing well off the balls and around the sticks, in space-filling a film lying close over the balls, shaded by the key light and opaque enough to color the group's atoms against the thousands unlit around them, and in a cartoon a faint film around the tube along the group's residues.
+The see-through shell around a lit atom group's shown atoms and the bonds between them, the see-through fill over a lit atom group of a skeletal formula, a disc about each corner, a box about each atom symbol and a band along each bond between two of them, or the see-through fill of a lit cell's rectangle behind its text and rulings, a see-through box a little larger than a lit flat copy, behind its stroke and around its fill, a see-through frame around a lit bar that fills its category's width, or a see-through shell around a lit solid copy, in one color. A highlight lights it, and a reaction carries a group's glow to the products. The element colors of the atoms inside show through it, and where two shells overlap it is no brighter. A group's representation sets how its glow looks: in ball-and-stick a faint film standing well off the balls and around the sticks, in space-filling a film lying close over the balls, shaded by the key light and opaque enough to color the group's atoms against the thousands unlit around them, and in a cartoon a faint film around the tube along the group's residues.
 _Avoid_: halo, aura, outline (the stroke is the outline), atom color
 
 **Glow share**:
@@ -827,6 +827,36 @@ _Avoid_: anchor, pin, link (a bond is a link), follow (a follow is an animation 
 **Caption**:
 A text or math object with an attachment. A line or arrow with an attachment to the same group is its leader line.
 _Avoid_: annotation, callout, tag, label (a tick label is an axes')
+
+### Skeletal formulas
+
+**Skeletal formula**:
+An object that draws a molecule flat, as a textbook draws it on the page, from a 2D structure file: carbons as corners, every other atom as its atom symbol, hydrogens on carbon left out except one with a stereo bond, and each bond as strokes of one width, a double bond two and a triple bond three. The second stroke of a double bond in a ring lies inside the ring, and the two strokes of any other double bond are centered on it. It is written, never created: a write draws its bonds along their path, filling each wedge as the stroke passes it, then writes its atom symbols glyph by glyph. A highlight lights one of its atom groups, and its `mirror` draws its mirror image.
+_Avoid_: skeleton (a backbone avoids it), structural formula, line-angle formula, Lewis structure, 2D molecule, molecule (an object read from a structure file in 3D)
+
+**2D structure file**:
+An SDF file whose atoms lie flat, laid out as a chemist draws the compound, with each stereo bond marked: PubChem's 2D record, fetched with `record_type=2d`. A skeletal formula reads one, and a molecule refuses one.
+_Avoid_: molfile, depiction, flat file, 2D shape (a flat shape is an object's)
+
+**Corner**:
+Where a skeletal formula's bonds meet at a carbon, drawn with no letter.
+_Avoid_: vertex, node, joint
+
+**Atom symbol**:
+The text a skeletal formula writes at an atom that is not a corner: its element's symbol, the hydrogens bonded to it with their count, written on the side away from its bonds, and its charge, such as `OH`, `HO`, `NH₂` or `O⁻`. Every bond stops short of the element's symbol.
+_Avoid_: label (a label is visible text of axes), atom label (an atom name is avoided as one), heteroatom label
+
+**Stereo bond**:
+A single bond of a 2D structure file marked to point out of the page toward the reader, a wedge, or into it, a hash. Its narrow end is at the bond's first atom in the file, the atom whose groups it places in space.
+_Avoid_: dash (a dash is a stroke's), wedge-and-dash bond, up bond, down bond, stereo mark
+
+**Wedge**:
+A stereo bond that points out of the page toward the reader, drawn as a filled triangle widening from its narrow end. A mirror image through the page, `mirror` `z`, draws it as a hash.
+_Avoid_: bold bond, solid wedge, up bond
+
+**Hash**:
+A stereo bond that points into the page, drawn as short strokes across the bond that widen from its narrow end. A mirror image through the page, `mirror` `z`, draws it as a wedge.
+_Avoid_: dash (a dash is a stroke's), dashed wedge, hashed wedge, down bond
 
 ### Reactions
 

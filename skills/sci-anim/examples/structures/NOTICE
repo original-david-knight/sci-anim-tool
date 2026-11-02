@@ -3,6 +3,11 @@ fetched from PubChem (https://pubchem.ncbi.nlm.nih.gov) on 2026-10-21 and 2026-1
 `curl -fo <name>.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d"`:
 ethylene (CID 6325), water (CID 962, fetched by `compound/cid/962`) and ethanol (CID 702).
 
+l_alanine_2d.sdf is PubChem's 2D record of L-alanine (CID 5950), fetched on 2026-11-02, unchanged,
+with
+
+    curl -fo l_alanine_2d.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/5950/record/SDF?record_type=2d"
+
 PubChem's data is in the public domain, as the NCBI policies state:
 https://www.ncbi.nlm.nih.gov/home/about/policies/
 

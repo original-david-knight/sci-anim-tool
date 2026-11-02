@@ -1,7 +1,8 @@
 //! Reading a structure file into a `Molecule`: an SDF file, or a PDB file, which `pdb` reads.
-//! The only module that uses sdfrust, whose types stop here: the molecule, its elements and its
-//! bond orders are ours, and everything sdfrust accepts that a molecule cannot be is refused here
-//! with the reason.
+//! Also reading a 2D structure file into a `Structure2d`, the atoms, bonds and stereo bonds a
+//! skeletal formula draws. The only module that uses sdfrust, whose types stop here: the
+//! molecule, its elements and its bond orders are ours, and everything sdfrust accepts that a
+//! molecule cannot be is refused here with the reason.
 //!
 //! Reading happens once, when the scene file is read. The tool never goes online to find a
 //! structure file.
@@ -11,10 +12,10 @@ mod pdb;
 use std::io;
 use std::path::Path;
 
-use sdfrust::BondOrder as SdfBondOrder;
+use sdfrust::{BondOrder as SdfBondOrder, BondStereo};
 
 use crate::element::Element;
-use crate::molecule::{BondOrder, Molecule};
+use crate::molecule::{AtomNumber, BondOrder, Molecule};
 
 #[derive(Debug)]
 pub enum StructureFileError {
@@ -47,6 +48,91 @@ pub fn read(file: &Path) -> Result<Molecule, StructureFileError> {
         return Err(read.invalid("it is a 2D structure file, whose atoms all lie flat; fetch the 3D one by adding `?record_type=3d` to the PubChem URL".to_string()));
     }
     molecule_of(&record, &read)
+}
+
+/// Whether a bond of a 2D structure file points out of the page toward the reader, a wedge, or
+/// into it, a hash, from its narrow end at its first atom. No variant doc comments, for the
+/// reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Stereo {
+    Wedge,
+    Hash,
+}
+
+impl Stereo {
+    /// The stereo bond's mirror image through the page: a wedge becomes a hash and a hash a wedge.
+    pub fn through_the_page(self) -> Stereo {
+        match self {
+            Stereo::Wedge => Stereo::Hash,
+            Stereo::Hash => Stereo::Wedge,
+        }
+    }
+}
+
+/// One bond as a 2D structure file writes it, its first atom first, since a stereo bond's narrow
+/// end is at its first atom.
+#[derive(Clone, Copy, Debug)]
+pub struct Bond2d {
+    pub from: AtomNumber,
+    pub to: AtomNumber,
+    pub order: BondOrder,
+    pub stereo: Option<Stereo>,
+}
+
+/// The atoms and bonds of a 2D structure file: the molecule, its atoms at the file's flat
+/// positions with z 0, each bond as the file writes it with its stereo mark, and each atom's
+/// formal charge, indexed as the molecule's atoms.
+#[derive(Debug)]
+pub struct Structure2d {
+    pub molecule: Molecule,
+    pub bonds: Vec<Bond2d>,
+    pub charges: Vec<i8>,
+}
+
+/// The 2D structure of `file`, the one SDF record of a 2D structure file. A PDB file and a 3D
+/// structure file are refused with the reason.
+pub fn read_2d(file: &Path) -> Result<Structure2d, StructureFileError> {
+    let read = ReadFile::read(file)?;
+    if is_pdb(file) {
+        return Err(read.invalid("it is a PDB file, which gives 3D positions; a skeletal formula reads a 2D structure file, PubChem's 2D record, fetched with `?record_type=2d`".to_string()));
+    }
+    let record = read
+        .one_record("fetch it with `record_type=2d`, which gives the compound's one 2D record")?;
+    let flat = match header_dimensions(&record) {
+        Some(dimensions) => dimensions == Dimensions::Flat,
+        None => record.atoms.iter().all(|atom| atom.z == 0.0),
+    };
+    if !flat {
+        return Err(read.invalid("it is a 3D structure file, whose atoms do not lie flat as a skeletal formula draws them; fetch the 2D one by adding `?record_type=2d` to the PubChem URL".to_string()));
+    }
+    let molecule = molecule_of(&record, &read)?;
+    let number = |index: usize| {
+        molecule
+            .atom_number(index as u32 + 1)
+            .expect("`molecule_of` checked every bond's atoms")
+    };
+    let bonds = record
+        .bonds
+        .iter()
+        .zip(molecule_bond_orders(&record, &read)?)
+        .map(|(bond, order)| Bond2d {
+            from: number(bond.atom1),
+            to: number(bond.atom2),
+            order,
+            stereo: match bond.stereo {
+                BondStereo::Up => Some(Stereo::Wedge),
+                BondStereo::Down => Some(Stereo::Hash),
+                BondStereo::None | BondStereo::Either => None,
+            },
+        })
+        .collect();
+    let charges = record.atoms.iter().map(|atom| atom.formal_charge).collect();
+    Ok(Structure2d {
+        molecule,
+        bonds,
+        charges,
+    })
 }
 
 /// A structure file's text, with the first line that has any text, which an error quotes.

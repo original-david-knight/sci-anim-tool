@@ -781,6 +781,64 @@ pub(super) enum ShapeFile {
         #[serde(default)]
         groups: BTreeMap<String, GroupFile>,
     },
+    /// A molecule drawn flat as a textbook draws it on the page, from a 2D structure file:
+    /// carbons as corners where bonds meet, with no letter; every other atom as its atom symbol,
+    /// its element with the hydrogens it holds written on the side away from its bonds and its
+    /// charge, such as `OH`, `HO`, `NH₂` or `O⁻`; hydrogens on carbon left out, except one with a
+    /// stereo bond, which is written `H`. A double bond is two strokes, the second inside its ring
+    /// for a bond in a ring and the two centered on the bond otherwise, and a triple bond three.
+    /// A stereo bond is drawn from its narrow end at the file's first atom of the bond: a wedge,
+    /// a filled triangle, for one out of the page toward the reader, and a hash, short strokes
+    /// that widen, for one into it. Strokes are one width, and every bond stops short of an atom
+    /// symbol.
+    ///
+    /// The middle of the box around its shown atoms sits at the object's position, and its bonds between atoms other than
+    /// hydrogen are drawn `bond_length` long. It is drawn with `write`: its bonds along their
+    /// path, each wedge filling as the stroke passes it, then its atom symbols glyph by glyph. A
+    /// `highlight` lights an atom group, named in `groups` by atom numbers as a molecule's are,
+    /// with a see-through fill over its shown atoms and the bonds between them. It cannot be
+    /// created, recolored or morphed. `inspect` reports each atom's `drawn` (`corner`, `symbol`
+    /// or `hidden`), its atom symbol and its position, each bond's `form` (`line`,
+    /// `double-centered`, `double-in-ring`, `triple`, `wedge`, `hash` or `hidden`) and how many
+    /// `strokes` a write draws for it, and each group's glow. Needs sci_anim 0.25.0 or later.
+    SkeletalFormula {
+        /// The path of a 2D structure file, relative to the folder of the scene file: an SDF
+        /// file whose atoms lie flat, as a chemist draws the compound, with its stereo bonds
+        /// marked. sci_anim never downloads one. Fetch PubChem's 2D record from
+        /// `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=2d`.
+        /// A 3D structure file or a PDB file is a scene error here.
+        #[schemars(length(min = 1))]
+        file: String,
+        /// How long the bonds between atoms other than hydrogen are drawn, their median, in
+        /// world units, more than 0. The default is 1.
+        #[serde(default = "ShapeFile::default_bond_length")]
+        bond_length: Positive,
+        /// The text size of the atom symbols: the height of one em, in world units, more than 0.
+        /// The default is 0.6 of `bond_length`.
+        size: Option<Positive>,
+        /// The width of every bond's strokes, and of a wedge's outline, in world units, more than
+        /// 0. The default is 0.04 of `bond_length`.
+        stroke_width: Option<Positive>,
+        /// The color of the bonds and the atom symbols, written `#rrggbb`. The default is white.
+        #[serde(default = "ShapeFile::default_color")]
+        color: Color,
+        /// The font of the atom symbols: `sans` for Libertinus Sans or `serif` for Libertinus
+        /// Serif. The default is `sans`.
+        #[serde(default)]
+        font: Font,
+        /// Draws the formula's mirror image. `x` flips the drawing left to right across its
+        /// middle and `y` flips it top to bottom, each the other enantiomer of a molecule with
+        /// one stereocenter, drawn as a mirror stood beside or below the page shows it. `z`
+        /// reflects it through the page: every atom stays where it is, and every wedge becomes a
+        /// hash and every hash a wedge. The atom symbols are never written backward. The
+        /// default is none.
+        mirror: Option<MirrorPlane>,
+        /// Named sets of atoms, by the atoms' numbers in the structure file, such as
+        /// `{ "carboxyl": [1, 2, 6] }`, as a molecule's are. A group can be highlighted. A group
+        /// may hold hydrogens the formula leaves out, and must hold at least one atom it shows.
+        #[serde(default)]
+        groups: BTreeMap<String, GroupFile>,
+    },
     /// One shape drawn at every copy of a layout. A crystal lattice is a pattern of a `sphere` on
     /// a `grid`, a ruler's ticks are a pattern of a `line` on a grid one copy high, a ring of
     /// atoms is a pattern on a `ring`, and a vector field is a pattern of an `arrow` on a grid,

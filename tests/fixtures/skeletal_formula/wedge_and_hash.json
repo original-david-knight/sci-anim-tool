@@ -1,0 +1,8 @@
+{
+  "scene_config": { "width": 400, "height": 400, "background": "#000000" },
+  "objects": {
+    "hash": { "type": "skeletal-formula", "file": "../../../skills/sci-anim/examples/structures/l_alanine_2d.sdf", "bond_length": 0.8, "position": [-1.9, 0, 0] },
+    "wedge": { "type": "skeletal-formula", "file": "../../../skills/sci-anim/examples/structures/l_alanine_2d.sdf", "bond_length": 0.8, "mirror": "z", "position": [1.9, 0, 0] }
+  },
+  "timeline": []
+}
