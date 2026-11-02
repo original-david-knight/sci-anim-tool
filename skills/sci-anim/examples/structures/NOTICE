@@ -3,6 +3,10 @@ fetched from PubChem (https://pubchem.ncbi.nlm.nih.gov) on 2026-10-21 and 2026-1
 `curl -fo <name>.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d"`:
 ethylene (CID 6325), water (CID 962, fetched by `compound/cid/962`) and ethanol (CID 702).
 
+alanine.sdf is L-alanine (CID 5950), fetched from PubChem on 2026-11-02 with
+`curl -fo alanine.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/5950/SDF?record_type=3d"`.
+Its stereocenter is atom 4, and a molecule with `mirror` draws D-alanine from it.
+
 PubChem's data is in the public domain, as the NCBI policies state:
 https://www.ncbi.nlm.nih.gov/home/about/policies/
 

@@ -43,9 +43,9 @@ use crate::reaction::{AtomPairFile, Reaction};
 use crate::readout::Readout;
 use crate::scene::{
     Align, Camera, CellPadding, Color, CopyCount, Decimals, Duration, EdgeShade, FieldOfView, Fill,
-    FillRule, FiniteNumber, Font, Material, MatrixEntry, Object, ObjectId, OriginCoordinate,
-    PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig, SecondsIntoStep, Shape, Solid,
-    Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
+    FillRule, FiniteNumber, Font, Material, MatrixEntry, MirrorPlane, Object, ObjectId,
+    OriginCoordinate, PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig,
+    SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
 };
 use crate::simulate::{Set, Simulate};
 use crate::space_curve::{self, SpaceCurve, SpaceCurveError};

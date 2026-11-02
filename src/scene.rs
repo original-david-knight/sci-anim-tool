@@ -1054,6 +1054,30 @@ pub enum Font {
     Serif,
 }
 
+/// The plane an object's `mirror` reflects it through, named by the axis it crosses at right
+/// angles: `x` reverses every x offset from the object's middle, so left and right swap, `y`
+/// swaps top and bottom, and `z` swaps front and back. The plane goes through the object's
+/// middle, so the mirror image stays where the object was.
+// No variant doc comments, for the reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum MirrorPlane {
+    X,
+    Y,
+    Z,
+}
+
+impl MirrorPlane {
+    /// `offset`, an offset from the object's middle, reflected through the plane.
+    pub fn reflect(self, offset: Vec3) -> Vec3 {
+        match self {
+            MirrorPlane::X => Vec3::new(-offset.x, offset.y, offset.z),
+            MirrorPlane::Y => Vec3::new(offset.x, -offset.y, offset.z),
+            MirrorPlane::Z => Vec3::new(offset.x, offset.y, -offset.z),
+        }
+    }
+}
+
 pub const HEX_COLOR_PATTERN: &str = "^#[0-9a-fA-F]{6}$";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]

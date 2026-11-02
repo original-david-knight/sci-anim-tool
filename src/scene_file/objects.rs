@@ -772,6 +772,19 @@ pub(super) enum ShapeFile {
         /// reactions. The default is `true`.
         #[serde(default = "ShapeFile::default_hydrogens")]
         hydrogens: bool,
+        /// Draws the molecule's mirror image: every atom of the structure file reflected through
+        /// the plane across the molecule's centroid at right angles to this axis, `x`, `y` or
+        /// `z` of the molecule's own space, before its `rotation`. Atom numbers, bonds, residues,
+        /// `groups` and `inspect` work as on any molecule, so a reaction can turn the molecule
+        /// into its mirror image with each atom mapped to the atom of the same number. Unlike a
+        /// negative `scale`, which also draws a mirror image, the molecule keeps one uniform
+        /// scale, so it can be a reactant or a product. A molecule with `mirror: "x"` is the
+        /// reflection of one without it across the plane x = 0 when it stands at the other's
+        /// `position` with x negated and has the other's `rotation` with its y and z angles
+        /// negated, as `[20, 30, 40]` and `[20, -30, -40]`. For `y`, the plane is y = 0 and the
+        /// x and z angles are negated, and for `z`, the plane is z = 0 and the x and y angles
+        /// are. Leave it out to draw the file as it is. `mirror` needs sci_anim 0.25.0 or later.
+        mirror: Option<MirrorPlane>,
         /// Named sets of atoms, by the atoms' numbers in the structure file, such as
         /// `{ "carbonyl": [1, 9] }`. A group can be highlighted and a caption attached to it. A
         /// group may include atoms that `hydrogens: false` hides. A product's group receives the

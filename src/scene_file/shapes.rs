@@ -662,10 +662,15 @@ pub(super) fn shape(
             file,
             representation,
             hydrogens,
+            mirror,
             ..
         } => {
-            let molecule = structure_file::read(&base.join(&file))
+            let read = structure_file::read(&base.join(&file))
                 .map_err(structure_file_error(&file, base))?;
+            let molecule = match mirror {
+                Some(plane) => read.mirrored(plane),
+                None => read,
+            };
             let representation = match representation {
                 RepresentationFile::BallAndStick => Representation::BallAndStick { hydrogens },
                 RepresentationFile::SpaceFilling => Representation::SpaceFilling { hydrogens },
