@@ -260,7 +260,7 @@ pub fn report(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::axes::{Appearance, Axis, Side};
+    use crate::axes::{Appearance, Axis, AxisScale, Side};
     use crate::scene::Color;
 
     const WHITE: Color = Color {
@@ -277,7 +277,7 @@ mod tests {
             label_size: 0.3,
         };
         let names = ["A", "B", "C", "D"].map(String::from).to_vec();
-        let y = Axis::new(-10.0, 10.0, Some(5.0), 4.0).unwrap();
+        let y = Axis::new(-10.0, 10.0, AxisScale::Linear, Some(5.0), 4.0).unwrap();
         Axes::with_categories(names, 4.0, y, None, None, appearance).unwrap()
     }
 
@@ -338,8 +338,8 @@ mod tests {
             label_size: 0.3,
         };
         let numbers = Axes::new(
-            Axis::new(0.0, 4.0, None, 4.0).unwrap(),
-            Axis::new(0.0, 4.0, None, 4.0).unwrap(),
+            Axis::new(0.0, 4.0, AxisScale::Linear, None, 4.0).unwrap(),
+            Axis::new(0.0, 4.0, AxisScale::Linear, None, 4.0).unwrap(),
             None,
             None,
             appearance,
@@ -367,7 +367,7 @@ mod tests {
             label_size: 0.3,
         };
         let years = ["1950", "1960", "1970", "1980"].map(String::from).to_vec();
-        let y = || Axis::new(0.0, 1.0, None, 4.0).unwrap();
+        let y = || Axis::new(0.0, 1.0, AxisScale::Linear, None, 4.0).unwrap();
         let narrow = Axes::with_categories(years.clone(), 2.0, y(), None, None, appearance);
         let wide = Axes::with_categories(years, 8.0, y(), None, None, appearance);
 

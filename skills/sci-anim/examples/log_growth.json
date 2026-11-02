@@ -1,0 +1,27 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A tiny excess grows a millionfold", "size": 0.5, "position": [0, 3.3, 0] },
+
+    "ax": { "type": "axes", "position": [0.3, -0.3, 0], "width": 8, "height": 5,
+      "x": { "range": [0, 10], "spacing": 2, "label": "t" },
+      "y": { "range": [1e-6, 1], "scale": "log", "label": "\\text{excess}" },
+      "stroke": { "color": "#888888" }, "color": "#888888" },
+    "growth": { "type": "function-plot", "axes": "ax", "expression": "10^(0.6*x - 6)", "stroke": { "color": "#58c4dd", "width": 0.06 } },
+    "p": { "type": "dot", "axes": "ax", "radius": 0.1, "fill": { "color": "#ffd23f" }, "position": [0, 1e-6, 0], "opacity": 0 },
+
+    "say_axis": { "type": "text", "text": "Each tick up is ten times the one below it.", "size": 0.4, "position": [0, -3.6, 0] },
+    "say_line": { "type": "text", "text": "Growing by the same factor each moment, it climbs in a straight line.", "size": 0.4, "position": [0, -3.6, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "ax" }, { "type": "write", "object": "say_axis" }] },
+    { "type": "wait", "duration": 2 },
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "say_axis", "to": 0 }, { "type": "fade", "object": "p", "to": 1 }] },
+    { "type": "play", "duration": 5, "animations": [
+      { "type": "create", "object": "growth", "easing_curve": "linear" },
+      { "type": "follow", "object": "p", "law": { "x": "2*t", "y": "10^(1.2*t - 6)", "z": "0" } },
+      { "type": "write", "object": "say_line" }
+    ] },
+    { "type": "wait", "duration": 2 }
+  ]
+}

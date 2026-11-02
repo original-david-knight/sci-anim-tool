@@ -10,7 +10,7 @@ A scene file is the JSON file a scene is written in: its scene config, its camer
 - [Steps](#steps): [`wait`](#wait), [`chapter`](#chapter), [`play`](#play)
 - [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`pattern`](#pattern)
 - [Animations](#animations): [`fade`](#fade), [`count`](#count), [`move`](#move), [`scale`](#scale), [`rotate`](#rotate), [`create`](#create), [`write`](#write), [`reaction`](#reaction), [`morph`](#morph), [`highlight`](#highlight), [`recolor`](#recolor), [`camera-move`](#camera-move), [`camera-look`](#camera-look), [`camera-zoom`](#camera-zoom), [`linear-map`](#linear-map), [`simulate`](#simulate), [`follow`](#follow)
-- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
+- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
 
 ## Top level
 
@@ -412,7 +412,7 @@ Text and math in cells, in `rows` of cells from the top, each row's cells from t
 
 ### `axes`
 
-Axes: `x` and `y` each give the `range` of data values they show, the `spacing` of their ticks (a round number giving about five when left out) and a `label` in LaTeX math, set at the high end. `width` and `height` are the lengths of the axes in world units, in a box centered on the object's position. The x axis crosses the y axis at 0, or at the nearest end of the y range. Tick labels are set in math. A create draws the axis lines and ticks along their length, then fades the labels in. Plots name these axes and are placed by them. `inspect` reports the text, side and bounding box of each tick label, the bounding box of each axis label, and on each plot the labels its stroke crosses.
+Axes: `x` and `y` each give the `range` of data values they show, the `spacing` of their ticks (a round number giving about five when left out) and a `label` in LaTeX math, set at the high end. `width` and `height` are the lengths of the axes in world units, in a box centered on the object's position. The x axis crosses the y axis at 0, or at the nearest end of the y range. Either axis may be a log axis, `"scale": "log"`, which lays each power of ten an equal step along it, so x and y both log make a log-log plot. Tick labels are set in math. A create draws the axis lines and ticks along their length, then fades the labels in. Plots name these axes and are placed by them. `inspect` reports the text, side and bounding box of each tick label, the bounding box of each axis label, and on each plot the labels its stroke crosses.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -864,7 +864,8 @@ One axis of an `axes` object.
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `range` | [number, number] | yes | The lowest and highest data value the axis shows, as `[low, high]`, low first. |
-| `spacing` | number |  | The distance in data units between ticks, more than 0, giving at most 100 ticks. The default is a round number that gives about five. |
+| `scale` | [Axis scale](#axis-scale) |  | How the axis lays data values along its length: `linear`, the default, or `log`, which puts each power of ten an equal step along it, with a tick at powers of ten labeled 10^k. A log axis' `range` is above 0, and every value placed on it, a plot's point, a bar's value or a data point's position, is above 0 too. A function plot on a log x axis samples x evenly along the axis. Needs sci_anim 0.25.0 or later. |
+| `spacing` | number |  | The distance between ticks, more than 0, giving at most 100 ticks: in data units, or on a log axis a whole number of powers of ten. The default is a round number that gives about five, and on a log axis at least one power of ten. |
 | `label` | string |  | LaTeX math set at the high end of the axis, as in a math object's `tex`. The default is no label. |
 
 ### Axis 3d
@@ -877,6 +878,12 @@ One axis of a `3d-axes` object.
 | `spacing` | number |  | The distance in data units between ticks, more than 0, giving at most 100 ticks. The default is a round number that gives about five. |
 | `length` | number | yes | The length of the axis in world units, more than 0, which its range fills. |
 | `label` | string |  | LaTeX math set past the high end of the axis, as in a math object's `tex`, such as `x`. The default is no label. |
+
+### Axis scale
+
+How an axis lays data values along its length. `linear`, the default, puts equal steps of value at equal steps along it. `log` puts each power of ten an equal step along it, so a value 1000 times another sits three such steps past it. The variants carry no doc comments, for the reason `FillRule` gives.
+
+One of `linear`, `log`.
 
 ### Category axis
 

@@ -714,7 +714,7 @@ mod tests {
     use glam::Vec2;
 
     use super::*;
-    use crate::axes::{Appearance, Axes, Axis};
+    use crate::axes::{Appearance, Axes, Axis, AxisScale};
     use crate::expr::Expression;
     use crate::plot;
     use crate::scene::{Color, FillRule};
@@ -945,8 +945,8 @@ mod tests {
             label_size: 0.3,
         };
         let axes = Axes::new(
-            Axis::new(-3.0, 3.0, None, 6.0).unwrap(),
-            Axis::new(-1.0, 9.0, None, 10.0).unwrap(),
+            Axis::new(-3.0, 3.0, AxisScale::Linear, None, 6.0).unwrap(),
+            Axis::new(-1.0, 9.0, AxisScale::Linear, None, 10.0).unwrap(),
             None,
             None,
             appearance,

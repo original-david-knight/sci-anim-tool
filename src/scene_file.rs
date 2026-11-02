@@ -25,9 +25,10 @@ use serde_json::{Value, json};
 
 use glam::{Vec2, Vec3};
 
-use crate::axes::{Appearance, Axes, Axis, AxisError, LabelError, NumberLine};
+use crate::axes::{Appearance, Axes, Axis, AxisError, AxisScale, LabelError, NumberLine};
 use crate::axes_3d::Axes3d;
 use crate::bar_plot::{BarPlot, BarPlotError};
+use crate::data_point::DataToWorld;
 use crate::ends::{End, Ends};
 use crate::expr::{self, Expression, ExpressionError};
 use crate::follow::{Carry, Faces, Follow, Followed, Law, LawKind, LawTimeStart};

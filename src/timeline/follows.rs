@@ -166,6 +166,11 @@ impl Timeline {
                 errors.push(error);
                 continue;
             }
+            if matches!(set, Set::Position(..)) {
+                errors.extend(self.unplaced_error(&outright, object_id, start, span, |k| {
+                    at.field(set.field()).index(k)
+                }));
+            }
             let on = OutrightOn {
                 outright,
                 span,
@@ -425,6 +430,41 @@ impl Timeline {
         errors
     }
 
+    /// The `out_of_range` error at the first frame time of `span` at which `outright`, setting
+    /// the position of the data point `object_id`, gives it a coordinate that a log axis of its
+    /// axes cannot place, a value at or below 0, or `None`. `expression` gives the path of the
+    /// expression of a coordinate, 0 for x and 1 for y.
+    fn unplaced_error(
+        &self,
+        outright: &Outright,
+        object_id: &ObjectId,
+        start: &Stage,
+        span: (f64, f64),
+        expression: impl Fn(usize) -> JsonPath,
+    ) -> Option<SceneError> {
+        let PlacedBy::DataPoint(axes_id) = &start.objects[object_id].placed_by else {
+            return None;
+        };
+        let on = DataToWorld::of(&start.objects[axes_id]);
+        let (scene_time, axis, value) = frame_times_in(span, self.fps).find_map(|scene_time| {
+            let position = Vec3::from_array(outright.at(scene_time, [1.0; 3]).map(|v| v as f32));
+            on.unplaced(position)
+                .map(|(axis, value)| (scene_time, axis, value))
+        })?;
+        let message = format!(
+            "`{axis}` reaches {} at scene time {} (law time {}), and the {axis} axis of `{axes_id}` is a log axis, which places only values above 0; change the expression so it stays above 0",
+            follow::short(value),
+            follow::short(scene_time),
+            follow::short(scene_time - outright.law_start())
+        );
+        let coordinate = usize::from(axis == "y");
+        Some(SceneError::new(
+            expression(coordinate),
+            SceneErrorCode::OutOfRange,
+            message,
+        ))
+    }
+
     /// Adds a law to its value's track. Its errors: `unknown_chapter` at `from` for a chapter that
     /// has not begun; `out_of_range` at each expression with no finite value, a position's
     /// past `follow::FARTHEST`, or an object opacity's outside 0 to 1, at a frame time of the
@@ -461,6 +501,11 @@ impl Timeline {
                 outright.fault_error(fault, path.field("law").field(field))
             })
             .collect();
+        if let Followed::Position(id) = followed {
+            errors.extend(self.unplaced_error(&outright, id, start, span, |k| {
+                path.field("law").field(["x", "y"][k])
+            }));
+        }
         let on = OutrightOn {
             outright,
             span,

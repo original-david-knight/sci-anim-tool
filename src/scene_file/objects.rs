@@ -584,7 +584,9 @@ pub(super) enum ShapeFile {
     /// ticks (a round number giving about five when left out) and a `label` in LaTeX math, set at
     /// the high end. `width` and `height` are the lengths of the axes in world units, in a box
     /// centered on the object's position. The x axis crosses the y axis at 0, or at the nearest
-    /// end of the y range. Tick labels are set in math. A create draws the axis lines and ticks
+    /// end of the y range. Either axis may be a log axis, `"scale": "log"`, which lays each power
+    /// of ten an equal step along it, so x and y both log make a log-log plot. Tick labels are
+    /// set in math. A create draws the axis lines and ticks
     /// along their length, then fades the labels in. Plots name these axes and are placed by them.
     /// `inspect` reports the text, side and bounding box of each tick label, the bounding box of
     /// each axis label, and on each plot the labels its stroke crosses.
@@ -1156,8 +1158,16 @@ pub(super) struct AxisFile {
     /// The lowest and highest data value the axis shows, as `[low, high]`, low first.
     #[schemars(with = "[f64; 2]")]
     pub(super) range: [f64; 2],
-    /// The distance in data units between ticks, more than 0, giving at most 100 ticks. The
-    /// default is a round number that gives about five.
+    /// How the axis lays data values along its length: `linear`, the default, or `log`, which
+    /// puts each power of ten an equal step along it, with a tick at powers of ten labeled
+    /// 10^k. A log axis' `range` is above 0, and every value placed on it, a plot's point, a
+    /// bar's value or a data point's position, is above 0 too. A function plot on a log x
+    /// axis samples x evenly along the axis. Needs sci_anim 0.25.0 or later.
+    #[serde(default)]
+    pub(super) scale: AxisScale,
+    /// The distance between ticks, more than 0, giving at most 100 ticks: in data units, or on a
+    /// log axis a whole number of powers of ten. The default is a round number that gives
+    /// about five, and on a log axis at least one power of ten.
     pub(super) spacing: Option<f64>,
     /// LaTeX math set at the high end of the axis, as in a math object's `tex`. The default is
     /// no label.
