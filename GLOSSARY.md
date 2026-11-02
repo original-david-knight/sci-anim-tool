@@ -191,7 +191,7 @@ An object that draws the world points another object passed through over the las
 _Avoid_: trace (an atom trace is a space curve through a PDB file's atoms), path (a path is a flat shape's curve), tail, streak, motion blur, TracedPath
 
 **Pattern**:
-An object that draws one shape, a flat shape or a solid, at every copy of a layout. Each copy may take its own position, rotation, scale and color share from expressions in its index and place, and its pick of a palette. A pattern is one object, so one animation changes every copy, and it draws its copies as one picture: its scale and a copy's scale size the whole copy, stroke included.
+An object that draws one shape, a flat shape or a solid, at every copy of a layout. Each copy may take its own position, rotation, scale, color share and starting opacity from expressions in its index and place, and its pick of a palette. A pattern is one object, so one animation changes every copy, and it draws its copies as one picture: its scale and a copy's scale size the whole copy, stroke included.
 _Avoid_: array, loop, repeat, instances, clones, group (an atom group is a molecule's)
 
 **Layout**:

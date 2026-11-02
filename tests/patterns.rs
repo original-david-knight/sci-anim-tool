@@ -911,3 +911,115 @@ fn a_palette_goes_with_a_palette_index_and_not_with_to_color() {
         pairs(&[("/objects/p/copy/palette", "missing_field")])
     );
 }
+
+/// Three white circles 1 apart, each copy's starting opacity from `opacity`.
+fn white_row(opacity: &str) -> String {
+    format!(
+        r##""p": {{ "type": "pattern",
+    "shape": {{ "type": "circle", "radius": 0.2, "fill": {{ "color": "#ffffff" }} }},
+    "layout": {{ "type": "grid", "counts": [3, 1, 1], "spacing": 1 }},
+    "copy": {{ "opacity": "{opacity}" }} }}"##
+    )
+}
+
+fn opacities(inspected: &Value) -> Vec<f64> {
+    copies(inspected)
+        .iter()
+        .map(|copy| copy["opacity"].as_f64().unwrap())
+        .collect()
+}
+
+/// The pixel at the center of each copy, where `inspect` places it.
+fn copy_pixels(scene: &str, scene_time: &str) -> Vec<[u8; 4]> {
+    let (_dir, rgba) = frame_at(scene, scene_time);
+    copies(&inspect_at(scene, scene_time))
+        .iter()
+        .map(|copy| {
+            let [x, y] =
+                [0, 1].map(|k| copy["position_pixels"][k].as_f64().unwrap().round() as usize);
+            pixel(&rgba, x, y)
+        })
+        .collect()
+}
+
+#[test]
+fn an_opacity_expression_in_the_index_alternates_copies_and_is_clamped_to_0_to_1() {
+    let alternating = inspect_at(
+        &scene(
+            &dots(
+                r#"{ "type": "grid", "counts": [4, 1, 1], "spacing": 1 }"#,
+                r#"{ "opacity": "1 - mod(i, 2)" }"#,
+            ),
+            "",
+        ),
+        "0",
+    );
+    assert_eq!(opacities(&alternating), [1.0, 0.0, 1.0, 0.0]);
+
+    let clamped = inspect_at(&scene(&white_row("2*i - 1"), ""), "0");
+    assert_eq!(opacities(&clamped), [0.0, 1.0, 1.0]);
+
+    let unwritten = inspect_at(&scene(RED_TO_BLUE, ""), "0");
+    assert_eq!(opacities(&unwritten), [1.0, 1.0, 1.0], "the default is 1");
+}
+
+#[test]
+fn the_first_frame_hides_a_copy_whose_opacity_is_0() {
+    let shown = copy_pixels(&scene(&white_row("mod(i, 2)"), ""), "0");
+    assert_eq!(
+        shown,
+        [[0, 0, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]]
+    );
+}
+
+#[test]
+fn a_fade_of_a_copy_starts_from_its_opacity() {
+    let faded = scene(
+        &white_row("0"),
+        r#"{ "type": "play", "duration": 2, "animations": [
+            { "type": "fade", "object": "p", "copy": [1, 0, 0], "to": 1, "easing_curve": "linear" } ] }"#,
+    );
+
+    assert_eq!(opacities(&inspect_at(&faded, "1")), [0.0, 0.5, 0.0]);
+    assert_eq!(
+        copy_pixels(&faded, "0"),
+        [[0, 0, 0, 255]; 3],
+        "every copy starts hidden"
+    );
+    assert_eq!(
+        copy_pixels(&faded, "2"),
+        [[0, 0, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]]
+    );
+}
+
+#[test]
+fn a_bad_opacity_expression_is_refused_at_copy_opacity() {
+    let unknown = validate(&scene(&white_row("1 - q"), ""));
+    assert_eq!(
+        scene_errors(&unknown),
+        pairs(&[("/objects/p/copy/opacity", "bad_format")])
+    );
+
+    let no_value = validate(&scene(&white_row("sqrt(i - 2)"), ""));
+    assert_eq!(
+        scene_errors(&no_value),
+        pairs(&[("/objects/p/copy/opacity", "out_of_range")])
+    );
+    let message = no_value.json["errors"][0]["message"].as_str().unwrap();
+    assert!(message.contains("copy [0, 0, 0]"), "{message}");
+}
+
+#[test]
+fn an_opacity_that_reads_law_time_fades_copies_in_one_after_another_over_a_follow() {
+    let follow = r#"{ "type": "play", "duration": 2, "animations": [ { "type": "follow", "object": "p", "sets": "shape" } ] }"#;
+    let fading = scene(&white_row("min(1, t/(i + 1))"), follow);
+
+    assert_eq!(opacities(&inspect_at(&fading, "0")), [0.0, 0.0, 0.0]);
+    assert_eq!(
+        opacities(&inspect_at(&fading, "1"))
+            .iter()
+            .map(|o| (o * 1000.0).round() / 1000.0)
+            .collect::<Vec<_>>(),
+        [1.0, 0.5, 0.333]
+    );
+}

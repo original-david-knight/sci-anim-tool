@@ -134,6 +134,7 @@ An object shows from scene time 0 as declared, unless an animation brings it in:
 
 - An object that the timeline creates or writes, or that a morph or a reaction makes, shows nothing until that animation begins. It enters at opacity 1.
 - An object that enters by a fade is declared with `"opacity": 0` and faded to 1, like the dot and the equation in the scene above. A dot has no stroke to create, so a fade brings it in.
+- A copy of a pattern that enters by a fade starts at its own opacity, the value of the pattern's `copy.opacity` expression, such as `"0"` for every copy or `"mod(i, 2)"` for every other one, and a fade that names the copy brings it in.
 - An object with no create, write, morph, reaction or fade shows for the whole video.
 
 A create or a write does not raise opacity. An object declared at `"opacity": 0` and then only created stays hidden, and `check-layout` reports that it never shows.
