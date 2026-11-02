@@ -1,5 +1,5 @@
 //! Members: the parts of an object an animation can change apart from the rest of it. A
-//! highlight lights an atom group of a molecule, a cell of a table, a copy of a pattern or a bar
+//! highlight lights an atom group of a molecule or a skeletal formula, a cell of a table, a copy of a pattern or a bar
 //! of a bar plot; a move and a fade change one copy; a recolor changes one copy or one bar.
 //!
 //! A member is named in the scene file beside the animation's `object`, by `group`, `cell`, `copy`

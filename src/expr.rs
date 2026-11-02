@@ -187,6 +187,13 @@ pub fn color_share_description() -> String {
     )
 }
 
+/// What a pattern copy's `opacity` takes, for `sci_anim schema`.
+pub fn copy_opacity_description() -> String {
+    copy_description(
+        "gives the copy's own opacity, from 0 for hidden to 1 for opaque, such as `mod(i, 2)` to hide every other copy. A value below 0 is 0, and above 1 is 1. A fade of the copy starts from it, and the pattern's `opacity` applies on top of it. The default is 1. Needs sci_anim 0.25.0 or later",
+    )
+}
+
 /// What a pattern copy's `palette_index` takes as an expression, for `sci_anim schema`.
 pub fn palette_index_description() -> String {
     copy_description(

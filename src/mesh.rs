@@ -27,6 +27,7 @@ use crate::scene::{
     Phase, Positive, Region, SceneConfig, Shape, Solid, Stage, StagedReaction, Stroke, Transform,
     UnitInterval,
 };
+use crate::skeletal_formula::{AtomSymbol, SkeletalFormula};
 use crate::space_curve::{CrossSection, CurveFrame, SpaceCurve};
 use crate::surface::Surface;
 use crate::table::{Cell, FLAT_GLOW_OPACITY, Table};
@@ -346,6 +347,9 @@ impl Shape {
                 (written_meshes(glyphs, *size, bake, created.get()), placed)
             }
             Shape::Table(table) => (table_meshes(table, bake, created.get()), placed),
+            Shape::SkeletalFormula(formula) => {
+                (formula_meshes(formula, bake, created.get()), placed)
+            }
             Shape::Mix(paths) => (
                 paths
                     .iter()
@@ -1064,6 +1068,112 @@ fn table_meshes(table: &Table, bake: Bake, created: f32) -> Vec<Mesh> {
             }),
     );
     meshes
+}
+
+/// A skeletal formula at a write's created share: the glow of each lit atom group, its bonds
+/// drawn along their path with each wedge filling as the stroke passes its outline, then its
+/// atom symbols written. Its strokes, wedges and glyphs are overlays, so a see-through glow lies
+/// behind them and does not tint them.
+fn formula_meshes(formula: &SkeletalFormula, bake: Bake, created: f32) -> Vec<Mesh> {
+    let (bond_share, symbol_share) = formula.written_shares(created);
+    let look = formula.look;
+    let stroke = Stroke {
+        color: look.color,
+        width: look.stroke_width,
+        dash: None,
+    };
+    let mut meshes: Vec<Mesh> = formula
+        .groups
+        .iter()
+        .filter_map(|(id, group)| {
+            let glow = formula.glows.get(id).filter(|g| g.share.get() > 0.0)?;
+            Some((formula.glow_path(&group.atoms)?, glow))
+        })
+        .flat_map(|(path, glow)| {
+            let fill = Fill {
+                color: glow.color,
+                opacity: UnitInterval::clamped(FLAT_GLOW_OPACITY * glow.share.get()),
+                rule: FillRule::NonZero,
+            };
+            path_meshes(&path, bake, None, 0.0, Some(fill), 1.0)
+        })
+        .collect();
+    let overlay = |mesh: Mesh| Mesh {
+        overlay: true,
+        ..mesh
+    };
+    meshes.extend(formula.wedges.iter().flat_map(|wedge| {
+        let share = SkeletalFormula::wedge_share(wedge, bond_share);
+        path_meshes(
+            &wedge.path,
+            bake,
+            None,
+            0.0,
+            Some(Fill::solid(look.color)),
+            share,
+        )
+        .into_iter()
+        .map(overlay)
+    }));
+    if let Some(bond_path) = &formula.bond_path {
+        meshes.extend(path_meshes(
+            bond_path,
+            bake,
+            Some(stroke),
+            bond_share,
+            None,
+            0.0,
+        ));
+    }
+    meshes.extend(
+        written_meshes(&formula.glyphs, look.size, bake, symbol_share)
+            .into_iter()
+            .map(overlay),
+    );
+    meshes
+}
+
+/// The glyphs of one atom symbol of a skeletal formula, written whole, placed as the formula is,
+/// for measuring.
+pub fn symbol_meshes(
+    formula: &SkeletalFormula,
+    symbol: &AtomSymbol,
+    to_world: FlatToWorld,
+) -> Vec<Mesh> {
+    formula.glyphs[symbol.glyphs.clone()]
+        .iter()
+        .flat_map(|glyph| {
+            path_meshes(
+                &glyph.path,
+                Bake::of(to_world),
+                None,
+                0.0,
+                Some(Fill::solid(glyph.color)),
+                1.0,
+            )
+        })
+        .collect()
+}
+
+/// The see-through fill of a skeletal formula's glow of `atoms`, at full glow share, placed as
+/// the formula is, for measuring.
+pub fn formula_glow_meshes(
+    formula: &SkeletalFormula,
+    atoms: &[crate::molecule::AtomNumber],
+    color: Color,
+    to_world: FlatToWorld,
+) -> Vec<Mesh> {
+    formula
+        .glow_path(atoms)
+        .map(|path| {
+            let fill = Fill {
+                color,
+                opacity: UnitInterval::clamped(FLAT_GLOW_OPACITY),
+                rule: FillRule::NonZero,
+            };
+            path_meshes(&path, Bake::of(to_world), None, 0.0, Some(fill), 1.0)
+        })
+        .unwrap_or_default()
 }
 
 /// The glyphs of one cell of a table, written whole, placed as the table is, for measuring.

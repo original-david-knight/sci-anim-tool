@@ -36,6 +36,7 @@ A `pattern` draws one shape at every copy of a layout. Use one when repetition i
 - `rotation`: degrees, each left out is 0. `"z": "30*i"` turns each copy of a ring a little more.
 - `scale`: each left out is 1. The pattern draws its copies as one picture, so a copy's scale sizes its stroke with it, and so does the pattern's scale.
 - `color_share` with `to_color`: each copy's colors are mixed toward `to_color` by `color_share`, clamped to 0 to 1. `"color_share": "i/11", "to_color": "#fc6255"` runs a ring of 12 from its shape's color to red.
+- `opacity` (sci_anim 0.25.0 or later): the copy's own opacity at the start, clamped to 0 to 1, and 1 when left out. `"0"` hides every copy, and `"mod(i, 2)"` hides every other copy of a row. A fade of the copy starts from it, and the pattern's own `opacity` still applies on top.
 - `palette` with `palette_index` (sci_anim 0.15.0 or later): each copy picks one color of `palette` by its `palette_index`, counted from 0, and is drawn in it. The index is an expression, such as `"mod(i, 4)"`, or a list of one whole number a copy in index order, as a scene generator writes a sequence. `color_share` still mixes toward the pick, and is 1 unless you write it. Write `palette` or `to_color`, not both.
 
 Color each rung of a ladder by its nucleobase, for the sequence ATGCGTA, with a palette of A, T, G and C:
@@ -58,6 +59,29 @@ A pattern draws no text, so label the copies with separate `text` objects, and a
 | Beads on a helix | `sphere` along a helix curve, `count` 20 |
 | Units pointing along a strand | a cone `revolution` along a helix curve with `"faces": "tangent"` and `"rotation": { "z": "-90" }` |
 | Simple cubic crystal | `sphere` in a grid of `[3, 3, 3]` |
+
+## Start copies hidden
+
+With sci_anim 0.25.0 or later, write `opacity` in `copy` for copies that are not there yet when the scene starts: the first frame does not show them, and a fade of each copy brings it in. Without it, every copy shows from scene time 0, and hiding hundreds of copies would take a fade of each at the start.
+
+A field of 400 molecules, the even columns shown and the odd ones hidden, with one hidden copy faded in:
+
+```json
+"field": {
+  "type": "pattern",
+  "shape": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" } },
+  "layout": { "type": "grid", "counts": [20, 20, 1], "spacing": 0.3 },
+  "copy": { "opacity": "1 - mod(i, 2)" }
+}
+```
+
+```json
+{ "type": "fade", "object": "field", "copy": [1, 0, 0], "to": 1, "start": 0, "end": 1 }
+```
+
+- An expression has no random function. To hide a scattered share of the copies, mix the indices: `"step(6 - mod(7*i + 3*j, 10))"` hides 120 of a 20 by 20 grid, 30%, spread across it. For an exact set of copies, a scene generator writes an expression or splits the copies into two patterns.
+- `inspect` reports each copy's `opacity`, so check the share shown before you render.
+- An `opacity` that reads `t` runs with a follow of the shape, as a copy's position does: `"min(1, t/(i + 1))"` fades the copies in one after another over the follow's span.
 
 ## Face along the curve
 
@@ -91,7 +115,7 @@ An `along` layout with `"faces": "tangent"` turns each copy so its own x axis po
 ```
 
   - A copy's `move` takes its `to` in the pattern's own space, where its layout placed it, not in the world: a grid copy's own place is its `x`, `y` and `z` from the layout, the pattern's `position` left out. A move, scale or rotate of the whole pattern still carries a moved copy, so the two add. A copy of a pattern whose copy expressions read `t` cannot be moved.
-  - A copy's `fade` sets its own opacity, which the pattern's object opacity applies on top of. A copy faded to 0 shows nothing, and `check-layout` skips it.
+  - A copy's `fade` sets its own opacity, which the pattern's object opacity applies on top of. It starts from the copy's `opacity` expression, or 1 without one. A copy faded to 0 shows nothing, and `check-layout` skips it.
   - A copy's `recolor` starts from the colors it shows and ends at colors of its own. From then on a `recolor` of the whole pattern leaves that copy as it is.
   - A copy's `highlight` lights a see-through glow around it: a box a little larger than a flat copy, behind its stroke and around its fill, or a shell around a solid copy. It fades with the copy.
   - A copy index the pattern does not have is `unknown_copy`, one of the wrong length is `wrong_length`, and a `copy` on an object that is not a pattern is `not_pattern`, each at `copy`. Two animations of one value of one copy at once conflict, as for an object, and two copies animate at once freely.

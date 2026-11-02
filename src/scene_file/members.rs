@@ -78,6 +78,32 @@ pub(super) fn read_member(
                 }
                 Ok(Some(Member::Group(group_id.clone())))
             }
+            Shape::SkeletalFormula(formula) => {
+                let Some((group_id, atom_group)) = formula.groups.find(&group) else {
+                    let known: Vec<String> = formula
+                        .groups
+                        .iter()
+                        .map(|(g, _)| format!("`{g}`"))
+                        .collect();
+                    let known = if known.is_empty() {
+                        "it has no groups; declare them in its `groups`".to_string()
+                    } else {
+                        format!("its groups are {}", known.join(", "))
+                    };
+                    return error(
+                        "group",
+                        SceneErrorCode::UnknownGroup,
+                        format!("`{object_id}` has no group `{group}`; {known}"),
+                    );
+                };
+                if !formula.lights(&atom_group.atoms) {
+                    let message = format!(
+                        "every atom of group `{group_id}` of `{object_id}` is a hydrogen the skeletal formula leaves out, so its glow would draw nothing; add the atom the hydrogen is bonded to"
+                    );
+                    return error("group", SceneErrorCode::GroupHidden, message);
+                }
+                Ok(Some(Member::Group(group_id.clone())))
+            }
             Shape::Table(_) => error(
                 "group",
                 SceneErrorCode::UnknownGroup,
@@ -89,7 +115,7 @@ pub(super) fn read_member(
                 "object",
                 SceneErrorCode::NotMolecule,
                 format!(
-                    "`group` names an atom group of a molecule, and `{object_id}` is not a molecule; {}",
+                    "`group` names an atom group of a molecule or a skeletal formula, and `{object_id}` is neither; {}",
                     what_members(shape)
                 ),
             ),
@@ -205,6 +231,12 @@ pub(super) fn no_member(object_id: &ObjectId, start: &Stage, path: &JsonPath) ->
                 "a highlight of the molecule `{object_id}` names the atom group it lights in `group`"
             ),
         ),
+        Shape::SkeletalFormula(_) => missing(
+            "group",
+            format!(
+                "a highlight of the skeletal formula `{object_id}` names the atom group it lights in `group`"
+            ),
+        ),
         Shape::Table(_) => missing(
             "cell",
             format!(
@@ -227,7 +259,7 @@ pub(super) fn no_member(object_id: &ObjectId, start: &Stage, path: &JsonPath) ->
             path.field("object"),
             SceneErrorCode::NotMolecule,
             format!(
-                "`highlight` lights an atom group of a molecule, a cell of a table, a copy of a pattern or a bar of a bar plot, and `{object_id}` is none of them"
+                "`highlight` lights an atom group of a molecule or a skeletal formula, a cell of a table, a copy of a pattern or a bar of a bar plot, and `{object_id}` is none of them"
             ),
         ),
     }
@@ -238,6 +270,7 @@ pub(super) fn no_member(object_id: &ObjectId, start: &Stage, path: &JsonPath) ->
 fn what_members(shape: &Shape) -> &'static str {
     match shape {
         Shape::Molecule { .. } => "a molecule's atom group is named by `group`",
+        Shape::SkeletalFormula(_) => "a skeletal formula's atom group is named by `group`",
         Shape::Table(_) => "a table's cell is named by `cell`",
         Shape::Pattern(_) => "a pattern's copy is named by `copy`",
         Shape::BarPlot(_) => "a bar plot's bar is named by `bar`",

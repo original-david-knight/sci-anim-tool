@@ -526,6 +526,7 @@ impl Colors {
             },
             Shape::Mix(_)
             | Shape::Molecule { .. }
+            | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => Colors {
@@ -593,6 +594,7 @@ impl Colors {
             }
             Shape::Mix(_)
             | Shape::Molecule { .. }
+            | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => {}
@@ -1936,6 +1938,9 @@ fn glow_of(shape: &Shape, member: &Member) -> Glow {
         }
         (Shape::Table(table), Member::Cell(address)) => {
             table.glows.get(address).copied().unwrap_or_else(Glow::off)
+        }
+        (Shape::SkeletalFormula(formula), Member::Group(group)) => {
+            formula.glows.get(group).copied().unwrap_or_else(Glow::off)
         }
         (Shape::Pattern(_), Member::Copy(_)) => copy_of(shape, member).glow,
         (Shape::BarPlot(bar_plot), Member::Bar(k)) => bar_plot.bars[*k].glow,

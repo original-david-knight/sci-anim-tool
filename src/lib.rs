@@ -37,6 +37,7 @@ mod readout;
 mod scene;
 mod scene_file;
 mod simulate;
+mod skeletal_formula;
 mod skill;
 mod space_curve;
 mod structure_file;
@@ -389,6 +390,7 @@ impl ColorsReport {
             },
             Shape::Mix(_)
             | Shape::Molecule { .. }
+            | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => ColorsReport::default(),
@@ -427,6 +429,9 @@ enum ShapeDetail {
     },
     Table {
         table: table::TableReport,
+    },
+    SkeletalFormula {
+        skeletal_formula: skeletal_formula::SkeletalFormulaReport,
     },
     Dot {
         dot: DotReport,
@@ -832,6 +837,80 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                                 rows: table.rows,
                                 columns: table.columns,
                                 cells,
+                            },
+                        })
+                    }
+                    Shape::SkeletalFormula(formula) => {
+                        use skeletal_formula::{AtomForm, FormulaAtomReport, FormulaBondReport};
+                        let measure = |meshes| {
+                            mesh::with_meshes(object, meshes)
+                                .bounding_box(&draw_list.camera, &scene.scene_config)
+                                .0
+                        };
+                        let atoms = formula
+                            .atoms
+                            .iter()
+                            .map(|atom| {
+                                let position =
+                                    object_to_world.transform_point3(atom.position.extend(0.0));
+                                let symbol = match &atom.form {
+                                    AtomForm::Symbol(symbol) => Some(symbol),
+                                    AtomForm::Corner | AtomForm::Hidden => None,
+                                };
+                                FormulaAtomReport {
+                                    atom: atom.number,
+                                    element: atom.element,
+                                    drawn: atom.form.name(),
+                                    symbol: symbol.map(|s| s.text.clone()),
+                                    position,
+                                    position_pixels: to_pixels(position),
+                                    bounding_box: symbol.and_then(|s| {
+                                        measure(mesh::symbol_meshes(formula, s, to_world))
+                                    }),
+                                }
+                            })
+                            .collect();
+                        let bonds = formula
+                            .bonds
+                            .iter()
+                            .map(|drawn| FormulaBondReport {
+                                atoms: [drawn.bond.from, drawn.bond.to],
+                                order: drawn.bond.order,
+                                stereo: drawn.bond.stereo,
+                                form: drawn.form,
+                                strokes: drawn.strokes,
+                            })
+                            .collect();
+                        let groups = formula
+                            .groups
+                            .iter()
+                            .map(|(id, group)| {
+                                let glow = formula
+                                    .glows
+                                    .get(id)
+                                    .copied()
+                                    .unwrap_or_else(group::Glow::off);
+                                let entry = skeletal_formula::FormulaGroupReport {
+                                    atoms: group.atoms.clone(),
+                                    glow: glow.share.get(),
+                                    color: glow.color.hex(),
+                                    bounding_box: measure(mesh::formula_glow_meshes(
+                                        formula,
+                                        &group.atoms,
+                                        glow.color,
+                                        to_world,
+                                    )),
+                                };
+                                (id.clone(), entry)
+                            })
+                            .collect();
+                        Some(ShapeDetail::SkeletalFormula {
+                            skeletal_formula: skeletal_formula::SkeletalFormulaReport {
+                                bond_length: formula.look.bond_length.get(),
+                                size: formula.look.size.get(),
+                                atoms,
+                                bonds,
+                                groups,
                             },
                         })
                     }

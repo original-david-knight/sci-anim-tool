@@ -1,0 +1,61 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Pasteur's two kinds of tartrate crystal", "size": 0.5, "position": [0, 3.4, 0], "opacity": 0 },
+
+    "left_top": { "type": "surface", "position": [-3, 0, 0], "rotation": [28, -25, 0],
+      "z": "min(min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x))), min(0.48 + 0.5*(1.3625 - x) + 0.3*(y + 0.3636), 0.48 + 0.5*(x + 1.3625) + 0.3*(0.3636 - y)))",
+      "x_range": [-1.8, 1.8], "y_range": [-1, 1], "material": { "type": "standard", "color": "#a8d8ea" } },
+    "left_bottom": { "type": "surface", "position": [-3, 0, 0], "rotation": [28, -25, 0], "scale": [1, -1, 1],
+      "z": "min(min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x))), min(0.48 + 0.5*(1.3625 - x) + 0.3*(0.3636 - y), 0.48 + 0.5*(x + 1.3625) + 0.3*(y + 0.3636)))",
+      "x_range": [-1.8, 1.8], "y_range": [-1, 1], "material": { "type": "standard", "color": "#a8d8ea" } },
+    "right_top": { "type": "surface", "position": [3, 0, 0], "rotation": [28, 25, 0], "scale": [-1, 1, 1],
+      "z": "min(min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x))), min(0.48 + 0.5*(1.3625 - x) + 0.3*(y + 0.3636), 0.48 + 0.5*(x + 1.3625) + 0.3*(0.3636 - y)))",
+      "x_range": [-1.8, 1.8], "y_range": [-1, 1], "material": { "type": "standard", "color": "#a8d8ea" } },
+    "right_bottom": { "type": "surface", "position": [3, 0, 0], "rotation": [28, 25, 0], "scale": [-1, -1, 1],
+      "z": "min(min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x))), min(0.48 + 0.5*(1.3625 - x) + 0.3*(0.3636 - y), 0.48 + 0.5*(x + 1.3625) + 0.3*(y + 0.3636)))",
+      "x_range": [-1.8, 1.8], "y_range": [-1, 1], "material": { "type": "standard", "color": "#a8d8ea" } },
+
+    "say_face": { "type": "text", "text": "the small slanted face", "size": 0.34, "color": "#ffd23f", "position": [0, 2.3, 0], "opacity": 0 },
+    "left_pointer": { "type": "arrow", "from": [-0.9, 2, 0], "to": [-1.95, 0.3, 0.97], "tip_length": 0.22, "stroke": { "color": "#ffd23f", "width": 0.04 }, "opacity": 0 },
+    "right_pointer": { "type": "arrow", "from": [0.9, 2, 0], "to": [1.95, 0.3, 0.97], "tip_length": 0.22, "stroke": { "color": "#ffd23f", "width": 0.04 }, "opacity": 0 },
+
+    "mirror": { "type": "line", "from": [0, -1.7], "to": [0, 1.5], "stroke": { "color": "#ffffff", "width": 0.03, "dash": [0.12, 0.1] } },
+    "say_mirror": { "type": "text", "text": "Each crystal is the other's mirror image.", "size": 0.36, "position": [0, -2.6, 0], "opacity": 0 },
+    "say_turn": { "type": "text", "text": "A half turn brings back the same crystal, never its mirror image.", "size": 0.36, "position": [0, -2.6, 0], "opacity": 0 },
+    "say_light": { "type": "text", "text": "Dissolved, one kind turns polarized light right, the other left.", "size": 0.36, "position": [0, -3.3, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "heading", "to": 1 }] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "left_top" },
+      { "type": "create", "object": "left_bottom" },
+      { "type": "create", "object": "right_top" },
+      { "type": "create", "object": "right_bottom" }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "say_face", "to": 1, "end": 1 },
+      { "type": "fade", "object": "left_pointer", "to": 1 },
+      { "type": "fade", "object": "right_pointer", "to": 1 }
+    ] },
+    { "type": "wait", "duration": 2 },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "mirror" },
+      { "type": "fade", "object": "say_mirror", "to": 1, "start": 0.5 }
+    ] },
+    { "type": "wait", "duration": 2 },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "say_face", "to": 0 },
+      { "type": "fade", "object": "left_pointer", "to": 0 },
+      { "type": "fade", "object": "right_pointer", "to": 0 },
+      { "type": "fade", "object": "say_mirror", "to": 0 }
+    ] },
+    { "type": "play", "duration": 3, "animations": [
+      { "type": "rotate", "object": "right_top", "to": [28, 205, 0] },
+      { "type": "rotate", "object": "right_bottom", "to": [28, 205, 0] },
+      { "type": "fade", "object": "say_turn", "to": 1, "end": 1 }
+    ] },
+    { "type": "wait", "duration": 1.5 },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "say_light", "to": 1 }] },
+    { "type": "wait", "duration": 2.5 }
+  ]
+}

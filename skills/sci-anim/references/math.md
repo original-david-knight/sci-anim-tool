@@ -25,7 +25,7 @@ A derivation reads best as one equation that changes in place.
 
 ## Axes and plots
 
-- `axes` takes `x` and `y` (each a `range`, optional `spacing` and `label`) and a `width` and `height` in world units, centered on its `position`. `create` draws it. An `x` of `categories` instead is a category axis for a bar plot (below).
+- `axes` takes `x` and `y` (each a `range`, optional `scale`, `spacing` and `label`) and a `width` and `height` in world units, centered on its `position`. `create` draws it. An `x` of `categories` instead is a category axis for a bar plot (below).
 - `function-plot` names its `axes` and gives an `expression` in `x`. Write `2*x`, not `2x`. `ln` is the natural log and there is no `log`. Angles are radians. `atan2(y, x)` takes y first, `mod(a, b)` has the sign of b, and `step(a)` is 1 from 0 on and 0 below, for a piecewise function such as `step(x)*x^2`. The plot breaks where the function jumps, with no stroke up the jump. The schema lists every function: `sci_anim schema | jq -r '.["$defs"].ObjectFile.allOf[].then | select(.properties.type.const == "function-plot") | .properties.expression.description'`.
 - `point-plot` draws straight pieces through `points` in data units, for data or a curve an expression cannot write.
 - A plot is placed by its axes. It has no position of its own, and it is cut at the axes' box.
@@ -65,6 +65,35 @@ world_y = position_y + (y - (y_low + y_high) / 2) * height / (y_high - y_low)
 - `inspect` gives each tick its `label_text` (the words it shows), `label_side` (`below`, `above`, `left`, `right`, or `below-left` for the one label where the axes cross) and `label_bounding_box`. Labels show as many decimals as the spacing has, so a spacing of π shows `3.14159265`. For ticks at π and 2π, give the axis a round spacing or none, and draw your own short `line` ticks with `math` labels such as `\pi`.
 - `inspect` lists on each plot the shown text and math objects its stroke runs through, in `crosses_objects`, glyph by glyph. So a text set inside a curve's hump is clear when it is not listed. `check-layout` reports each one.
 - An axis `label` sits at the high end of its axis. Extend the axis `range` a little past the data and stop the plot with `x_range`, so the label clears the curve's end.
+
+## Log axes
+
+A quantity that grows or shrinks over many powers of ten, such as a tiny excess growing a millionfold, a concentration, or a decay, goes on a log axis. Needs sci_anim 0.25.0 or later. Give the axis `"scale": "log"`: each power of ten is then an equal step along it, and its ticks sit at powers of ten, labeled `10^{-6}`, `10^{0}` and so on. Either axis can be log, or both for a log-log plot, on which a power law is a straight line whose slope is its power. `../examples/log_growth.json` is a complete lesson: an excess growing from 10^-6 to 1 climbs a log axis in a straight line while a dot rides along it.
+
+```json
+"ax": { "type": "axes", "width": 8, "height": 5,
+  "x": { "range": [0, 10], "spacing": 2, "label": "t" },
+  "y": { "range": [1e-6, 1], "scale": "log", "label": "\\text{excess}" } },
+"growth": { "type": "function-plot", "axes": "ax", "expression": "10^(0.6*x - 6)" },
+"p": { "type": "dot", "axes": "ax", "radius": 0.1, "position": [5, 0.001, 0] }
+```
+
+A log-log plot of y = x² from 0.01 to 100:
+
+```json
+"loglog": { "type": "axes", "width": 6, "height": 6,
+  "x": { "range": [0.01, 100], "scale": "log", "label": "x" },
+  "y": { "range": [1e-4, 1e4], "scale": "log", "spacing": 2, "label": "y" } },
+"square": { "type": "function-plot", "axes": "loglog", "expression": "x^2" }
+```
+
+- Plots, data points and bars take data values, as on a linear axis: the dot above at y = 0.001 sits on the tick `10^{-3}`. Write `1e-6` or `0.000001` for 10^-6. There is no `log` in an expression, but `10^(...)` writes a power of ten.
+- A log axis' `range` starts above 0, and every value placed on it is above 0: a point plot's point, a bar's value, a data point's `position`, a `move`'s `to` and a follow's law at every frame time. Any of them at 0 or below is `out_of_range` at the field that writes it. A function plot is the exception: where its curve falls to 0 or below it leaves the box, and the plot stops there, as at any edge.
+- `spacing` on a log axis is a whole number of powers of ten: 1 for a tick at every one, 2 for every other. Left out, it is 1, or a larger round number for a range over more than about seven powers of ten, so the labels do not crowd.
+- A function plot on a log x axis samples x evenly along the axis, so its curve is as smooth at 10^-6 as at 1. A point plot's pieces are straight on the frame.
+- A `move` of a data point goes straight in data values, so on a log axis it covers most of the powers of ten in its first moments. For a steady climb, `follow` a law that is a power of ten in `t`, such as `"y": "10^(1.2*t - 6)"`, as the example does.
+- The x axis crosses a log y axis at the low end of its range, since a log axis has no 0. `inspect` reports `"scale": "log"` on the axis. Its `zero` is the data point with 1 on each log axis, and its unit vector is one power of ten, so data (x, y) on a log y axis lands at `zero + x*x_unit + log10(y)*y_unit`.
+- A log axis is only on `axes`. A `number-line` and `3d-axes` stay linear.
 
 ## Bar plots
 

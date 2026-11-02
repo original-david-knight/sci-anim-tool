@@ -45,6 +45,13 @@ impl ObjectFile {
             );
             return Err(("position", SceneErrorCode::PlacedByAxes, message).into());
         }
+        if let PlacedBy::DataPoint(axes_id) = &placed_by
+            && let Some((axis, value)) =
+                DataToWorld::of(&placed[axes_id]).unplaced(self.transform.position)
+        {
+            let message = unplaced("the position", axes_id, axis, value);
+            return Err(("position", SceneErrorCode::OutOfRange, message).into());
+        }
         Ok(Object {
             transform: self.transform,
             opacity: self.opacity,
@@ -189,6 +196,7 @@ fn reads_law_time(file: &ShapeFile) -> bool {
                     sy,
                     sz,
                     copy.color_share.as_ref(),
+                    copy.opacity.as_ref(),
                 ]
                 .into_iter()
                 .flatten()
@@ -547,6 +555,7 @@ pub(super) fn shape(
             for (which, file) in [("x", &x), ("y", &y), ("z", &z)] {
                 let one = AxisFile {
                     range: file.range,
+                    scale: AxisScale::Linear,
                     spacing: file.spacing,
                     label: None,
                 };
@@ -580,6 +589,7 @@ pub(super) fn shape(
             };
             let one = AxisFile {
                 range,
+                scale: AxisScale::Linear,
                 spacing,
                 label: None,
             };
@@ -623,6 +633,18 @@ pub(super) fn shape(
         } => {
             let (axes_id, axes) = find_axes(&axes, placed)?;
             let points: Vec<(f64, f64)> = points.into_iter().map(|[x, y]| (x, y)).collect();
+            if let Some((k, (axis, value))) = points
+                .iter()
+                .enumerate()
+                .find_map(|(k, &point)| Some((k, axes.unplaced(point)?)))
+            {
+                let message = unplaced(&format!("point {k}"), &axes_id, axis, value);
+                return Err(Faults(vec![(
+                    format!("points/{k}"),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                )]));
+            }
             let path = plot::points_path(axes, &points).map_err(plot_error("points"))?;
             placed_by = PlacedBy::Axes(axes_id);
             Shape::Flat {
@@ -638,6 +660,18 @@ pub(super) fn shape(
             stroke,
         } => {
             let (axes_id, found) = find_axes(&axes, placed)?;
+            if let Some((k, &value)) = values
+                .iter()
+                .enumerate()
+                .find(|(_, value)| !found.y.places(**value))
+            {
+                let message = unplaced(&format!("bar {k}"), &axes_id, "y", value);
+                return Err(Faults(vec![(
+                    format!("values/{k}"),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                )]));
+            }
             let bar_plot =
                 BarPlot::new(found, &values, fill, stroke).map_err(|error| match error {
                     BarPlotError::NoCategories => (
@@ -662,10 +696,15 @@ pub(super) fn shape(
             file,
             representation,
             hydrogens,
+            mirror,
             ..
         } => {
-            let molecule = structure_file::read(&base.join(&file))
-                .map_err(structure_file_error(&file, base))?;
+            let read = structure_file::read(&base.join(&file))
+                .map_err(structure_file_error(&file, base, "3d"))?;
+            let molecule = match mirror {
+                Some(plane) => read.mirrored(plane),
+                None => read,
+            };
             let representation = match representation {
                 RepresentationFile::BallAndStick => Representation::BallAndStick { hydrogens },
                 RepresentationFile::SpaceFilling => Representation::SpaceFilling { hydrogens },
@@ -697,6 +736,33 @@ pub(super) fn shape(
                 groups: Groups::default(),
                 glows: BTreeMap::new(),
             }
+        }
+        ShapeFile::SkeletalFormula {
+            file,
+            bond_length,
+            size,
+            stroke_width,
+            color,
+            font,
+            mirror,
+            ..
+        } => {
+            let structure = structure_file::read_2d(&base.join(&file))
+                .map_err(structure_file_error(&file, base, "2d"))?;
+            let of_bond = |share: f32| {
+                Positive::try_from(f64::from(share * bond_length.get())).expect("positive")
+            };
+            let look = Look {
+                bond_length,
+                size: size.unwrap_or_else(|| of_bond(skeletal_formula::DEFAULT_SIZE)),
+                stroke_width: stroke_width
+                    .unwrap_or_else(|| of_bond(skeletal_formula::DEFAULT_STROKE_WIDTH)),
+                color,
+                font,
+            };
+            Shape::SkeletalFormula(
+                SkeletalFormula::new(structure, look, mirror).map_err(typeset_error("file"))?,
+            )
         }
         ShapeFile::Pattern {
             shape: one,
@@ -831,6 +897,9 @@ fn not_one_shape(shape: &ShapeFile) -> Option<&'static str> {
         }
         ShapeFile::Molecule { .. } => {
             "a `molecule` is many atoms, not one shape; draw atoms as a pattern of a `sphere`, or write a separate `molecule` object for each"
+        }
+        ShapeFile::SkeletalFormula { .. } => {
+            "a `skeletal-formula` is many bonds and atom symbols, not one shape; write a separate `skeletal-formula` object for each"
         }
         ShapeFile::Axes { .. } | ShapeFile::NumberLine { .. } | ShapeFile::Axes3d { .. } => {
             "axes and a number line are many lines and labels, not one shape; write a separate object for each"
@@ -979,7 +1048,19 @@ fn copy_expressions(
         .rotation
         .map_or([None, None, None], |c| [c.x, c.y, c.z]);
     let [sx, sy, sz] = copy.scale.map_or([None, None, None], |c| [c.x, c.y, c.z]);
-    let sources = [px, py, pz, rx, ry, rz, sx, sy, sz, copy.color_share];
+    let sources = [
+        px,
+        py,
+        pz,
+        rx,
+        ry,
+        rz,
+        sx,
+        sy,
+        sz,
+        copy.color_share,
+        copy.opacity,
+    ];
     let expressions: Vec<Option<Expression>> = pattern::COPY_FIELDS
         .into_iter()
         .zip(sources)
@@ -1269,6 +1350,14 @@ fn undashed(stroke: Stroke, what: &str) -> Result<Stroke, Fault> {
     Ok(stroke)
 }
 
+/// The message for a value that a log axis of the axes `axes_id` cannot place: `what`, such as
+/// `point 3`, has `value` along `axis`.
+pub(super) fn unplaced(what: &str, axes_id: &ObjectId, axis: &str, value: f64) -> String {
+    format!(
+        "{what} has {axis} = {value}, and the {axis} axis of `{axes_id}` is a log axis, which places only values above 0; give a value above 0, or leave out that axis' `scale` for a linear axis"
+    )
+}
+
 pub(super) fn axis(which: &str, file: &AxisFile, length: Positive) -> Result<Axis, Fault> {
     let (range_field, spacing_field) = match which {
         "x" => ("x/range", "x/spacing"),
@@ -1283,8 +1372,10 @@ pub(super) fn axis(which: &str, file: &AxisFile, length: Positive) -> Result<Axi
             "`spacing` must be more than 0".to_string(),
         ));
     }
-    Axis::new(file.range[0], file.range[1], file.spacing, length.get()).map_err(|error| match error {
+    Axis::new(file.range[0], file.range[1], file.scale, file.spacing, length.get()).map_err(|error| match error {
         AxisError::EmptyRange => (range_field, SceneErrorCode::Invalid, "`range` must give its lowest value first, and the two must differ".to_string()),
+        AxisError::NotAboveZero => (range_field, SceneErrorCode::OutOfRange, format!("a log axis shows only values above 0, where powers of ten lie, and `range` starts at {}; start it above 0, such as at 1e-6, or leave `scale` out for a linear axis", file.range[0])),
+        AxisError::NotWholePowers => (spacing_field, SceneErrorCode::Invalid, format!("a log axis puts its ticks at powers of ten, so its `spacing` is a whole number of them, and {} is not; write 1 for a tick at every power of ten, or 2 for every other", file.spacing.unwrap_or_default())),
         AxisError::TooManyTicks(count) => {
             (spacing_field, SceneErrorCode::Invalid, format!("this spacing gives {count} ticks over the range, and an axis draws at most {}; use a larger `spacing`", crate::axes::MAX_TICKS))
         }
@@ -1667,7 +1758,7 @@ fn atom_trace(trace: &AtomTraceFile, base: &std::path::Path) -> Result<Vec<[f64;
         ));
     }
     let molecule =
-        structure_file::read(&base.join(file)).map_err(structure_file_error(file, base))?;
+        structure_file::read(&base.join(file)).map_err(structure_file_error(file, base, "3d"))?;
     let chains: Vec<char> = molecule
         .residues()
         .iter()
@@ -1744,6 +1835,7 @@ fn atom_trace(trace: &AtomTraceFile, base: &std::path::Path) -> Result<Vec<[f64;
 fn structure_file_error<'a>(
     file: &'a str,
     base: &'a std::path::Path,
+    record_type: &'a str,
 ) -> impl Fn(StructureFileError) -> (&'static str, SceneErrorCode, String) + 'a {
     move |error| match error {
         StructureFileError::Unreadable(source) => {
@@ -1754,7 +1846,7 @@ fn structure_file_error<'a>(
                 )
             } else {
                 format!(
-                    "from PubChem with `curl -fo {file} \"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=3d\"`"
+                    "from PubChem with `curl -fo {file} \"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type={record_type}\"`"
                 )
             };
             let message = format!(

@@ -428,6 +428,10 @@ impl ShapeFile {
         true
     }
 
+    pub(super) fn default_bond_length() -> Positive {
+        Positive::try_from(1.0).expect("positive")
+    }
+
     pub(super) fn default_ruling_stroke() -> Stroke {
         Stroke {
             color: Color {

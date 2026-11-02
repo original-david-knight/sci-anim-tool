@@ -1,4 +1,4 @@
-# Chemistry: molecules, atom groups and reactions
+# Chemistry: molecules, atom groups, reactions and skeletal formulas
 
 Read `instructional-videos.md` first. `../examples/hydration.json` is a complete lesson built from what this file describes: ethylene's double bond lights up, water joins it, and the reaction makes ethanol while the glow moves with the two carbons. Its structure files are in `../examples/structures/`.
 
@@ -11,7 +11,7 @@ curl -fo caffeine.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/c
 curl -fo water.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/962/SDF?record_type=3d"
 ```
 
-- Always add `?record_type=3d`. The tool refuses a 2D file.
+- Always add `?record_type=3d` for a `molecule`, which refuses a 2D file. A `skeletal-formula` takes the 2D one instead ("Skeletal formulas" below).
 - Use the CID form, `compound/cid/<cid>`, when a name could mean more than one compound.
 - A 404 means PubChem has no 3D model. Proteins, DNA and H₂ have none. Fetch a protein or DNA as a PDB file instead ("Proteins and DNA from PDB files" below). For anything else, choose another example, and tell the user why.
 - `file` in the scene file is relative to the scene file.
@@ -107,6 +107,38 @@ Give both reactions `"fit": false`. The fit would turn the loose atoms about the
 Rest each loose atom away from both where it starts and where it ends, such as spread on a wide ring around the middle, so the viewer sees the atoms come apart in the first reaction and gather to their new partners in the second. Atoms that rest where the products will be make the second reaction a still frame whose bonds just appear. Keep loose atoms at least 1.5 Å apart in the file: two oxygens 1 Å apart look like an O₂ molecule with no stick. `check-layout` lists two atoms with no bond between them, in one molecule or two, whose balls rest less than 0.35 Å apart at the end of a step, since they read as bonded. Give each of the two reactions 3 to 4 s.
 
 Say on screen that a real reaction does not pull every atom apart: the loose atoms show which bonds break and which form, not a step of the mechanism.
+
+## Mirror images
+
+A molecule with `"mirror": "x"` draws its structure file's mirror image: every atom reflected through the plane across its centroid at right angles to x, before its `rotation`. Atom numbers, groups, highlights, captions and `inspect` work as on any molecule, so write the groups of a mirror image with the file's atom numbers. `mirror` needs sci_anim 0.25.0 or later. Do not mirror a molecule with a negative `scale`: a reaction refuses a molecule whose scale differs by axis.
+
+A molecule with a stereocenter, an atom bonded to four different groups, cannot be turned to lie on its mirror image. `../examples/mirror_images.json` shows that with alanine, `../examples/structures/alanine.sdf`, which is L-alanine with its stereocenter at atom 4. PubChem's CID 5950 is L-alanine and CID 71080 is D-alanine. Fetch the one the lesson names and draw the other with `mirror`.
+
+### A mirror pair
+
+- Put the two molecules either side of x = 0, at `[-3, y, 0]` and `[3, y, 0]`, and give the right one `"mirror": "x"`. With the left one at `rotation` `[a, b, c]`, give the right one `[a, -b, -c]`: then the pair is the reflection of each other across x = 0, whatever the turn. With equal rotations it is not, unless the rotation is about x alone.
+- Draw the mirror as a glass pane between them: a thin `polygon` at x = 0, `[[-0.05, -2.1], [0.05, -2.1], [0.05, 2.3], [-0.05, 2.3]]`, with a pale blue fill at `opacity` 0.35. Fade the first molecule in, then the pane, then the mirror image behind it over 2 s, so the viewer reads it as a reflection.
+- Choose the first molecule's rotation so its stereocenter shows: a group pointing at the camera hides it, and `check-layout` says so. For alanine, `[-125.4, 3.7, -152.6]` shows the carboxyl to the left, the amino group to the right, the methyl down and the stereocenter's hydrogen up and behind.
+
+### Try to lay one on the other
+
+The viewer should see that no turn lines a mirror image up with the first molecule. Turn the mirror image, slide it up beside the first, and light the group that does not match:
+
+1. Turn the mirror image half a turn about the frame's depth axis, so it stands upside down. `rotate` moves each angle straight to its `to`, so work out the `to` that equals that turn, and draw a frame mid-turn to see that it reads as a turn. In the example, from `[-125.4, -3.7, 152.6]` it is `[-234.6, 3.7, -27.4]`. Now the carboxyl and the amino group stand on the same sides as the first molecule's.
+2. Slide it beside the first, about one molecule's width away, `[1.9, -0.2, 0]` in the example. Laid exactly on the first, every atom rests on another, and `check-layout` reports each pair as reading bonded.
+3. Light the group that is out of place on both, in two colors: the methyl points down on one and up on the other. Say that no turn lines them up.
+4. Turn and move the mirror image back to where it started before the next idea.
+
+Half a turn about the vertical instead swaps only front and back, which the camera cannot see.
+
+### Light the stereocenter
+
+- Name a group of the one atom, `"stereocenter": [4]`, on both molecules, and light both together.
+- Caption each with its configuration, R or S, in the glow's color, attached to the stereocenter on the side with no atoms, as `"offset": [0, 1.5]` above alanine's. `inspect` does not name R or S: read it from the lesson's source, or from PubChem's name for the compound, such as (2S)-2-aminopropanoic acid for L-alanine. The mirror image always has the other letter.
+
+### Pass a molecule through the mirror
+
+A reaction from a molecule to its mirror image, with each atom mapped to the atom of the same number and `"fit": false`, moves each atom straight through the mirror plane. Put both at the same `position`, the product with `mirror` and the rotation rule above. Halfway every atom lies in the plane, so the molecule flattens into a disc of overlapping balls before it opens out reflected. That is not how a molecule turns into its mirror image: it takes breaking and forming bonds. Show the reflection fading in behind a glass pane instead, and keep the pass-through for a lesson about what a mirror does to coordinates, saying on screen that no molecule does this. Leave the fit on and the product turns to lie as close to the reactant as a turn allows, which hides the reflection.
 
 ## Polymers
 
@@ -304,6 +336,39 @@ A molecule of thousands of atoms reads as a tangle in balls and sticks. `"repres
 - `inspect` reports `"representation": "space-filling"`, each shown atom's `ball_radius` at its whole van der Waals radius, and every bond hidden, since none is drawn.
 - `check-layout` judges a text against the discs of the molecule's balls, which together cover what the molecule covers in the frame. It does not list unbonded atoms that touch, atoms hidden behind others or bonds that point at the camera: overlapping and hiding are what space-filling draws.
 - `../examples/nucleosome_dna.json` turns the 147 nucleobase pairs of DNA that wrap a nucleosome, read from PDB entry 1KX5 without its histone proteins, with one strand lit. It is 6,021 atoms, about 108 Å across and 64 Å along its axis, and fits at `scale` 0.05 between a heading and two lines of text. It renders at about 65 ms a frame at 1920×1080, against about 20 for the dodecamer in ball-and-stick: a space-filling molecule's balls are cut into only as many triangles as its largest ball needs to look round at the size it shows.
+
+## Skeletal formulas
+
+A `skeletal-formula` draws a molecule flat, as a textbook draws it on the page: carbons as corners with no letter, every other atom as its atom symbol (`OH`, `HO`, `NH₂`, `O⁻`), hydrogens on carbon left out, double bonds as two strokes and triple bonds as three, and stereo bonds as wedges and hashes. Use it for the page view a chemist reads: which way a group points at a stereocenter, a molecule beside its mirror image, a functional group named on a formula. Use a `molecule` for the shape in space. Needs sci_anim 0.25.0 or later.
+
+It reads PubChem's 2D record, not the 3D one. Fetch it by CID with `record_type=2d`:
+
+```sh
+curl -fo l_alanine_2d.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/5950/record/SDF?record_type=2d"
+```
+
+A 3D record or a PDB file is a scene error at `file`. Name the file `<name>_2d.sdf`, so it is not mistaken for the 3D one a `molecule` reads.
+
+```json
+"l_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "position": [-3, 0.2, 0],
+  "groups": { "amino": [3, 11, 12], "stereocenter": [4] } },
+"d_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "mirror": "x", "position": [3, 0.2, 0] }
+```
+
+- `bond_length` is the length its bonds are drawn, 1 world unit unless set. L-alanine is then about 4 units across and 2.7 high, and glucose about 4.7 across. Scale a formula by `bond_length`, not `scale`: strokes keep their width under `scale`, and so would look thin on a formula scaled up.
+- `size` sets the atom symbols' text size, 0.6 of `bond_length` unless set, and `stroke_width` the bonds' width, 0.04 of `bond_length` unless set. `color` colors both, white unless set. Keep the defaults, which keep a textbook's proportions.
+- The middle of the box around its shown atoms sits at `position`. `inspect` gives its `bounding_box` and each atom's `position_pixels`, to place captions beside it.
+- A stereo bond's narrow end is at its stereocenter, as PubChem writes it. A wedge points out of the page toward the reader, and a hash into it.
+- `mirror` draws its mirror image. `x` flips it left to right and `y` top to bottom: either is the other enantiomer of a molecule with one stereocenter, as a mirror beside or below the page shows it. `z` keeps every atom in place and turns each wedge into a hash and each hash into a wedge, a mirror behind the page. Atom symbols are never written backward: under `x`, `H₂N` becomes `NH₂`, still written on the side away from its bonds.
+- Draw it with `write`, not `create`: its bonds are drawn along their path, each wedge filling as the stroke passes it, then its atom symbols are written. Give a write of a formula 2 to 3 seconds. It fades and moves as any object does, and cannot be recolored or morphed.
+- `groups` names atoms by their numbers in the 2D file, as a molecule's groups do. A `highlight` of a group lays a see-through fill over its corners, atom symbols and the bonds between them. A group may hold the hydrogens a formula leaves out, as `amino` holds N and its two H here, but a highlight of a group of hidden hydrogens alone is a scene error. Attaching a caption to a group is not supported: attach it to the formula with an `offset`, or place it by `position_pixels`.
+- Atom numbers in a 2D record are not those of the 3D record of the same compound. Find them with `inspect`, which lists each atom's `drawn` (`corner`, `symbol` or `hidden`) and `symbol`, and each bond's `atoms`, `form` (`line`, `double-centered`, `double-in-ring`, `triple`, `wedge`, `hash` or `hidden`) and `strokes`:
+
+```sh
+sci_anim inspect s.json -t 0 | jq -c '.objects.l_alanine.skeletal_formula | (.atoms[] | select(.drawn != "hidden") | [.atom, .element, .symbol]), (.bonds[] | select(.form != "hidden") | [.atoms, .form])'
+```
+
+`../examples/alanine_formulas.json` writes L-alanine, lights its amino group behind the hash, draws a mirror pane and writes D-alanine as its `mirror: "x"` image, then lights both stereocenters.
 
 ## Equations for reactions
 

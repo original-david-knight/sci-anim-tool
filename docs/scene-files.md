@@ -97,7 +97,7 @@ sci_anim has 26 object types. This list groups them by what they draw. The [scen
 - Text and math: `text`, `math` typeset from LaTeX, `table`, and `readout`, a number that changes.
 - Plots: `axes`, `number-line`, `function-plot`, `point-plot`, and `bar-plot`.
 - Solids and 3D: `sphere`, `prism`, `revolution`, `tube`, `surface`, `spring`, and `3d-axes`.
-- Chemistry: `molecule`, read from a structure file or a PDB file.
+- Chemistry: `molecule`, read from a structure file or a PDB file, and `skeletal-formula`, a molecule drawn flat as a textbook draws it, read from a 2D structure file.
 - Repetition: `pattern`, one shape drawn at many places, such as a crystal lattice or the ticks of a clock.
 - Motion: `trail`, the path an object leaves behind it.
 
@@ -121,10 +121,10 @@ Animations in one step play at the same time. Two animations whose spans overlap
 
 sci_anim has 17 animation types. The [scene file reference](scene-reference.md#animations) has the fields of each.
 
-- Bring an object in: `create` draws a shape or grows a solid, and `write` writes text, math and tables.
+- Bring an object in: `create` draws a shape or grows a solid, and `write` writes text, math, tables and skeletal formulas.
 - Ease a value to a `to`: `move`, `scale`, `rotate`, `fade`, `recolor`, and `count`, which counts a readout to a value.
 - Reshape: `morph` turns one shape into another, `reaction` turns reactant molecules into products, and `linear-map` carries objects through a 2x2 matrix.
-- Light one part: `highlight` lights an atom group of a molecule, a cell of a table, a copy of a pattern, or a bar of a bar plot.
+- Light one part: `highlight` lights an atom group of a molecule or a skeletal formula, a cell of a table, a copy of a pattern, or a bar of a bar plot.
 - Move the camera: `camera-move`, `camera-look`, and `camera-zoom`.
 - Set a value at every scene time: `follow` and `simulate`.
 
@@ -134,6 +134,7 @@ An object shows from scene time 0 as declared, unless an animation brings it in:
 
 - An object that the timeline creates or writes, or that a morph or a reaction makes, shows nothing until that animation begins. It enters at opacity 1.
 - An object that enters by a fade is declared with `"opacity": 0` and faded to 1, like the dot and the equation in the scene above. A dot has no stroke to create, so a fade brings it in.
+- A copy of a pattern that enters by a fade starts at its own opacity, the value of the pattern's `copy.opacity` expression, such as `"0"` for every copy or `"mod(i, 2)"` for every other one, and a fade that names the copy brings it in.
 - An object with no create, write, morph, reaction or fade shows for the whole video.
 
 A create or a write does not raise opacity. An object declared at `"opacity": 0` and then only created stays hidden, and `check-layout` reports that it never shows.

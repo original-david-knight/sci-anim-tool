@@ -426,14 +426,14 @@ fn each_tick_reports_the_text_its_label_shows_and_the_side_of_the_tick_it_is_on(
 
     let inspected = inspect_at(&scene(objects, ""), "0");
 
-    // The frame shows "3.14159265" and "6.28318531" under the x ticks, "0.00000000" in the corner
-    // below and left of the crossing, running off the left edge, and "-1.5" to "1.5" left of the
-    // y axis.
+    // The frame shows "3.14159265" and "6.28318531" under the x ticks, "0.00000000" under the x
+    // axis starting right of the y axis, since "0.0" holds the place left of the crossing, and
+    // "-1.5" to "1.5" left of the y axis.
     let ax = tick_labels(&inspected["objects"]["ax"]["axes"]["ticks"]);
     assert_eq!(
         ax[..4],
         [
-            json!(["x", 0.0, "0.00000000", "below-left"]),
+            json!(["x", 0.0, "0.00000000", "below"]),
             json!(["x", std::f64::consts::PI, "3.14159265", "below"]),
             json!(["x", std::f64::consts::TAU, "6.28318531", "below"]),
             json!(["y", -1.5, "-1.5", "left"]),
