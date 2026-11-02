@@ -108,6 +108,38 @@ Rest each loose atom away from both where it starts and where it ends, such as s
 
 Say on screen that a real reaction does not pull every atom apart: the loose atoms show which bonds break and which form, not a step of the mechanism.
 
+## Mirror images
+
+A molecule with `"mirror": "x"` draws its structure file's mirror image: every atom reflected through the plane across its centroid at right angles to x, before its `rotation`. Atom numbers, groups, highlights, captions and `inspect` work as on any molecule, so write the groups of a mirror image with the file's atom numbers. `mirror` needs sci_anim 0.25.0 or later. Do not mirror a molecule with a negative `scale`: a reaction refuses a molecule whose scale differs by axis.
+
+A molecule with a stereocenter, an atom bonded to four different groups, cannot be turned to lie on its mirror image. `../examples/mirror_images.json` shows that with alanine, `../examples/structures/alanine.sdf`, which is L-alanine with its stereocenter at atom 4. PubChem's CID 5950 is L-alanine and CID 71080 is D-alanine. Fetch the one the lesson names and draw the other with `mirror`.
+
+### A mirror pair
+
+- Put the two molecules either side of x = 0, at `[-3, y, 0]` and `[3, y, 0]`, and give the right one `"mirror": "x"`. With the left one at `rotation` `[a, b, c]`, give the right one `[a, -b, -c]`: then the pair is the reflection of each other across x = 0, whatever the turn. With equal rotations it is not, unless the rotation is about x alone.
+- Draw the mirror as a glass pane between them: a thin `polygon` at x = 0, `[[-0.05, -2.1], [0.05, -2.1], [0.05, 2.3], [-0.05, 2.3]]`, with a pale blue fill at `opacity` 0.35. Fade the first molecule in, then the pane, then the mirror image behind it over 2 s, so the viewer reads it as a reflection.
+- Choose the first molecule's rotation so its stereocenter shows: a group pointing at the camera hides it, and `check-layout` says so. For alanine, `[-125.4, 3.7, -152.6]` shows the carboxyl to the left, the amino group to the right, the methyl down and the stereocenter's hydrogen up and behind.
+
+### Try to lay one on the other
+
+The viewer should see that no turn lines a mirror image up with the first molecule. Turn the mirror image, slide it up beside the first, and light the group that does not match:
+
+1. Turn the mirror image half a turn about the frame's depth axis, so it stands upside down. `rotate` moves each angle straight to its `to`, so work out the `to` that equals that turn, and draw a frame mid-turn to see that it reads as a turn. In the example, from `[-125.4, -3.7, 152.6]` it is `[-234.6, 3.7, -27.4]`. Now the carboxyl and the amino group stand on the same sides as the first molecule's.
+2. Slide it beside the first, about one molecule's width away, `[1.9, -0.2, 0]` in the example. Laid exactly on the first, every atom rests on another, and `check-layout` reports each pair as reading bonded.
+3. Light the group that is out of place on both, in two colors: the methyl points down on one and up on the other. Say that no turn lines them up.
+4. Turn and move the mirror image back to where it started before the next idea.
+
+Half a turn about the vertical instead swaps only front and back, which the camera cannot see.
+
+### Light the stereocenter
+
+- Name a group of the one atom, `"stereocenter": [4]`, on both molecules, and light both together.
+- Caption each with its configuration, R or S, in the glow's color, attached to the stereocenter on the side with no atoms, as `"offset": [0, 1.5]` above alanine's. `inspect` does not name R or S: read it from the lesson's source, or from PubChem's name for the compound, such as (2S)-2-aminopropanoic acid for L-alanine. The mirror image always has the other letter.
+
+### Pass a molecule through the mirror
+
+A reaction from a molecule to its mirror image, with each atom mapped to the atom of the same number and `"fit": false`, moves each atom straight through the mirror plane. Put both at the same `position`, the product with `mirror` and the rotation rule above. Halfway every atom lies in the plane, so the molecule flattens into a disc of overlapping balls before it opens out reflected. That is not how a molecule turns into its mirror image: it takes breaking and forming bonds. Show the reflection fading in behind a glass pane instead, and keep the pass-through for a lesson about what a mirror does to coordinates, saying on screen that no molecule does this. Leave the fit on and the product turns to lie as close to the reactant as a turn allows, which hides the reflection.
+
 ## Polymers
 
 PubChem has no 3D model of a polymer chain, and sci_anim makes no structure. Write the chain's structure file yourself with `../scripts/straight_chain.go` before you write the scene. `../examples/polyethylene.go` is a complete lesson: a methyl radical opens one ethylene after another, the chain grows by three repeating units, and the first unit stays lit while it grows. `../examples/polystyrene.json` lights a polystyrene chain's rings one after another, and `../examples/pet.json` lights the rings, ester groups, one repeating unit and the end groups of a PET chain.
