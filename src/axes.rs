@@ -550,7 +550,10 @@ impl Axes {
         // crossing, when they say the same, as both say 0 where the axes cross at 0. Otherwise
         // a crossing label that the other axis runs through, under the x axis where the y axis
         // runs below or left of the y axis where the x axis runs left, moves to the other side
-        // of its own axis, or to the corner when the other axis runs both ways.
+        // of its own axis, or to the corner when the other axis runs both ways. When the label's
+        // own axis starts at the crossing, the other crossing label sits beside the corner, so the
+        // label moves along its own axis past the other axis instead: an x label right of the y
+        // axis, a y label above the x axis.
         let crossing_text = |axis: &Axis| {
             axis.ticks()
                 .any(|value| value == axis.crossing())
@@ -620,6 +623,15 @@ impl Axes {
                     Vec2::new(along, x_axis_y + offset),
                     Side::Above,
                 )?,
+                (true, true) if x.min == x.crossing() => tick_label(
+                    &mut b,
+                    "x",
+                    &x,
+                    value,
+                    Align::Left,
+                    Vec2::new(y_axis_x + LABEL_GAP, x_axis_y - offset),
+                    Side::Below,
+                )?,
                 (true, true) => corner_label = Some((x.label(value), vec![tick("x", value)])),
             }
         }
@@ -652,6 +664,15 @@ impl Axes {
                     Align::Left,
                     Vec2::new(y_axis_x + offset, along),
                     Side::Right,
+                )?,
+                (true, true) if y.min == y.crossing() => tick_label(
+                    &mut b,
+                    "y",
+                    &y,
+                    value,
+                    Align::Right,
+                    Vec2::new(y_axis_x - offset, x_axis_y + LABEL_GAP + half_digit),
+                    Side::Left,
                 )?,
                 (true, true) => corner_label = Some((y.label(value), vec![tick("y", value)])),
             }
@@ -1000,10 +1021,10 @@ mod tests {
         );
     }
 
-    /// No tick label may lie across an axis line, wherever the axes cross, and the crossing's
-    /// value still shows once.
+    /// No tick label may lie across an axis line or run into another label, wherever the axes
+    /// cross and whatever their axis scales, and the crossing's value still shows once.
     #[test]
-    fn no_tick_label_lies_across_an_axis() {
+    fn no_tick_label_lies_across_an_axis_or_another_label() {
         let appearance = Appearance {
             stroke: Stroke::default(),
             color: Color {
@@ -1013,17 +1034,20 @@ mod tests {
             },
             label_size: 0.3,
         };
-        for (xs, ys) in [
-            ((0.0, 390.0, 90.0), (-1.2, 1.2, 1.0)),
-            ((-3.0, 3.0, 1.0), (-2.0, 2.0, 1.0)),
-            ((2.0, 5.0, 1.0), (-1.0, 1.0, 1.0)),
-            ((-5.0, -1.0, 1.0), (-3.0, 3.0, 1.0)),
-            ((0.0, 4.0, 1.0), (0.0, 4.0, 1.0)),
+        let linear = |min, max, spacing, length| axis(min, max, Some(spacing), length);
+        let log = |min, max, length| Axis::new(min, max, AxisScale::Log, None, length).unwrap();
+        for (x, y) in [
+            (linear(0.0, 390.0, 90.0, 8.0), linear(-1.2, 1.2, 1.0, 5.0)),
+            (linear(-3.0, 3.0, 1.0, 8.0), linear(-2.0, 2.0, 1.0, 5.0)),
+            (linear(2.0, 5.0, 1.0, 8.0), linear(-1.0, 1.0, 1.0, 5.0)),
+            (linear(-3.0, 3.0, 1.0, 8.0), linear(2.0, 5.0, 1.0, 5.0)),
+            (linear(-5.0, -1.0, 1.0, 8.0), linear(-3.0, 3.0, 1.0, 5.0)),
+            (linear(0.0, 4.0, 1.0, 8.0), linear(0.0, 4.0, 1.0, 5.0)),
+            (log(1e-2, 1e2, 8.0), linear(-1.2, 1.2, 1.0, 5.0)),
+            (linear(-2.0, 2.0, 1.0, 8.0), log(1.0, 1e4, 5.0)),
+            (linear(0.0, 10.0, 2.0, 8.0), log(1e-6, 1.0, 5.0)),
+            (log(1e-2, 1e2, 6.0), log(1e-4, 1e4, 6.0)),
         ] {
-            let (x, y) = (
-                axis(xs.0, xs.1, Some(xs.2), 8.0),
-                axis(ys.0, ys.1, Some(ys.2), 5.0),
-            );
             let axes = Axes::new(x, y, None, None, appearance).unwrap();
             let (x_axis_y, y_axis_x) = (
                 f64::from(y.to_local(y.crossing())),
@@ -1033,7 +1057,8 @@ mod tests {
                 (f64::from(x.to_local(x.min)), f64::from(x.to_local(x.max))),
                 (f64::from(y.to_local(y.min)), f64::from(y.to_local(y.max))),
             );
-            for glyph in axes.drawing.labels.iter().flat_map(|label| &label.glyphs) {
+            let labels = &axes.drawing.labels;
+            for glyph in labels.iter().flat_map(|label| &label.glyphs) {
                 let b = glyph.path.bounding_box();
                 let across_x_axis =
                     b.y0 < x_axis_y && x_axis_y < b.y1 && b.x1 > x_span.0 && b.x0 < x_span.1;
@@ -1041,12 +1066,21 @@ mod tests {
                     b.x0 < y_axis_x && y_axis_x < b.x1 && b.y1 > y_span.0 && b.y0 < y_span.1;
                 assert!(
                     !across_x_axis && !across_y_axis,
-                    "x {xs:?}, y {ys:?}: a label glyph at {b:?} lies across an axis"
+                    "x {x:?}, y {y:?}: a label glyph at {b:?} lies across an axis"
                 );
             }
-            let zeros = axes
-                .drawing
-                .labels
+            for (k, a) in labels.iter().enumerate() {
+                for b in &labels[k + 1..] {
+                    let gap = a.bounding_box.inflate(0.02, 0.02).intersect(b.bounding_box);
+                    assert!(
+                        gap.width() <= 0.0 || gap.height() <= 0.0,
+                        "x {x:?}, y {y:?}: the labels {} and {} run into each other",
+                        a.text,
+                        b.text
+                    );
+                }
+            }
+            let zeros = labels
                 .iter()
                 .flat_map(|label| &label.glyphs)
                 .filter(|glyph| {
@@ -1058,10 +1092,10 @@ mod tests {
                         < 0.4
                 })
                 .count();
-            if xs.0 <= 0.0 && ys.0 <= 0.0 && 0.0 <= xs.1 && 0.0 <= ys.1 {
+            if x.min <= 0.0 && y.min <= 0.0 && 0.0 <= x.max && 0.0 <= y.max {
                 assert_eq!(
                     zeros, 1,
-                    "x {xs:?}, y {ys:?}: the axes cross at 0, and one 0 shows it"
+                    "x {x:?}, y {y:?}: the axes cross at 0, and one 0 shows it"
                 );
             }
         }
