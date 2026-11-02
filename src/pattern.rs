@@ -38,8 +38,8 @@ pub struct Copy {
     pub color_share: f32,
     /// The pattern's `to_color`, or the color of its palette that the copy's palette index picks.
     pub to_color: Color,
-    /// The copy's own opacity, from 0 to 1, which a fade of the copy changes. The pattern's
-    /// object opacity applies on top of it.
+    /// The copy's own opacity, from 0 to 1: its `opacity` expression's value until a fade of the
+    /// copy changes it. The pattern's object opacity applies on top of it.
     pub opacity: f32,
     /// The colors a recolor of the copy gave it, drawn in place of its mixed colors.
     pub own_colors: OwnColors,
@@ -185,7 +185,7 @@ impl Layout {
 
 /// The field of each value a pattern's `copy` sets, under the object, in the order of a
 /// `CopyExpressions`.
-pub const COPY_FIELDS: [&str; 10] = [
+pub const COPY_FIELDS: [&str; 11] = [
     "copy/position/x",
     "copy/position/y",
     "copy/position/z",
@@ -196,12 +196,13 @@ pub const COPY_FIELDS: [&str; 10] = [
     "copy/scale/y",
     "copy/scale/z",
     "copy/color_share",
+    "copy/opacity",
 ];
 
 /// The expression of each value of `COPY_FIELDS` that a pattern's `copy` writes, read under its
 /// layout's variables. A value with none takes its default: the place for a position, 0 for a
-/// rotation, 1 for a scale, and for a color share 1 with a palette and 0 without.
-pub struct CopyExpressions(pub [Option<Expression>; 10]);
+/// rotation, 1 for a scale and an opacity, and for a color share 1 with a palette and 0 without.
+pub struct CopyExpressions(pub [Option<Expression>; 11]);
 
 /// An expression of `copy` with no value a copy can take, at the first such copy in index order:
 /// no finite value, or for the palette index no whole number within the palette.
@@ -265,6 +266,7 @@ impl Pattern {
                 1.0,
                 1.0,
                 default_share,
+                1.0,
             ];
             for (slot, expression) in expressions.0.iter().enumerate() {
                 let Some(expression) = expression else {
@@ -310,7 +312,7 @@ impl Pattern {
                 transform,
                 color_share: set[9].clamp(0.0, 1.0),
                 to_color: copy_to_color,
-                opacity: 1.0,
+                opacity: set[10].clamp(0.0, 1.0),
                 own_colors: OwnColors::default(),
                 glow: Glow::off(),
             });

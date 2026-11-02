@@ -189,6 +189,7 @@ fn reads_law_time(file: &ShapeFile) -> bool {
                     sy,
                     sz,
                     copy.color_share.as_ref(),
+                    copy.opacity.as_ref(),
                 ]
                 .into_iter()
                 .flatten()
@@ -979,7 +980,19 @@ fn copy_expressions(
         .rotation
         .map_or([None, None, None], |c| [c.x, c.y, c.z]);
     let [sx, sy, sz] = copy.scale.map_or([None, None, None], |c| [c.x, c.y, c.z]);
-    let sources = [px, py, pz, rx, ry, rz, sx, sy, sz, copy.color_share];
+    let sources = [
+        px,
+        py,
+        pz,
+        rx,
+        ry,
+        rz,
+        sx,
+        sy,
+        sz,
+        copy.color_share,
+        copy.opacity,
+    ];
     let expressions: Vec<Option<Expression>> = pattern::COPY_FIELDS
         .into_iter()
         .zip(sources)

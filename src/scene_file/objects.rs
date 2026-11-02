@@ -1072,6 +1072,8 @@ pub(super) struct CopyFile {
     pub(super) scale: Option<CopyScaleFile>,
     #[schemars(description = crate::expr::color_share_description())]
     pub(super) color_share: Option<String>,
+    #[schemars(description = crate::expr::copy_opacity_description())]
+    pub(super) opacity: Option<String>,
     /// The color each copy's colors are mixed toward by its `color_share`, written `#rrggbb`.
     /// Write it with `color_share`, and not with `palette`.
     pub(super) to_color: Option<Color>,
