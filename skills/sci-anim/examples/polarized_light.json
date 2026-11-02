@@ -1,0 +1,124 @@
+{
+  "camera": { "position": [-6.5, 3, 8.5], "target": [0.6, -0.2, 0], "fov": 45 },
+  "objects": {
+    "heading": { "type": "text", "text": "Sugar turns the plane of polarized light", "size": 0.45, "attach": { "object": "wave", "offset": [0.8, 3.4] }, "opacity": 0 },
+
+    "polarizer": { "type": "prism", "position": [-3.6, 0, 0], "rotation": [0, 0, -90], "height": 0.1,
+      "base": { "type": "circle", "radius": 1.1 }, "material": { "type": "standard", "color": "#8c8c8c" } },
+    "glass": { "type": "revolution", "rotation": [0, 0, -90], "opacity": 0.3,
+      "profile": { "type": "polygon", "points": [[0, -2], [0.9, -2], [0.9, 2], [0, 2]] },
+      "material": { "type": "standard", "color": "#fff3b0" } },
+    "wave": { "type": "tube", "radius": 0.04,
+      "curve": { "x": "u", "y": "0.7*sin(4*u - 6*t)*cos(1.0472*min(max((u + 2)/4, 0), 1))",
+                 "z": "-0.7*sin(4*u - 6*t)*sin(1.0472*min(max((u + 2)/4, 0), 1))", "u_range": [-3.5, 5.6] },
+      "material": { "type": "standard", "color": "#58c4dd" } },
+    "say_polarizer": { "type": "text", "text": "polarizer", "size": 0.34, "attach": { "object": "polarizer", "offset": [0, -1.45] }, "opacity": 0 },
+    "say_glass": { "type": "text", "text": "tube of sugar solution", "size": 0.34, "attach": { "object": "glass", "offset": [0.3, -1.8] }, "opacity": 0 },
+
+    "plane_in": { "type": "polygon", "position": [-3.4, 0, 0], "points": [[0, -0.75], [1.3, -0.75], [1.3, 0.75], [0, 0.75]],
+      "stroke": { "color": "#ffd23f", "width": 0.03 }, "fill": { "color": "#ffd23f", "opacity": 0.15 }, "opacity": 0 },
+    "plane_out": { "type": "polygon", "position": [2.4, 0, 0], "rotation": [-60, 0, 0], "points": [[0, -0.75], [3.2, -0.75], [3.2, 0.75], [0, 0.75]],
+      "stroke": { "color": "#ffd23f", "width": 0.03 }, "fill": { "color": "#ffd23f", "opacity": 0.15 }, "opacity": 0 },
+    "upright": { "type": "line", "from": [5.6, -0.75, 0], "to": [5.6, 0.75, 0], "stroke": { "color": "#ffffff", "width": 0.03, "dash": [0.1, 0.08] }, "opacity": 0 },
+    "turn": { "type": "arc", "position": [5.6, 0, 0], "rotation": [0, 90, 0], "radius": 0.75, "start_angle": 90, "sweep": -60,
+      "stroke": { "color": "#fc6255", "width": 0.04 } },
+    "say_turn": { "type": "math", "tex": "\\alpha", "size": 0.45, "color": "#fc6255", "attach": { "object": "turn", "offset": [0.45, 1.05] }, "opacity": 0 },
+    "say_angle": { "type": "text", "text": "Out of the tube, the plane has turned by an angle α.\nMore sugar, or a longer tube, turns it further.", "size": 0.32, "attach": { "object": "wave", "offset": [1.3, -3.0] }, "opacity": 0 },
+
+    "helix_heading": { "type": "text", "text": "Circularly polarized light turns as it travels", "size": 0.45, "attach": { "object": "right_helix", "offset": [0, 2.1] }, "opacity": 0 },
+    "right_axis": { "type": "line", "from": [-4.5, 1.3, 0], "to": [4.5, 1.3, 0], "stroke": { "color": "#888888", "width": 0.02 }, "opacity": 0 },
+    "right_helix": { "type": "tube", "position": [0, 1.3, 0], "radius": 0.04,
+      "curve": { "x": "u", "y": "0.6*cos(3*u - 6*t)", "z": "0.6*sin(3*u - 6*t)", "u_range": [-4.5, 4.5] },
+      "material": { "type": "standard", "color": "#58c4dd" } },
+    "right_field_1": { "type": "arrow", "from": [-3, 1.3, 0], "to": { "object": "right_helix", "u": -3 }, "tip_length": 0.22, "stroke": { "color": "#58c4dd", "width": 0.045 }, "opacity": 0 },
+    "right_field_2": { "type": "arrow", "from": [-1, 1.3, 0], "to": { "object": "right_helix", "u": -1 }, "tip_length": 0.22, "stroke": { "color": "#58c4dd", "width": 0.045 }, "opacity": 0 },
+    "right_field_3": { "type": "arrow", "from": [1, 1.3, 0], "to": { "object": "right_helix", "u": 1 }, "tip_length": 0.22, "stroke": { "color": "#58c4dd", "width": 0.045 }, "opacity": 0 },
+    "right_field_4": { "type": "arrow", "from": [3, 1.3, 0], "to": { "object": "right_helix", "u": 3 }, "tip_length": 0.22, "stroke": { "color": "#58c4dd", "width": 0.045 }, "opacity": 0 },
+    "say_right": { "type": "text", "text": "right-handed", "size": 0.34, "attach": { "object": "right_helix", "offset": [-6.1, 0] }, "opacity": 0 },
+
+    "left_axis": { "type": "line", "from": [-4.5, -1.3, 0], "to": [4.5, -1.3, 0], "stroke": { "color": "#888888", "width": 0.02 }, "opacity": 0 },
+    "left_helix": { "type": "tube", "position": [0, -1.3, 0], "radius": 0.04,
+      "curve": { "x": "u", "y": "0.6*cos(3*u - 6*t)", "z": "-0.6*sin(3*u - 6*t)", "u_range": [-4.5, 4.5] },
+      "material": { "type": "standard", "color": "#fc6255" } },
+    "left_field_1": { "type": "arrow", "from": [-3, -1.3, 0], "to": { "object": "left_helix", "u": -3 }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.045 }, "opacity": 0 },
+    "left_field_2": { "type": "arrow", "from": [-1, -1.3, 0], "to": { "object": "left_helix", "u": -1 }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.045 }, "opacity": 0 },
+    "left_field_3": { "type": "arrow", "from": [1, -1.3, 0], "to": { "object": "left_helix", "u": 1 }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.045 }, "opacity": 0 },
+    "left_field_4": { "type": "arrow", "from": [3, -1.3, 0], "to": { "object": "left_helix", "u": 3 }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.045 }, "opacity": 0 },
+    "say_left": { "type": "text", "text": "left-handed", "size": 0.34, "attach": { "object": "left_helix", "offset": [-6.1, 0] }, "opacity": 0 },
+    "say_helix": { "type": "text", "text": "Sugar slows one hand more than the other, which turns the plane.", "size": 0.32, "attach": { "object": "left_helix", "offset": [0, -1.6] }, "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "heading", "to": 1, "end": 0.8 },
+      { "type": "create", "object": "polarizer" },
+      { "type": "create", "object": "glass" },
+      { "type": "fade", "object": "say_polarizer", "to": 1, "start": 0.5 },
+      { "type": "fade", "object": "say_glass", "to": 1, "start": 0.5 }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "create", "object": "wave", "easing_curve": "linear" }
+    ] },
+    { "type": "chapter", "id": "travel", "steps": [
+      { "type": "play", "duration": 3, "animations": [
+        { "type": "follow", "object": "wave", "sets": "shape", "from": "travel" },
+        { "type": "fade", "object": "plane_in", "to": 1, "end": 1 }
+      ] },
+      { "type": "play", "duration": 3, "animations": [
+        { "type": "follow", "object": "wave", "sets": "shape", "from": "travel" },
+        { "type": "fade", "object": "plane_out", "to": 1, "end": 1 },
+        { "type": "fade", "object": "upright", "to": 1, "end": 1 },
+        { "type": "create", "object": "turn", "start": 1, "end": 2 },
+        { "type": "fade", "object": "say_turn", "to": 1, "start": 1.5, "end": 2 }
+      ] },
+      { "type": "play", "duration": 4, "animations": [
+        { "type": "follow", "object": "wave", "sets": "shape", "from": "travel" },
+        { "type": "fade", "object": "say_angle", "to": 1, "end": 1 }
+      ] }
+    ] },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "fade", "object": "heading", "to": 0 },
+      { "type": "fade", "object": "polarizer", "to": 0 },
+      { "type": "fade", "object": "glass", "to": 0 },
+      { "type": "fade", "object": "wave", "to": 0 },
+      { "type": "fade", "object": "say_polarizer", "to": 0 },
+      { "type": "fade", "object": "say_glass", "to": 0 },
+      { "type": "fade", "object": "plane_in", "to": 0 },
+      { "type": "fade", "object": "plane_out", "to": 0 },
+      { "type": "fade", "object": "upright", "to": 0 },
+      { "type": "fade", "object": "turn", "to": 0 },
+      { "type": "fade", "object": "say_turn", "to": 0 },
+      { "type": "fade", "object": "say_angle", "to": 0 },
+      { "type": "camera-move", "to": [-3.5, 1.8, 10.5] },
+      { "type": "camera-look", "to": [0, -0.1, 0] }
+    ] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "helix_heading", "to": 1, "end": 0.8 },
+      { "type": "fade", "object": "right_axis", "to": 1 },
+      { "type": "fade", "object": "left_axis", "to": 1 },
+      { "type": "create", "object": "right_helix" },
+      { "type": "create", "object": "left_helix" },
+      { "type": "fade", "object": "say_right", "to": 1, "start": 0.5 },
+      { "type": "fade", "object": "say_left", "to": 1, "start": 0.5 }
+    ] },
+    { "type": "chapter", "id": "spin", "steps": [
+      { "type": "play", "duration": 3, "animations": [
+        { "type": "follow", "object": "right_helix", "sets": "shape", "from": "spin" },
+        { "type": "follow", "object": "left_helix", "sets": "shape", "from": "spin" },
+        { "type": "fade", "object": "right_field_1", "to": 1, "end": 1 },
+        { "type": "fade", "object": "right_field_2", "to": 1, "end": 1 },
+        { "type": "fade", "object": "right_field_3", "to": 1, "end": 1 },
+        { "type": "fade", "object": "right_field_4", "to": 1, "end": 1 },
+        { "type": "fade", "object": "left_field_1", "to": 1, "end": 1 },
+        { "type": "fade", "object": "left_field_2", "to": 1, "end": 1 },
+        { "type": "fade", "object": "left_field_3", "to": 1, "end": 1 },
+        { "type": "fade", "object": "left_field_4", "to": 1, "end": 1 }
+      ] },
+      { "type": "play", "duration": 4, "animations": [
+        { "type": "follow", "object": "right_helix", "sets": "shape", "from": "spin" },
+        { "type": "follow", "object": "left_helix", "sets": "shape", "from": "spin" },
+        { "type": "fade", "object": "say_helix", "to": 1, "end": 1 }
+      ] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

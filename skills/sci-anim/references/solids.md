@@ -109,6 +109,27 @@ A `surface` is a sheet whose height `z` is an expression in `x` and `y`, over th
 - Write the function beside it as `math`, such as `z = -2e^{-(x^2 + y^2)/2}`, `attach`ed to the surface or its axes so it faces the camera.
 - To graph it on axes, name `3d-axes` in `axes`, as below.
 
+## A crystal with flat faces: two surfaces
+
+No solid takes a list of corners and faces. A crystal whose faces all slope, with none standing straight up from its middle, is two surfaces over one rectangle: its top half, and its bottom half turned down. `../examples/tartrate_crystals.json` draws Pasteur's two tartrate crystals this way:
+
+```json
+"top": { "type": "surface", "x_range": [-1.8, 1.8], "y_range": [-1, 1],
+  "z": "min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x)))", "material": { "type": "standard", "color": "#a8d8ea" } },
+"bottom": { "type": "surface", "scale": [1, -1, 1], "x_range": [-1.8, 1.8], "y_range": [-1, 1],
+  "z": "min(min(0.7, 1.1*(1 - abs(y))), 1.6*(1.8 - abs(x)))", "material": { "type": "standard", "color": "#a8d8ea" } }
+```
+
+- Each term of the `min` is a face: `0.7` is the flat top, `1.1*(1 - abs(y))` the two long sloping faces, and `1.6*(1.8 - abs(x))` the two end faces. The height of the solid at a point is that of the lowest face there.
+- Each half falls to 0 along the whole rim of the rectangle, so the two halves meet there, and the rim is drawn as the edge between them. A face that stands straight up cannot be a height, so it slopes a little or the crystal lies on its side.
+- `"scale": [1, -1, 1]` turns the bottom half's height down. Give both halves the same `position` and `rotation`, and the same `rotate` or `move` in the same step, so they go as one solid about their shared position. A `create` raises both from the rim's plane.
+- A small face that cuts off one corner, such as the slanted face that told Pasteur's crystals apart, is one more plane in the `min`: a little below the corner, rising inward more gently than the faces that meet there. The top half's slanted face at the corner where the flat top meets the front long face and the right end face is `0.48 + 0.5*(1.3625 - x) + 0.3*(y + 0.3636)`: the corner is at x = 1.3625 and y = -0.3636, it lies 0.22 below the top's 0.7 there, and it rises 0.5 a unit inward along x and 0.3 along y. Its slope along x over the end face's, 0.5/1.6, plus its slope along y over the long face's, 0.3/1.1, is under 1, so it cuts off a small triangle. Steeper, it runs out to the rim and the sheet shows a fin there: look at a frame after each change.
+- An edge where two faces meet at a shallow angle comes out a pixel or two ragged.
+
+### A mirror image
+
+A negative factor in `scale` draws a true mirror image of any solid, lit as the original is: `[-1, 1, 1]` mirrors a solid across its own yz plane. To mirror a solid at `[-3, 0, 0]` with `"rotation": [28, -25, 0]` across the plane x = 0, place a copy at `[3, 0, 0]` with `"rotation": [28, 25, 0]` and the x factor of its `scale` negated: `[-1, 1, 1]`, or `[-1, -1, 1]` for a bottom half. The angles about y and z change sign, and the angle about x stays. A prism, a revolution and a surface all mirror this way.
+
 ## Draw 3D axes
 
 `3d-axes` draws three axes with ticks, tick labels and axis labels, z up as a textbook draws them: x to the right, z up and y away from the camera. Each of `x`, `y` and `z` gives a `range` in data units, a `length` in world units that the range fills, an optional `spacing` of its ticks and an optional `label` in LaTeX math. The box of the three lengths is centered on the object's `position`.

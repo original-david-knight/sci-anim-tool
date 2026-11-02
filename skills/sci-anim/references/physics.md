@@ -37,6 +37,36 @@ A surface that a follow runs is sampled at the same points at every frame, every
 
 `check-layout` checks every frame time of the follow, so a wave that runs through a tick label is reported however briefly it does. A wave crosses the x axis by nature: give that axis a `spacing` wider than its range, so only the tick at 0 is labeled, rather than move the wave off its axis.
 
+## Polarized light: a plane that turns, and a helix
+
+A light wave in space is a `tube` along the beam whose curve is the tip of the wave's field at law time `t`. Run it with a follow of `"sets": "shape"`, as above. Write `θ` below for the angle of the plane of polarization from straight up, in radians, as an expression in `u`:
+
+```json
+"wave": { "type": "tube", "radius": 0.04,
+  "curve": { "x": "u", "y": "0.7*sin(4*u - 6*t)*cos(θ)", "z": "-0.7*sin(4*u - 6*t)*sin(θ)", "u_range": [-3.5, 5.6] } }
+```
+
+| Light | `θ` |
+|---|---|
+| Polarized straight up | `0` |
+| Through a tube of sugar solution from u = -2 to 2, its plane turned by 60 degrees at the far end | `1.0472*min(max((u + 2)/4, 0), 1)` |
+
+- A `θ` that rises along the tube and holds after it turns the plane inside the solution only. Out of the tube the wave keeps its new plane.
+- `z` of `-…*sin(θ)` turns the plane clockwise as someone looking back toward the light sees it, as a dextrorotatory sugar such as sucrose does. `+…*sin(θ)` turns it the other way.
+- The tube of solution is a `revolution` of a rectangle, `[[0, -2], [0.9, -2], [0.9, 2], [0, 2]]`, turned by `"rotation": [0, 0, -90]` so its axis lies along x. Declare it at `"opacity": 0.3`, which shows the wave through it. A solid's material is always opaque, but a faded object shows what is behind it. A polarizer is a thin `prism` on a `circle`, turned the same way.
+- Show the plane as a `polygon` rectangle along the beam with a see-through fill, `"points": [[0, -0.75], [3.2, -0.75], [3.2, 0.75], [0, 0.75]]`. Turn the one past the tube about x by the angle, as `"rotation": [-60, 0, 0]`, the minus for the `-z` above.
+- Mark the angle at the rectangle's far edge: a dashed `line` straight up, and an `arc` across the beam with `"rotation": [0, 90, 0]`, `"start_angle": 90` and `"sweep": -60`, of the rectangle's half height as its radius.
+- Look from the side and above, as `"camera": { "position": [-6.5, 3, 8.5], "target": [0.6, -0.2, 0] }`, so the plane's turn shows. From straight in front, a plane turned toward the camera looks only shorter. Text faces the default camera's way, so under a turned camera give each text an `attach` to a solid, such as the wave, with an `offset`. An attached text faces the camera wherever it stands.
+
+Circularly polarized light is a helix that turns as it travels:
+
+| Helix | `y` | `z` |
+|---|---|---|
+| Right-handed | `0.6*cos(3*u - 6*t)` | `0.6*sin(3*u - 6*t)` |
+| Left-handed | `0.6*cos(3*u - 6*t)` | `-0.6*sin(3*u - 6*t)` |
+
+An `arrow` from a point on the beam's axis to the helix at the same `u`, as `"from": [1, 1.3, 0], "to": { "object": "right_helix", "u": 1 }`, shows the field at that point turning. `../examples/polarized_light.json` shows both: a polarized wave turning through a tube of sugar solution, then a right-handed and a left-handed helix side by side.
+
 ## Forces on a body: ends on objects
 
 A line's or an arrow's `from` or `to` may sit on an object: `{ "object": "block", "offset": [0, -1.5, 0] }` is the object's world position plus an offset in world units along the world's axes. The shape is then placed by its ends, and lies between them at every scene time wherever the object goes:
