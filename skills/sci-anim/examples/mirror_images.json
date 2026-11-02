@@ -1,0 +1,63 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A molecule and its mirror image", "size": 0.5, "position": [0, 3.3, 0] },
+
+    "glass": { "type": "polygon", "points": [[-0.05, -2.1], [0.05, -2.1], [0.05, 2.3], [-0.05, 2.3]],
+      "fill": { "color": "#9fd3e6", "opacity": 0.35 }, "stroke": { "color": "#cfeaf3", "width": 0.02 }, "opacity": 0 },
+
+    "left": { "type": "molecule", "file": "structures/alanine.sdf", "position": [-3, -0.2, 0], "rotation": [-125.4, 3.7, -152.6], "scale": [1, 1, 1], "opacity": 0,
+      "groups": { "methyl": [5, 8, 9, 10], "stereocenter": [4] } },
+    "right": { "type": "molecule", "file": "structures/alanine.sdf", "mirror": "x", "position": [3, -0.2, 0], "rotation": [-125.4, -3.7, 152.6], "scale": [1, 1, 1], "opacity": 0,
+      "groups": { "methyl": [5, 8, 9, 10], "stereocenter": [4] } },
+
+    "left_name": { "type": "text", "text": "L-alanine", "size": 0.4, "position": [-3, -2.75, 0], "opacity": 0 },
+    "right_name": { "type": "text", "text": "D-alanine", "size": 0.4, "position": [3, -2.75, 0], "opacity": 0 },
+
+    "left_s": { "type": "text", "text": "S", "size": 0.6, "color": "#ffd23f", "opacity": 0,
+      "attach": { "object": "left", "group": "stereocenter", "offset": [0, 1.5] } },
+    "right_r": { "type": "text", "text": "R", "size": 0.6, "color": "#ffd23f", "opacity": 0,
+      "attach": { "object": "right", "group": "stereocenter", "offset": [0, 1.5] } },
+
+    "say_alanine": { "type": "text", "text": "Alanine, one of the amino acids in every protein.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 },
+    "say_mirror": { "type": "text", "text": "Its mirror image has the same atoms and the same bonds.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 },
+    "say_lay": { "type": "text", "text": "Turn it over and slide it up to the first one.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 },
+    "say_miss": { "type": "text", "text": "One methyl group points down, the other up. No turn lines them up.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 },
+    "say_center": { "type": "text", "text": "The middle carbon holds four different groups, in mirrored order.", "size": 0.4, "position": [0, -3.4, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "fade", "object": "left", "to": 1 }, { "type": "fade", "object": "left_name", "to": 1 }, { "type": "fade", "object": "say_alanine", "to": 1 }] },
+    { "type": "wait", "duration": 1.5 },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "glass", "to": 1 }, { "type": "fade", "object": "say_alanine", "to": 0 }] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "fade", "object": "right", "to": 1 }, { "type": "fade", "object": "right_name", "to": 1 }, { "type": "fade", "object": "say_mirror", "to": 1 }] },
+    { "type": "wait", "duration": 2.5 },
+    { "type": "play", "duration": 0.8, "animations": [
+      { "type": "fade", "object": "glass", "to": 0 }, { "type": "fade", "object": "left_name", "to": 0 }, { "type": "fade", "object": "right_name", "to": 0 },
+      { "type": "fade", "object": "say_mirror", "to": 0 }] },
+
+    { "type": "play", "duration": 0.8, "animations": [{ "type": "fade", "object": "say_lay", "to": 1 }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "rotate", "object": "right", "to": [-234.6, 3.7, -27.4] }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "move", "object": "right", "to": [1.9, -0.2, 0] }] },
+    { "type": "play", "duration": 0.8, "animations": [{ "type": "fade", "object": "say_lay", "to": 0 }] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "highlight", "object": "left", "group": "methyl", "to": 1 },
+      { "type": "highlight", "object": "right", "group": "methyl", "to": 1, "color": "#9a72ac" },
+      { "type": "fade", "object": "say_miss", "to": 1 }] },
+    { "type": "wait", "duration": 3 },
+    { "type": "play", "duration": 0.8, "animations": [
+      { "type": "highlight", "object": "left", "group": "methyl", "to": 0 }, { "type": "highlight", "object": "right", "group": "methyl", "to": 0 },
+      { "type": "fade", "object": "say_miss", "to": 0 }] },
+
+    { "type": "play", "duration": 2.5, "animations": [
+      { "type": "rotate", "object": "right", "to": [-125.4, -3.7, 152.6] },
+      { "type": "move", "object": "right", "to": [3, -0.2, 0] }] },
+    { "type": "play", "duration": 1.2, "animations": [
+      { "type": "fade", "object": "glass", "to": 1 },
+      { "type": "highlight", "object": "left", "group": "stereocenter", "to": 1 }, { "type": "highlight", "object": "right", "group": "stereocenter", "to": 1 },
+      { "type": "fade", "object": "left_s", "to": 1 }, { "type": "fade", "object": "right_r", "to": 1 },
+      { "type": "fade", "object": "say_center", "to": 1 }] },
+    { "type": "wait", "duration": 3 }
+  ]
+}

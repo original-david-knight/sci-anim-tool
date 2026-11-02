@@ -740,6 +740,18 @@ _Avoid_: cycle, aromatic (as a name for the ring)
 The mean position of every atom of a molecule, hidden atoms too, so no representation moves it. A molecule is placed with its centroid at the object's position, and a rotation turns it about its centroid.
 _Avoid_: center of mass, origin (the structure file's origin is not the object's)
 
+**Mirror image**:
+A molecule drawn with every atom of its structure file reflected through a mirror plane, set by the molecule's `mirror`. Its atoms keep their numbers, elements and bonds, so its atom groups and atom map are written as for the file itself. A molecule with a stereocenter cannot be turned to lie on its mirror image.
+_Avoid_: enantiomer (a chemist's meaning, which the tool does not check), flipped copy, reflection (for the molecule; a reflection is what the mirror plane does)
+
+**Mirror plane**:
+The plane a mirror image is reflected through. It crosses the object's middle, the centroid for a molecule, at right angles to the axis `mirror` names: `x`, `y` or `z` of the object's own space, so the reflection comes before the object's rotation, scale and position.
+_Avoid_: mirror axis, flip axis, symmetry plane
+
+**Stereocenter**:
+An atom bonded to four different groups, such as alanine's middle carbon. A molecule with one is not its own mirror image, and the order of the four groups around it, read by chemists' priority rules, is named R or S. The tool finds no stereocenter. A scene lights one as an atom group.
+_Avoid_: chiral center, asymmetric carbon
+
 **Ball**:
 How a representation draws an atom: a sphere in the atom's element color, with a radius a quarter of its element's van der Waals radius in ball-and-stick and the whole of it in space-filling. The frame shows it as a disc, and `inspect` reports each shown atom's `ball_radius`, the disc's radius in pixels after the molecule's scale and the camera. The layout check finds the atoms a text covers by their discs, which together cover what a space-filling molecule covers in the frame.
 _Avoid_: atom (an atom has no size)

@@ -17,7 +17,7 @@ use serde::Serialize;
 use crate::cartoon::{Cartoon, CartoonTube};
 use crate::element::Element;
 use crate::group::{GroupId, GroupReport};
-use crate::scene::Color;
+use crate::scene::{Color, MirrorPlane};
 
 /// An atom's number in the structure file: its place in an SDF file, counting from 1, or its
 /// serial number in a PDB file. Only `Molecule::numbered` makes one, so holding an `AtomNumber`
@@ -371,6 +371,24 @@ impl Molecule {
             secondary_structure: Vec::new(),
             cartoon: OnceLock::new(),
         })
+    }
+
+    /// The molecule's mirror image: every atom reflected through `plane` across the centroid,
+    /// with its number, element, bonds and residues kept.
+    pub fn mirrored(self, plane: MirrorPlane) -> Molecule {
+        let atoms = self
+            .atoms
+            .into_iter()
+            .map(|atom| Atom {
+                position: plane.reflect(atom.position),
+                ..atom
+            })
+            .collect();
+        Molecule {
+            atoms,
+            cartoon: OnceLock::new(),
+            ..self
+        }
     }
 
     /// The molecule with the secondary structure its PDB file gives.
