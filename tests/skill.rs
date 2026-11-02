@@ -21,7 +21,6 @@ const FEATURE_MAP: &str = concat!(
 const NOT_YET_IN_THE_FEATURE_MAP: &[&str] = &[
     "arc",
     "number-line",
-    "point-plot",
     "rotate",
     "camera-move",
     "camera-look",
