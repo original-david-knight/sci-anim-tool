@@ -347,6 +347,13 @@ fn stage_members(shape: &mut Shape, members: &BTreeMap<Member, MemberTracks>, sc
                 }
             }
         }
+        Shape::SkeletalFormula(formula) => {
+            for (member, tracks) in members {
+                if let (Member::Group(group), Some(glow)) = (member, tracks.glow.at(scene_time)) {
+                    formula.glows.insert(group.clone(), glow);
+                }
+            }
+        }
         Shape::Pattern(pattern) => {
             let mut copies = pattern.copies.to_vec();
             for (member, tracks) in members {

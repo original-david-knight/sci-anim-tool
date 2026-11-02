@@ -23,6 +23,7 @@ use crate::plane_map::PlaneMap;
 use crate::reaction::{Blend, CarriedGlow};
 use crate::readout::Readout;
 use crate::scene_file::{JsonPath, SceneError, SceneErrorCode, ShapeLaw};
+use crate::skeletal_formula::SkeletalFormula;
 use crate::space_curve::SpaceCurve;
 use crate::surface::Surface;
 use crate::table::Table;
@@ -473,6 +474,10 @@ pub enum Shape {
     /// object's position: every cell's glyphs in reading order, which a write draws after the
     /// rulings, and the glow of each lit cell.
     Table(Table),
+    /// A molecule drawn flat as a textbook draws it, from a 2D structure file, with the middle of
+    /// its shown atoms at the object's position: its bonds along their path and its atom symbols,
+    /// which a write draws in that order, and the glow of each lit atom group.
+    SkeletalFormula(SkeletalFormula),
     NumberLine(NumberLine),
     /// Three axes with ticks and labels, z up, in a box centered on the object's position. Each
     /// label faces the camera at every frame.
@@ -548,6 +553,7 @@ impl Shape {
             Shape::Axes3d(axes) => axes.reach(),
             Shape::BarPlot(bar_plot) => bar_plot.reach(),
             Shape::Table(table) => table.reach(),
+            Shape::SkeletalFormula(formula) => formula.reach(),
             Shape::Pattern(pattern) => pattern.reach(),
             Shape::Trail(trail) => {
                 trail
@@ -1052,6 +1058,30 @@ pub enum Font {
     #[default]
     Sans,
     Serif,
+}
+
+/// The plane an object's `mirror` reflects it through, named by the axis it crosses at right
+/// angles: `x` reverses every x offset from the object's middle, so left and right swap, `y`
+/// swaps top and bottom, and `z` swaps front and back. The plane goes through the object's
+/// middle, so the mirror image stays where the object was. No variant doc comments, for the
+/// reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum MirrorPlane {
+    X,
+    Y,
+    Z,
+}
+
+impl MirrorPlane {
+    /// `offset`, an offset from the object's middle, reflected through the plane.
+    pub fn reflect(self, offset: Vec3) -> Vec3 {
+        match self {
+            MirrorPlane::X => Vec3::new(-offset.x, offset.y, offset.z),
+            MirrorPlane::Y => Vec3::new(offset.x, -offset.y, offset.z),
+            MirrorPlane::Z => Vec3::new(offset.x, offset.y, -offset.z),
+        }
+    }
 }
 
 pub const HEX_COLOR_PATTERN: &str = "^#[0-9a-fA-F]{6}$";

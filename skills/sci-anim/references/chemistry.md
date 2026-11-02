@@ -1,4 +1,4 @@
-# Chemistry: molecules, atom groups and reactions
+# Chemistry: molecules, atom groups, reactions and skeletal formulas
 
 Read `instructional-videos.md` first. `../examples/hydration.json` is a complete lesson built from what this file describes: ethylene's double bond lights up, water joins it, and the reaction makes ethanol while the glow moves with the two carbons. Its structure files are in `../examples/structures/`.
 
@@ -11,7 +11,7 @@ curl -fo caffeine.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/c
 curl -fo water.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/962/SDF?record_type=3d"
 ```
 
-- Always add `?record_type=3d`. The tool refuses a 2D file.
+- Always add `?record_type=3d` for a `molecule`, which refuses a 2D file. A `skeletal-formula` takes the 2D one instead ("Skeletal formulas" below).
 - Use the CID form, `compound/cid/<cid>`, when a name could mean more than one compound.
 - A 404 means PubChem has no 3D model. Proteins, DNA and H₂ have none. Fetch a protein or DNA as a PDB file instead ("Proteins and DNA from PDB files" below). For anything else, choose another example, and tell the user why.
 - `file` in the scene file is relative to the scene file.
@@ -304,6 +304,39 @@ A molecule of thousands of atoms reads as a tangle in balls and sticks. `"repres
 - `inspect` reports `"representation": "space-filling"`, each shown atom's `ball_radius` at its whole van der Waals radius, and every bond hidden, since none is drawn.
 - `check-layout` judges a text against the discs of the molecule's balls, which together cover what the molecule covers in the frame. It does not list unbonded atoms that touch, atoms hidden behind others or bonds that point at the camera: overlapping and hiding are what space-filling draws.
 - `../examples/nucleosome_dna.json` turns the 147 nucleobase pairs of DNA that wrap a nucleosome, read from PDB entry 1KX5 without its histone proteins, with one strand lit. It is 6,021 atoms, about 108 Å across and 64 Å along its axis, and fits at `scale` 0.05 between a heading and two lines of text. It renders at about 65 ms a frame at 1920×1080, against about 20 for the dodecamer in ball-and-stick: a space-filling molecule's balls are cut into only as many triangles as its largest ball needs to look round at the size it shows.
+
+## Skeletal formulas
+
+A `skeletal-formula` draws a molecule flat, as a textbook draws it on the page: carbons as corners with no letter, every other atom as its atom symbol (`OH`, `HO`, `NH₂`, `O⁻`), hydrogens on carbon left out, double bonds as two strokes and triple bonds as three, and stereo bonds as wedges and hashes. Use it for the page view a chemist reads: which way a group points at a stereocenter, a molecule beside its mirror image, a functional group named on a formula. Use a `molecule` for the shape in space. Needs sci_anim 0.25.0 or later.
+
+It reads PubChem's 2D record, not the 3D one. Fetch it by CID with `record_type=2d`:
+
+```sh
+curl -fo l_alanine_2d.sdf "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/5950/record/SDF?record_type=2d"
+```
+
+A 3D record or a PDB file is a scene error at `file`. Name the file `<name>_2d.sdf`, so it is not mistaken for the 3D one a `molecule` reads.
+
+```json
+"l_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "position": [-3, 0.2, 0],
+  "groups": { "amino": [3, 11, 12], "stereocenter": [4] } },
+"d_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "mirror": "x", "position": [3, 0.2, 0] }
+```
+
+- `bond_length` is the length its bonds are drawn, 1 world unit unless set. L-alanine is then about 4 units across and 2.7 high, and glucose about 4.7 across. Scale a formula by `bond_length`, not `scale`: strokes keep their width under `scale`, and so would look thin on a formula scaled up.
+- `size` sets the atom symbols' text size, 0.6 of `bond_length` unless set, and `stroke_width` the bonds' width, 0.04 of `bond_length` unless set. `color` colors both, white unless set. Keep the defaults, which keep a textbook's proportions.
+- The middle of the box around its shown atoms sits at `position`. `inspect` gives its `bounding_box` and each atom's `position_pixels`, to place captions beside it.
+- A stereo bond's narrow end is at its stereocenter, as PubChem writes it. A wedge points out of the page toward the reader, and a hash into it.
+- `mirror` draws its mirror image. `x` flips it left to right and `y` top to bottom: either is the other enantiomer of a molecule with one stereocenter, as a mirror beside or below the page shows it. `z` keeps every atom in place and turns each wedge into a hash and each hash into a wedge, a mirror behind the page. Atom symbols are never written backward: under `x`, `H₂N` becomes `NH₂`, still written on the side away from its bonds.
+- Draw it with `write`, not `create`: its bonds are drawn along their path, each wedge filling as the stroke passes it, then its atom symbols are written. Give a write of a formula 2 to 3 seconds. It fades and moves as any object does, and cannot be recolored or morphed.
+- `groups` names atoms by their numbers in the 2D file, as a molecule's groups do. A `highlight` of a group lays a see-through fill over its corners, atom symbols and the bonds between them. A group may hold the hydrogens a formula leaves out, as `amino` holds N and its two H here, but a highlight of a group of hidden hydrogens alone is a scene error. Attaching a caption to a group is not supported: attach it to the formula with an `offset`, or place it by `position_pixels`.
+- Atom numbers in a 2D record are not those of the 3D record of the same compound. Find them with `inspect`, which lists each atom's `drawn` (`corner`, `symbol` or `hidden`) and `symbol`, and each bond's `atoms`, `form` (`line`, `double-centered`, `double-in-ring`, `triple`, `wedge`, `hash` or `hidden`) and `strokes`:
+
+```sh
+sci_anim inspect s.json -t 0 | jq -c '.objects.l_alanine.skeletal_formula | (.atoms[] | select(.drawn != "hidden") | [.atom, .element, .symbol]), (.bonds[] | select(.form != "hidden") | [.atoms, .form])'
+```
+
+`../examples/alanine_formulas.json` writes L-alanine, lights its amino group behind the hash, draws a mirror pane and writes D-alanine as its `mirror: "x"` image, then lights both stereocenters.
 
 ## Equations for reactions
 

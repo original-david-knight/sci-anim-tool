@@ -152,6 +152,7 @@ static ROWS: [Row; 109] = [
 
 impl Element {
     pub const HYDROGEN: Element = Element(1);
+    pub const CARBON: Element = Element(6);
 
     /// The element whose symbol is written exactly `symbol`, such as `Cl`.
     pub fn from_symbol(symbol: &str) -> Option<Element> {

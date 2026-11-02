@@ -129,16 +129,18 @@ pub(super) enum ChangeFile {
     /// Draws a flat shape over its span: its stroke along its path by length, then its fill
     /// fading in. A solid grows, and a pattern's copies are created in index order, each starting
     /// a little after the one before. The object shows nothing before the create starts. A molecule cannot be created, and
-    /// text and math are written.
+    /// text, math, tables and skeletal formulas are written.
     Create {
         /// The object id of a flat shape with a stroke, a solid, a pattern, axes, 3D axes or a number line.
         object: String,
     },
     /// Draws text or math glyph by glyph over its span, a few at a time: each glyph's outline
-    /// along its path, then its fill fading in as the outline thins away. The object shows nothing
-    /// before the write starts.
+    /// along its path, then its fill fading in as the outline thins away. A table's rulings are
+    /// drawn first, then its cells written, and a skeletal formula's bonds are drawn along their
+    /// path first, then its atom symbols written (sci_anim 0.25.0 or later). The object shows
+    /// nothing before the write starts.
     Write {
-        /// The object id of a text or math object.
+        /// The object id of a text, math, table or skeletal formula object.
         object: String,
     },
     /// Turns the molecule objects in `reactants` into the molecule objects in `products` over its
@@ -205,11 +207,14 @@ pub(super) enum ChangeFile {
     /// `copy`, and on a bar plot the bar at `bar` (sci_anim 0.20.0 or later): a see-through box
     /// a little larger than a flat copy, behind its stroke and around its fill, a see-through frame
     /// around a bar as wide as half the gap between two bars, or a see-through shell around a
-    /// solid copy.
+    /// solid copy. On a skeletal formula it lights the atom group `group` with a see-through fill over its
+    /// shown atoms and the bonds between them, behind its strokes and atom symbols (sci_anim
+    /// 0.25.0 or later).
     Highlight {
-        /// The object id of a molecule, a table, a pattern or a bar plot.
+        /// The object id of a molecule, a skeletal formula, a table, a pattern or a bar plot.
         object: String,
-        /// The group id of one of the molecule's `groups`. Give it for a molecule, `cell` for a
+        /// The group id of one of the molecule's or skeletal formula's `groups`. Give it for a
+        /// molecule or a skeletal formula, `cell` for a
         /// table, `copy` for a pattern and `bar` for a bar plot.
         group: Option<String>,
         /// The cell address of one cell of the table, `[row, column]`, each counted from 0, such
@@ -234,8 +239,8 @@ pub(super) enum ChangeFile {
     /// A color left out keeps the color it has, except a fill in the stroke's color, as an arrow's
     /// tip is, which a recolor of the stroke takes along. A `color` recolors every glyph, those that
     /// `\textcolor` colors too. A pattern's colors are its shape's, and each copy still mixes them
-    /// toward `to_color`, or its pick of `palette`, by its color share. Axes, number lines and
-    /// molecules cannot be recolored. With `copy` or `bar`, recolors only that copy of a pattern or
+    /// toward `to_color`, or its pick of `palette`, by its color share. Axes, number lines,
+    /// molecules and skeletal formulas cannot be recolored. With `copy` or `bar`, recolors only that copy of a pattern or
     /// bar of a bar plot, from the colors it shows when the recolor begins, and the colors it ends
     /// at are its own from then on: a later recolor of the whole object leaves it as it is.
     Recolor {
@@ -1215,6 +1220,7 @@ fn read_carry(
             Shape::Axes(_) => "axes",
             Shape::BarPlot(_) => "a bar plot, whose bars are many shapes",
             Shape::Table(_) => "a table, whose glyphs and rulings are many curves",
+            Shape::SkeletalFormula(_) => "a skeletal formula, whose bonds and atom symbols are many curves",
             Shape::NumberLine(_) => "a number line",
             Shape::Axes3d(_) => "3D axes",
             Shape::Sphere { .. } => "a sphere",
@@ -1262,6 +1268,7 @@ fn tube_morph(
             Shape::Molecule { .. } => "a molecule",
             Shape::Pattern(_) => "a pattern",
             Shape::Table(_) => "a table",
+            Shape::SkeletalFormula(_) => "a skeletal formula",
             _ => "axes, 3D axes or a number line",
         };
         return refuse(format!(
@@ -1374,6 +1381,10 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                     SceneErrorCode::UseWrite,
                     "is a table; draw its rulings and write its cells with `write` instead",
                 )),
+                Shape::SkeletalFormula(_) => Some((
+                    SceneErrorCode::UseWrite,
+                    "is a skeletal formula; draw its bonds and write its atom symbols with `write` instead",
+                )),
                 Shape::Flat {
                     stroke: Some(_), ..
                 }
@@ -1398,10 +1409,10 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
             let object_id = object_id("object", object)?;
             if !matches!(
                 start.objects[&object_id].shape,
-                Shape::Glyphs { .. } | Shape::Table(_)
+                Shape::Glyphs { .. } | Shape::Table(_) | Shape::SkeletalFormula(_)
             ) {
                 let message = format!(
-                    "`write` draws text, math or a table glyph by glyph, and `{object_id}` is none of them; use `create` for a flat shape"
+                    "`write` draws text, math, a table or a skeletal formula glyph by glyph, and `{object_id}` is none of them; use `create` for a flat shape"
                 );
                 return Err(SceneError::new(
                     path.field("object"),
@@ -1671,12 +1682,13 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                     }
                 }
                 Shape::Molecule { .. }
+                | Shape::SkeletalFormula(_)
                 | Shape::Axes(_)
                 | Shape::NumberLine(_)
                 | Shape::Axes3d(_) => {
                     return refuse(
                         "object",
-                        "is a molecule, axes, 3D axes or a number line, which cannot be recolored; a `highlight` lights an atom group of a molecule",
+                        "is a molecule, a skeletal formula, axes, 3D axes or a number line, which cannot be recolored; a `highlight` lights an atom group of a molecule or a skeletal formula",
                     );
                 }
                 Shape::Mix(_) => unreachable!("a mix is staged only while a morph plays"),

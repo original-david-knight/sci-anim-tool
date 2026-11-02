@@ -105,6 +105,7 @@ impl MorphEnd {
             | Shape::Axes(_)
             | Shape::BarPlot(_)
             | Shape::Table(_)
+            | Shape::SkeletalFormula(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_)
             | Shape::Mix(_)

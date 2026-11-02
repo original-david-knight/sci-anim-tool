@@ -1,0 +1,37 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "L-alanine and its mirror image", "size": 0.5, "position": [0, 3.3, 0] },
+
+    "l_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "position": [-3, 0.2, 0],
+      "groups": { "amino": [3, 11, 12], "stereocenter": [4] } },
+    "d_alanine": { "type": "skeletal-formula", "file": "structures/l_alanine_2d.sdf", "mirror": "x", "position": [3, 0.2, 0],
+      "groups": { "amino": [3, 11, 12], "stereocenter": [4] } },
+    "pane": { "type": "line", "from": [0, -1.8], "to": [0, 2.2], "stroke": { "color": "#888888", "width": 0.03, "dash": [0.15, 0.1] } },
+
+    "l_name": { "type": "text", "text": "L-alanine", "size": 0.45, "position": [-3, -2.1, 0], "opacity": 0 },
+    "d_name": { "type": "text", "text": "D-alanine", "size": 0.45, "position": [3, -2.1, 0], "opacity": 0 },
+
+    "say_hash": { "type": "text", "text": "The hashed bond points into the page.", "size": 0.4, "position": [0, -3.4, 0] },
+    "say_mirror": { "type": "text", "text": "Its mirror image keeps the NH₂ behind the page, on the other side.", "size": 0.4, "position": [0, -3.4, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "write", "object": "l_alanine" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "l_name", "to": 1 }] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "highlight", "object": "l_alanine", "group": "amino", "to": 1 },
+      { "type": "write", "object": "say_hash" } ] },
+    { "type": "wait", "duration": 1.5 },
+    { "type": "play", "duration": 1, "animations": [
+      { "type": "highlight", "object": "l_alanine", "group": "amino", "to": 0 },
+      { "type": "fade", "object": "say_hash", "to": 0 },
+      { "type": "create", "object": "pane" } ] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "write", "object": "d_alanine" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "d_name", "to": 1 }] },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "highlight", "object": "l_alanine", "group": "stereocenter", "to": 1, "color": "#58c4dd" },
+      { "type": "highlight", "object": "d_alanine", "group": "stereocenter", "to": 1, "color": "#58c4dd" },
+      { "type": "write", "object": "say_mirror" } ] },
+    { "type": "wait", "duration": 2 }
+  ]
+}

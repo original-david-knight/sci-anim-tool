@@ -34,7 +34,7 @@ impl AtomNumber {
         self.number.get()
     }
 
-    fn index(self) -> usize {
+    pub fn index(self) -> usize {
         self.index as usize
     }
 }

@@ -8,9 +8,9 @@ A scene file is the JSON file a scene is written in: its scene config, its camer
 - [Scene config](#scene-config)
 - [Camera](#camera)
 - [Steps](#steps): [`wait`](#wait), [`chapter`](#chapter), [`play`](#play)
-- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`pattern`](#pattern)
+- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
 - [Animations](#animations): [`fade`](#fade), [`count`](#count), [`move`](#move), [`scale`](#scale), [`rotate`](#rotate), [`create`](#create), [`write`](#write), [`reaction`](#reaction), [`morph`](#morph), [`highlight`](#highlight), [`recolor`](#recolor), [`camera-move`](#camera-move), [`camera-look`](#camera-look), [`camera-zoom`](#camera-zoom), [`linear-map`](#linear-map), [`simulate`](#simulate), [`follow`](#follow)
-- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
+- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
 
 ## Top level
 
@@ -536,6 +536,29 @@ The atoms and bonds of the structure file `file`, a path relative to the scene f
 | `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
 | `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
 
+### `skeletal-formula`
+
+A molecule drawn flat as a textbook draws it on the page, from a 2D structure file: carbons as corners where bonds meet, with no letter; every other atom as its atom symbol, its element with the hydrogens it holds written on the side away from its bonds and its charge, such as `OH`, `HO`, `NH₂` or `O⁻`; hydrogens on carbon left out, except one with a stereo bond, which is written `H`. A double bond is two strokes, the second inside its ring for a bond in a ring and the two centered on the bond otherwise, and a triple bond three. A stereo bond is drawn from its narrow end at the file's first atom of the bond: a wedge, a filled triangle, for one out of the page toward the reader, and a hash, short strokes that widen, for one into it. Strokes are one width, and every bond stops short of an atom symbol.
+
+The middle of the box around its shown atoms sits at the object's position, and its bonds between atoms other than hydrogen are drawn `bond_length` long. It is drawn with `write`: its bonds along their path, each wedge filling as the stroke passes it, then its atom symbols glyph by glyph. A `highlight` lights an atom group, named in `groups` by atom numbers as a molecule's are, with a see-through fill over its shown atoms and the bonds between them. It cannot be created, recolored or morphed. `inspect` reports each atom's `drawn` (`corner`, `symbol` or `hidden`), its atom symbol and its position, each bond's `form` (`line`, `double-centered`, `double-in-ring`, `triple`, `wedge`, `hash` or `hidden`) and how many `strokes` a write draws for it, and each group's glow. Needs sci_anim 0.25.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `skeletal-formula` | yes |  |
+| `file` | string | yes | The path of a 2D structure file, relative to the folder of the scene file: an SDF file whose atoms lie flat, as a chemist draws the compound, with its stereo bonds marked. sci_anim never downloads one. Fetch PubChem's 2D record from `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/<name>/SDF?record_type=2d`. A 3D structure file or a PDB file is a scene error here. |
+| `bond_length` | number |  | How long the bonds between atoms other than hydrogen are drawn, their median, in world units, more than 0. The default is 1. |
+| `size` | number |  | The text size of the atom symbols: the height of one em, in world units, more than 0. The default is 0.6 of `bond_length`. |
+| `stroke_width` | number |  | The width of every bond's strokes, and of a wedge's outline, in world units, more than 0. The default is 0.04 of `bond_length`. |
+| `color` | string |  | The color of the bonds and the atom symbols, written `#rrggbb`. The default is white. |
+| `font` | [Font](#font) |  | The font of the atom symbols: `sans` for Libertinus Sans or `serif` for Libertinus Serif. The default is `sans`. |
+| `mirror` | [Mirror plane](#mirror-plane) |  | Draws the formula's mirror image. `x` flips the drawing left to right across its middle and `y` flips it top to bottom, each the other enantiomer of a molecule with one stereocenter, drawn as a mirror stood beside or below the page shows it. `z` reflects it through the page: every atom stays where it is, and every wedge becomes a hash and every hash a wedge. The atom symbols are never written backward. The default is none. |
+| `groups` | map of name to [Group](#group) |  | Named sets of atoms, by the atoms' numbers in the structure file, such as `{ "carboxyl": [1, 2, 6] }`, as a molecule's are. A group can be highlighted. A group may hold hydrogens the formula leaves out, and must hold at least one atom it shows. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
 ### `pattern`
 
 One shape drawn at every copy of a layout. A crystal lattice is a pattern of a `sphere` on a `grid`, a ruler's ticks are a pattern of a `line` on a grid one copy high, a ring of atoms is a pattern on a `ring`, and a vector field is a pattern of an `arrow` on a grid, each copy turned and scaled by expressions in its place. `layout` says where the copies go, and `copy` gives each copy its own position, rotation, scale and color share from expressions in its index and place. A pattern holds at most 10000 copies.
@@ -635,7 +658,7 @@ Turns the object to the rotation `to`, in degrees. Each angle moves straight to 
 
 ### `create`
 
-Draws a flat shape over its span: its stroke along its path by length, then its fill fading in. A solid grows, and a pattern's copies are created in index order, each starting a little after the one before. The object shows nothing before the create starts. A molecule cannot be created, and text and math are written.
+Draws a flat shape over its span: its stroke along its path by length, then its fill fading in. A solid grows, and a pattern's copies are created in index order, each starting a little after the one before. The object shows nothing before the create starts. A molecule cannot be created, and text, math, tables and skeletal formulas are written.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -647,12 +670,12 @@ Draws a flat shape over its span: its stroke along its path by length, then its 
 
 ### `write`
 
-Draws text or math glyph by glyph over its span, a few at a time: each glyph's outline along its path, then its fill fading in as the outline thins away. The object shows nothing before the write starts.
+Draws text or math glyph by glyph over its span, a few at a time: each glyph's outline along its path, then its fill fading in as the outline thins away. A table's rulings are drawn first, then its cells written, and a skeletal formula's bonds are drawn along their path first, then its atom symbols written (sci_anim 0.25.0 or later). The object shows nothing before the write starts.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | `write` | yes |  |
-| `object` | string | yes | The object id of a text or math object. |
+| `object` | string | yes | The object id of a text, math, table or skeletal formula object. |
 | `easing_curve` | [Easing curve](#easing-curve) |  | See [Fields every animation takes](#fields-every-animation-takes). |
 | `start` | number |  | See [Fields every animation takes](#fields-every-animation-takes). |
 | `end` | number |  | See [Fields every animation takes](#fields-every-animation-takes). |
@@ -687,13 +710,13 @@ Reshapes the flat shape, text, math, plot or tube `object` into `into`'s shape, 
 
 ### `highlight`
 
-Lights the atom group `group` of the molecule `object` with a glow, a see-through shell around its atoms and the bonds between them, to the share `to`: 1 is all of the glow and 0 is none. It starts from the glow the steps before left, none at first. `color` is the glow's color, `#ffd23f` unless an earlier highlight set another, and a highlight that leaves it out keeps the color it has. A glow that is off lights up in `color` from the start of the span, and only its share changes. Light a group in and out with two highlights. A group whose atoms are all hidden has no glow to light. A reaction carries a lit group's glow and passes it to a product group, so a highlight of a group of a reaction's molecule in the reaction's own step is a conflict. On a table it lights the cell at `cell` instead: a see-through fill of the cell's rectangle, behind its text and rulings, to the share `to` (sci_anim 0.18.0 or later). On a pattern it lights the copy at `copy`, and on a bar plot the bar at `bar` (sci_anim 0.20.0 or later): a see-through box a little larger than a flat copy, behind its stroke and around its fill, a see-through frame around a bar as wide as half the gap between two bars, or a see-through shell around a solid copy.
+Lights the atom group `group` of the molecule `object` with a glow, a see-through shell around its atoms and the bonds between them, to the share `to`: 1 is all of the glow and 0 is none. It starts from the glow the steps before left, none at first. `color` is the glow's color, `#ffd23f` unless an earlier highlight set another, and a highlight that leaves it out keeps the color it has. A glow that is off lights up in `color` from the start of the span, and only its share changes. Light a group in and out with two highlights. A group whose atoms are all hidden has no glow to light. A reaction carries a lit group's glow and passes it to a product group, so a highlight of a group of a reaction's molecule in the reaction's own step is a conflict. On a table it lights the cell at `cell` instead: a see-through fill of the cell's rectangle, behind its text and rulings, to the share `to` (sci_anim 0.18.0 or later). On a pattern it lights the copy at `copy`, and on a bar plot the bar at `bar` (sci_anim 0.20.0 or later): a see-through box a little larger than a flat copy, behind its stroke and around its fill, a see-through frame around a bar as wide as half the gap between two bars, or a see-through shell around a solid copy. On a skeletal formula it lights the atom group `group` with a see-through fill over its shown atoms and the bonds between them, behind its strokes and atom symbols (sci_anim 0.25.0 or later).
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | `highlight` | yes |  |
-| `object` | string | yes | The object id of a molecule, a table, a pattern or a bar plot. |
-| `group` | string |  | The group id of one of the molecule's `groups`. Give it for a molecule, `cell` for a table, `copy` for a pattern and `bar` for a bar plot. |
+| `object` | string | yes | The object id of a molecule, a skeletal formula, a table, a pattern or a bar plot. |
+| `group` | string |  | The group id of one of the molecule's or skeletal formula's `groups`. Give it for a molecule or a skeletal formula, `cell` for a table, `copy` for a pattern and `bar` for a bar plot. |
 | `cell` | [integer, integer] |  | The cell address of one cell of the table, `[row, column]`, each counted from 0, such as `[2, 1]` for the second cell of the third row. Needs sci_anim 0.18.0 or later. |
 | `copy` | [integer] or [integer, integer] or [integer, integer, integer] |  | The copy index of one copy of the pattern `object` to change alone, as `inspect` reports it: `[i, j, k]` for a grid and `[i]` for a ring or an along, each from 0. Needs sci_anim 0.20.0 or later. |
 | `bar` | integer |  | The index of one bar of the bar plot `object` to change alone, in category order from 0. Needs sci_anim 0.20.0 or later. |
@@ -705,7 +728,7 @@ Lights the atom group `group` of the molecule `object` with a glow, a see-throug
 
 ### `recolor`
 
-Takes the object's colors to new ones over its span, mixed in linear light: a flat shape's or plot's `stroke` and `fill`, and the `color` of text, math or a solid. Give at least one. A color left out keeps the color it has, except a fill in the stroke's color, as an arrow's tip is, which a recolor of the stroke takes along. A `color` recolors every glyph, those that `\textcolor` colors too. A pattern's colors are its shape's, and each copy still mixes them toward `to_color`, or its pick of `palette`, by its color share. Axes, number lines and molecules cannot be recolored. With `copy` or `bar`, recolors only that copy of a pattern or bar of a bar plot, from the colors it shows when the recolor begins, and the colors it ends at are its own from then on: a later recolor of the whole object leaves it as it is.
+Takes the object's colors to new ones over its span, mixed in linear light: a flat shape's or plot's `stroke` and `fill`, and the `color` of text, math or a solid. Give at least one. A color left out keeps the color it has, except a fill in the stroke's color, as an arrow's tip is, which a recolor of the stroke takes along. A `color` recolors every glyph, those that `\textcolor` colors too. A pattern's colors are its shape's, and each copy still mixes them toward `to_color`, or its pick of `palette`, by its color share. Axes, number lines, molecules and skeletal formulas cannot be recolored. With `copy` or `bar`, recolors only that copy of a pattern or bar of a bar plot, from the colors it shows when the recolor begins, and the colors it ends at are its own from then on: a later recolor of the whole object leaves it as it is.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1109,6 +1132,12 @@ How a linear map's matrix goes from the identity to all of `matrix` as its progr
 
 One of `entries`, `turn`.
 
+### Mirror plane
+
+The plane an object's `mirror` reflects it through, named by the axis it crosses at right angles: `x` reverses every x offset from the object's middle, so left and right swap, `y` swaps top and bottom, and `z` swaps front and back. The plane goes through the object's middle, so the mirror image stays where the object was. No variant doc comments, for the reason `FillRule` gives.
+
+One of `x`, `y`, `z`.
+
 ### On atom
 
 An end on an atom's center, named by an atom reference as an atom map names it, as `{ "object": "at_pair", "atom": 13 }`. It goes with the molecule as it moves, turns and scales, so a hydrogen bond stays on its two atoms. A molecule that a reaction uses up hides the shape when the reaction begins, and one that a reaction makes shows it from the reaction's end. Needs sci_anim 0.14.0 or later.
@@ -1355,6 +1384,10 @@ The same as [`bar-plot`](#bar-plot), without the [fields every object takes](#fi
 #### `molecule` shape
 
 The same as [`molecule`](#molecule), without the [fields every object takes](#fields-every-object-takes).
+
+#### `skeletal-formula` shape
+
+The same as [`skeletal-formula`](#skeletal-formula), without the [fields every object takes](#fields-every-object-takes).
 
 #### `pattern` shape
 
