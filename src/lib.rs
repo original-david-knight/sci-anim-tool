@@ -144,7 +144,7 @@ fn render(
         let (sender, writing) = std::sync::mpsc::sync_channel::<Readback>(WRITING_FRAMES);
         let writer = scope.spawn(move || write_frames(encoder, writing));
         let drawing = (|| {
-            for (drawn, readback) in (1..).zip(readbacks(&gpu, scene)) {
+            for (drawn, readback) in (1..).zip(readbacks(&gpu, scene, 0, frames)) {
                 if sender.send(readback?).is_err() {
                     // The writer stopped on an error, which its join reports.
                     break;
@@ -187,8 +187,13 @@ fn write_frames(
 fn readbacks<'a>(
     gpu: &'a Gpu,
     scene: &'a Scene,
+    first: u32,
+    frames: u32,
 ) -> impl Iterator<Item = Result<Readback, GpuError>> + 'a {
-    let mut scene_times = scene.frame_scene_times();
+    let mut scene_times = scene
+        .frame_scene_times()
+        .skip(first as usize)
+        .take(frames as usize);
     let mut drawing: Option<Drawing> = None;
     std::iter::from_fn(move || {
         let mut next = || {
@@ -234,10 +239,12 @@ fn write_oldest(
 fn frames(
     scene: &Scene,
     directory: &std::path::Path,
+    first: u32,
+    last: u32,
     gpu_kind: Option<GpuKind>,
     on_update: &mut dyn FnMut(RenderUpdate),
 ) -> Result<(FrameSequence, GpuIdentity), FrameSequenceRenderError> {
-    let frames = scene.frame_scene_times().len() as u32;
+    let frames = last - first + 1;
     let mut update = |update, frames_drawn| {
         on_update(RenderUpdate {
             update,
@@ -245,7 +252,7 @@ fn frames(
             frames,
         })
     };
-    let mut writer = FrameSequenceWriter::start(&scene.scene_config, directory)
+    let mut writer = FrameSequenceWriter::start(&scene.scene_config, directory, first)
         .map_err(FrameSequenceRenderError::Files)?;
     let gpu =
         Gpu::new(scene.scene_config.background, gpu_kind).map_err(FrameSequenceRenderError::Gpu)?;
@@ -254,12 +261,12 @@ fn frames(
     let mut encoding: VecDeque<Encoding> = VecDeque::with_capacity(ENCODING_FRAMES);
     let mut drawn = 0;
     update(RenderUpdateKind::Drawing, 0);
-    for readback in readbacks(&gpu, scene) {
+    for readback in readbacks(&gpu, scene, first, frames) {
         let readback = readback.map_err(FrameSequenceRenderError::Gpu)?;
         if encoding.len() == ENCODING_FRAMES {
             write_oldest(&mut encoding, &mut writer)?;
         }
-        let file = writer.file(drawn);
+        let file = writer.file(first + drawn);
         drawn += 1;
         encoding.push_back(std::thread::spawn(move || {
             let frame = readback.frame().map_err(FrameSequenceRenderError::Gpu)?;

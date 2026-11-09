@@ -25,6 +25,65 @@ fn files(directory: &Path) -> Vec<String> {
 }
 
 #[test]
+fn frames_can_render_an_inclusive_part_with_the_same_pixels() {
+    let (dir, scene_file) = scene_file(
+        &scene(json!([
+            { "type": "play", "duration": 1.5, "animations": [
+                { "type": "fade", "object": "disc", "to": 1, "easing_curve": "linear" }
+            ] }
+        ]))
+        .to_string(),
+    );
+    let whole = dir.path().join("whole");
+    let part = dir.path().join("part");
+    for (folder, flags) in [
+        (&whole, &[][..]),
+        (&part, &["--frame-start", "2", "--frame-end", "4"][..]),
+    ] {
+        let args = [
+            &[
+                "frames",
+                scene_file.to_str().unwrap(),
+                "-o",
+                folder.to_str().unwrap(),
+            ][..],
+            flags,
+        ]
+        .concat();
+        let run = sci_anim(&args);
+        assert_eq!(run.exit_code, 0, "{}", run.stdout);
+        if folder == &part {
+            assert_eq!(run.json["start_number"], 2);
+            assert_eq!(run.json["frames"], 3);
+        }
+    }
+    assert_eq!(
+        files(&part),
+        ["frame-000002.png", "frame-000003.png", "frame-000004.png"]
+    );
+    for frame in 2..=4 {
+        let name = format!("frame-{frame:06}.png");
+        assert_eq!(
+            std::fs::read(part.join(&name)).unwrap(),
+            std::fs::read(whole.join(name)).unwrap()
+        );
+    }
+    let bad = dir.path().join("bad");
+    let run = sci_anim(&[
+        "frames",
+        scene_file.to_str().unwrap(),
+        "-o",
+        bad.to_str().unwrap(),
+        "--frame-start",
+        "4",
+        "--frame-end",
+        "2",
+    ]);
+    assert_eq!(run.exit_code, 2, "{}", run.stdout);
+    assert!(!bad.exists());
+}
+
+#[test]
 fn every_numbered_frame_matches_its_scene_time_including_empty_waits_and_chapter_holds() {
     let scene = scene(json!([
         { "type": "wait", "duration": 0.5 },
