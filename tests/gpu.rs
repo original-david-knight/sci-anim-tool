@@ -76,3 +76,34 @@ fn a_kind_gpu_does_not_take_is_a_usage_error() {
         "{message}"
     );
 }
+
+/// A test's drawing command waits while another program, such as a video build, holds the
+/// machine's GPU lock, and draws once it is let go. A command a holder of the lock starts does not
+/// wait on its own parent.
+#[test]
+fn a_drawing_command_waits_for_the_machines_gpu_lock() {
+    let dir = tempfile::tempdir().unwrap();
+    let lock = dir.path().join("gpu.lock");
+    let build = std::fs::File::create(&lock).unwrap();
+    build.lock().unwrap();
+    drop(common::gpu_turn_at(&lock, true));
+
+    let (drew, drawn) = std::sync::mpsc::channel();
+    let waiting = lock.clone();
+    let test = std::thread::spawn(move || {
+        let _turn = common::gpu_turn_at(&waiting, false);
+        drew.send(()).unwrap();
+    });
+    assert!(
+        drawn
+            .recv_timeout(std::time::Duration::from_millis(500))
+            .is_err(),
+        "a test drew while a build held the GPU"
+    );
+    drop(build);
+    drawn
+        .recv_timeout(std::time::Duration::from_secs(30))
+        .expect("the test draws once the build lets the GPU go");
+    test.join().unwrap();
+    assert!(common::gpu_lock_file().ends_with("gpu.lock"));
+}

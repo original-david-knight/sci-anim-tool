@@ -204,7 +204,9 @@ fn frames_need_no_ffmpeg_and_ignore_validated_sound_content() {
     )
     .unwrap();
     let directory = dir.path().join("frames");
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "frames",
             path.to_str().unwrap(),
@@ -214,6 +216,7 @@ fn frames_need_no_ffmpeg_and_ignore_validated_sound_content() {
         .env("PATH", dir.path())
         .output()
         .unwrap();
+    drop(turn);
     assert!(
         out.status.success(),
         "{}",
@@ -302,7 +305,9 @@ fn any_existing_destination_is_refused_without_changing_it() {
 fn png_write_failure_cleans_owned_files_and_never_reports_finished() {
     let (dir, path) = scene_file(&scene(json!([])).to_string());
     let directory = dir.path().join("frames");
+    let turn = common::gpu_turn();
     let out = Command::new("/bin/bash")
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "-c",
             "ulimit -f 0\ntrap '' XFSZ\nexec \"$1\" frames \"$2\" -o \"$3\" --updates",
@@ -314,6 +319,7 @@ fn png_write_failure_cleans_owned_files_and_never_reports_finished() {
         .env("MESA_SHADER_CACHE_DISABLE", "true")
         .output()
         .unwrap();
+    drop(turn);
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(2), "{report}");
     assert_eq!(report["errors"][0]["kind"], "io");
@@ -340,7 +346,9 @@ fn png_write_failure_cleans_owned_files_and_never_reports_finished() {
 fn an_abrupt_stop_leaves_an_incomplete_directory_that_cannot_be_reused() {
     let (dir, path) = scene_file(&scene(json!([{ "type": "wait", "duration": 1000 }])).to_string());
     let directory = dir.path().join("frames");
+    let turn = common::gpu_turn();
     let mut child = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "frames",
             path.to_str().unwrap(),
@@ -363,6 +371,7 @@ fn an_abrupt_stop_leaves_an_incomplete_directory_that_cannot_be_reused() {
     assert!(directory.join(".incomplete").exists());
     child.kill().unwrap();
     child.wait().unwrap();
+    drop(turn);
     assert!(directory.join(".incomplete").exists());
     let run = sci_anim(&[
         "frames",
@@ -380,7 +389,9 @@ fn transparent_mp4_is_rejected_before_gpu_ffmpeg_or_destination_writes() {
     let (dir, path) = scene_file(&scene(json!([])).to_string());
     let mp4 = dir.path().join("out.mp4");
     std::fs::write(&mp4, b"earlier video").unwrap();
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "render",
             path.to_str().unwrap(),
@@ -392,6 +403,7 @@ fn transparent_mp4_is_rejected_before_gpu_ffmpeg_or_destination_writes() {
         .env("WGPU_BACKEND", "noop")
         .output()
         .unwrap();
+    drop(turn);
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(2));
     assert_eq!(report["errors"][0]["kind"], "usage");

@@ -139,7 +139,9 @@ fn render_with_updates_prints_no_finished_update_when_ffmpeg_fails() {
         std::env::var("PATH").unwrap()
     );
 
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "render",
             path.to_str().unwrap(),
@@ -150,6 +152,7 @@ fn render_with_updates_prints_no_finished_update_when_ffmpeg_fails() {
         .env("PATH", search_path)
         .output()
         .unwrap();
+    drop(turn);
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
     let updates = render_updates(&String::from_utf8(out.stderr).unwrap());
 
@@ -188,7 +191,9 @@ fn render_stops_with_an_ffmpeg_error_when_ffmpeg_stops_reading_frames() {
         std::env::var("PATH").unwrap()
     );
 
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "render",
             path.to_str().unwrap(),
@@ -198,6 +203,7 @@ fn render_stops_with_an_ffmpeg_error_when_ffmpeg_stops_reading_frames() {
         .env("PATH", search_path)
         .output()
         .unwrap();
+    drop(turn);
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
 
     assert_eq!(out.status.code(), Some(2));
@@ -222,7 +228,9 @@ fn render_writes_each_render_update_whole_in_one_write() {
     let mp4 = dir.path().join("out.mp4");
     let (ours, theirs) = std::os::unix::net::UnixDatagram::pair().unwrap();
 
+    let turn = common::gpu_turn();
     let exit = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "render",
             path.to_str().unwrap(),
@@ -234,6 +242,7 @@ fn render_writes_each_render_update_whole_in_one_write() {
         .stderr(std::os::fd::OwnedFd::from(theirs))
         .status()
         .unwrap();
+    drop(turn);
     ours.set_nonblocking(true).unwrap();
     let mut writes = Vec::new();
     let mut buffer = [0; 4096];
@@ -288,7 +297,9 @@ fn render_without_ffmpeg_is_an_ffmpeg_error_and_writes_nothing() {
     let (dir, path) = scene_file(SCENE);
     let mp4 = dir.path().join("out.mp4");
 
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .args([
             "render",
             path.to_str().unwrap(),
@@ -298,6 +309,7 @@ fn render_without_ffmpeg_is_an_ffmpeg_error_and_writes_nothing() {
         .env("PATH", dir.path())
         .output()
         .unwrap();
+    drop(turn);
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
 
     assert_eq!(out.status.code(), Some(2));

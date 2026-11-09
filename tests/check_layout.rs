@@ -22,7 +22,9 @@ struct Checked {
 fn check_layout(scene: &str, flags: &[&str]) -> Checked {
     let (dir, path) = scene_file(scene);
     let out = dir.path().join("check");
+    let turn = common::gpu_turn();
     let run = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .arg("check-layout")
         .arg(&path)
         .arg("--out")
@@ -30,6 +32,7 @@ fn check_layout(scene: &str, flags: &[&str]) -> Checked {
         .args(flags)
         .output()
         .expect("the binary runs");
+    drop(turn);
     let stages: PathBuf = out.join("stages.txt");
     Checked {
         exit_code: run.status.code().expect("an exit code"),

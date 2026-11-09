@@ -123,7 +123,9 @@ fn check_layout_reads_each_cell_as_a_text_object() {
         "u": { "type": "table", "size": 0.6, "position": [0, -2, 0], "rows": [["lit"]] }"#,
         r##"{ "type": "play", "duration": 1, "animations": [{ "type": "highlight", "object": "u", "cell": [0, 0], "to": 1, "color": "#ffffff" }] }"##,
     ));
+    let turn = common::gpu_turn();
     let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
+        .env(common::GPU_HELD_ENV, "1")
         .arg("check-layout")
         .arg(&path)
         .arg("--no-sheet")
@@ -131,6 +133,7 @@ fn check_layout_reads_each_cell_as_a_text_object() {
         .arg(dir.path().join("check"))
         .output()
         .unwrap();
+    drop(turn);
     let printed = String::from_utf8(out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(1), "{printed}");
     assert!(
