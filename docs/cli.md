@@ -136,14 +136,18 @@ A frame of a scene with `"background": "transparent"` keeps its transparency, as
 ## frames
 
 ```sh
-sci_anim frames <SCENE_FILE> --out <DIRECTORY>
+sci_anim frames <SCENE_FILE> --out <DIRECTORY> [--frame-start FIRST --frame-end LAST]
 ```
 
 Renders every frame to numbered PNGs in a new directory, with no sound and no `ffmpeg`. Use it for a scene with a transparent background, which an MP4 cannot carry, or to hand the frames to another tool.
 
+With `--frame-start` and `--frame-end`, renders only those numbered frames, including both ends. The report's `start_number` is the first frame and `frames` is the number rendered. Either flag may be omitted; its default is the first or last frame of the scene. A frame outside the scene, or a first frame after the last, is a `usage` error before any directory is made.
+
 | Flag | Meaning |
 |---|---|
 | `-o`, `--out <DIRECTORY>` | The directory to create. Its parent must exist, and the directory itself must not. Required. |
+| `--frame-start <FIRST>` | First frame to render, counted from 0. Defaults to 0. |
+| `--frame-end <LAST>` | Last frame to render, inclusive. Defaults to the scene's last frame. |
 | `--updates` | Prints render updates on stderr, as [render](#render) does. |
 | `--gpu <KIND>` | The kind of GPU to draw on. See [Choose a GPU](#choose-a-gpu). |
 

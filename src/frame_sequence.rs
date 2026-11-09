@@ -29,12 +29,17 @@ pub struct FrameSequenceWriter {
     directory: PathBuf,
     owned: Vec<PathBuf>,
     scene_config: SceneConfig,
+    first: u32,
     frames: u32,
     finished: bool,
 }
 
 impl FrameSequenceWriter {
-    pub fn start(scene_config: &SceneConfig, directory: &Path) -> Result<Self, FrameSequenceError> {
+    pub fn start(
+        scene_config: &SceneConfig,
+        directory: &Path,
+        first: u32,
+    ) -> Result<Self, FrameSequenceError> {
         fs::create_dir(directory).map_err(|source| FrameSequenceError {
             file: directory.to_path_buf(),
             source,
@@ -43,6 +48,7 @@ impl FrameSequenceWriter {
             directory: directory.to_path_buf(),
             owned: Vec::new(),
             scene_config: *scene_config,
+            first,
             frames: 0,
             finished: false,
         };
@@ -57,7 +63,7 @@ impl FrameSequenceWriter {
 
     /// `png` is the next frame, encoded.
     pub fn push_png(&mut self, png: &[u8]) -> Result<(), FrameSequenceError> {
-        let path = self.file(self.frames);
+        let path = self.file(self.first + self.frames);
         let mut file = self.create_file(path.clone())?;
         file.write_all(png)
             .map_err(|source| FrameSequenceError { file: path, source })?;
@@ -75,7 +81,7 @@ impl FrameSequenceWriter {
         let fps = self.scene_config.fps.get();
         Ok(FrameSequence {
             pattern: "frame-%06d.png",
-            start_number: 0,
+            start_number: self.first,
             width: self.scene_config.width.get(),
             height: self.scene_config.height.get(),
             fps,
@@ -116,7 +122,8 @@ mod tests {
     fn a_numbered_file_created_by_someone_else_survives_cleanup() {
         let dir = tempfile::tempdir().unwrap();
         let directory = dir.path().join("frames");
-        let mut writer = FrameSequenceWriter::start(&SceneConfig::default(), &directory).unwrap();
+        let mut writer =
+            FrameSequenceWriter::start(&SceneConfig::default(), &directory, 0).unwrap();
         let frame = Frame {
             width: 1,
             height: 1,

@@ -1,6 +1,6 @@
 [package]
 name = "sci_anim"
-version = "0.25.0"
+version = "0.25.1"
 edition = "2024"
 description = "Turns a scene file into an animation of math or science."
 license = "MIT OR Apache-2.0"

@@ -78,6 +78,12 @@ enum Command {
         scene_file: PathBuf,
         #[arg(short = 'o', long = "out")]
         directory: PathBuf,
+        /// First frame of the sequence to draw, counted from 0. Defaults to 0.
+        #[arg(long)]
+        frame_start: Option<u32>,
+        /// Last frame to draw, inclusive. Defaults to the scene's last frame.
+        #[arg(long)]
+        frame_end: Option<u32>,
         /// Prints render updates on stderr.
         #[arg(long)]
         updates: bool,
@@ -324,9 +330,18 @@ pub fn run() -> ExitCode {
         Command::Frames {
             scene_file,
             directory,
+            frame_start,
+            frame_end,
             updates,
             gpu,
-        } => frames(&scene_file, directory, updates, gpu.gpu),
+        } => frames(
+            &scene_file,
+            directory,
+            frame_start,
+            frame_end,
+            updates,
+            gpu.gpu,
+        ),
         Command::Skill {
             command:
                 SkillCommand::Install {
@@ -444,10 +459,23 @@ fn render(
 fn frames(
     scene_file: &Path,
     directory: PathBuf,
+    frame_start: Option<u32>,
+    frame_end: Option<u32>,
     updates: bool,
     gpu_kind: Option<GpuKind>,
 ) -> Result<Outcome, Vec<ToolError>> {
     let scene = read(scene_file)?;
+    let count = scene.frame_scene_times().len() as u32;
+    let first = frame_start.unwrap_or(0);
+    let last = frame_end.unwrap_or(count - 1);
+    if first > last || last >= count {
+        return Err(vec![ToolError::Usage {
+            message: format!(
+                "frames {first} to {last} are outside the scene's {count} frames; give --frame-start and --frame-end from 0 to {} in order",
+                count - 1
+            ),
+        }]);
+    }
     let mut last_printed = None;
     let mut print = |update| {
         print_update(
@@ -458,7 +486,8 @@ fn frames(
         )
     };
     let on_update: &mut dyn FnMut(RenderUpdate) = if updates { &mut print } else { &mut |_| {} };
-    let (frame_sequence, gpu) = crate::frames(&scene, &directory, gpu_kind, on_update)?;
+    let (frame_sequence, gpu) =
+        crate::frames(&scene, &directory, first, last, gpu_kind, on_update)?;
     Ok(Outcome::Frames {
         directory,
         frame_sequence,

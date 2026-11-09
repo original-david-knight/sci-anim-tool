@@ -5,6 +5,7 @@
 ## Sub-features
 
 - `frames-count` writes `max(1, round(duration * fps))` PNGs, frame `i` at scene time `i / fps`.
+- `frames-range` writes only the inclusive numbered frames requested, with their original frame numbers and pixels.
 - `frames-transparent` keeps straight alpha in RGBA PNGs for a transparent scene.
 - `frames-marker` keeps an `.incomplete` marker in the directory until the last frame is written.
 - `frames-existing` refuses a directory that exists, with an `io` error, exit 2, and leaves it unchanged.
@@ -13,6 +14,7 @@
 ## How to get to it (user POV)
 
 - Run `sci_anim frames <scene file> -o <directory>`, with `--updates` for render updates.
+- Run `sci_anim frames <scene file> -o <directory> --frame-start <first> --frame-end <last>` for only those frames.
 
 ## Driving it with the run helper
 
