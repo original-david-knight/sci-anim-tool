@@ -12,12 +12,81 @@ pub struct Run {
     pub stderr: String,
 }
 
+/// Set for everything run under the machine's GPU lock, so a program started by one that holds it
+/// does not wait on its own parent. Every caller on the machine uses this name, video builds and
+/// the tests of other programs that draw included.
+pub const GPU_HELD_ENV: &str = "GPU_LOCK_HELD";
+
+/// The machine's GPU lock: `gpu.lock` in the user's cache folder. A machine draws on its GPU one
+/// command at a time, since a video build sizes its frames to the GPU memory free when it starts,
+/// and a test drawing beside it leaves it too little. A test holds the lock only for one command.
+pub fn gpu_lock_file() -> PathBuf {
+    let home = || PathBuf::from(std::env::var_os("HOME").expect("HOME is set"));
+    if cfg!(target_os = "macos") {
+        return home().join("Library/Caches/gpu.lock");
+    }
+    let cache = std::env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .filter(|dir| dir.is_absolute())
+        .unwrap_or_else(|| home().join(".cache"));
+    cache.join("gpu.lock")
+}
+
+/// The machine's GPU lock, held while it lives, or nothing when this test runs inside a holder.
+pub struct GpuTurn(Option<std::fs::File>);
+
+/// Waits for the machine's GPU lock, saying so on stderr, and holds it while the turn lives. Every
+/// test that runs a command that draws (`frame`, `frames`, `render`, `check-layout`) takes it for
+/// that command, and sets [`GPU_HELD_ENV`] on it.
+pub fn gpu_turn() -> GpuTurn {
+    gpu_turn_at(
+        &gpu_lock_file(),
+        std::env::var_os(GPU_HELD_ENV).is_some_and(|held| !held.is_empty()),
+    )
+}
+
+/// Waits for the lock file `lock`, unless `held` says a parent holds it already.
+pub fn gpu_turn_at(lock: &Path, held: bool) -> GpuTurn {
+    if held {
+        return GpuTurn(None);
+    }
+    if let Some(dir) = lock.parent() {
+        std::fs::create_dir_all(dir).unwrap();
+    }
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(lock)
+        .unwrap_or_else(|e| panic!("open the GPU lock {}: {e}", lock.display()));
+    match file.try_lock() {
+        Ok(()) => {}
+        Err(std::fs::TryLockError::WouldBlock) => {
+            eprintln!("waiting for the GPU: another program is drawing on this machine");
+            file.lock().unwrap();
+        }
+        Err(std::fs::TryLockError::Error(e)) => panic!("lock the GPU {}: {e}", lock.display()),
+    }
+    GpuTurn(Some(file))
+}
+
+/// Whether `args` run a command that draws on the GPU.
+fn draws(args: &[&str]) -> bool {
+    matches!(
+        args.first(),
+        Some(&("frame" | "frames" | "render" | "check-layout"))
+    )
+}
+
 /// Runs the built binary the way an agent does. Panics unless stdout is exactly one JSON value.
+/// A command that draws holds the machine's GPU lock while it runs.
 pub fn sci_anim(args: &[&str]) -> Run {
-    let out = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
-        .args(args)
-        .output()
-        .expect("the binary runs");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_sci_anim"));
+    let _turn = draws(args).then(|| {
+        command.env(GPU_HELD_ENV, "1");
+        gpu_turn()
+    });
+    let out = command.args(args).output().expect("the binary runs");
     let stdout = String::from_utf8(out.stdout).expect("utf-8 stdout");
     let json = serde_json::from_str(&stdout)
         .unwrap_or_else(|e| panic!("stdout is one JSON value: {e}\n{stdout}"));
