@@ -16,6 +16,7 @@ use glam::Vec3;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::body::Placed;
 use crate::data_point::DataToWorld;
 use crate::follow::{self, Carry, Follow, Followed, Law, LawTimeStart, Outright};
 use crate::group::Glow;
@@ -30,7 +31,7 @@ use crate::scene::{
     frame_times_in,
 };
 use crate::scene_file::{JsonPath, SceneError, SceneErrorCode, ShapeFault, ShapeLaw};
-use crate::simulate::{self, NoValue, Set, Simulate, Simulation};
+use crate::simulate::{self, Motion, NoValue, Set, Simulate, Simulation};
 use crate::surface::Sampling;
 
 mod follows;
@@ -362,6 +363,17 @@ pub struct Timeline {
     /// For each object whose shape law draws a surface and a follow runs: every point the surface
     /// is sampled at, at any frame time of those follows, and those frame times.
     shape_samplings: BTreeMap<ObjectId, ShapeSampling>,
+    /// Every collision of a simulation's bodies, in timeline order.
+    collisions: Vec<CollisionReport>,
+}
+
+/// Two bodies colliding, and the simulation that moves them, which `validate` reports so a
+/// narration can land on the moment.
+#[derive(Clone, Debug, Serialize)]
+pub struct CollisionReport {
+    #[serde(flatten)]
+    pub collision: crate::body::Collision,
+    pub path: JsonPath,
 }
 
 /// The points a surface a follow runs is sampled at, and the scene time and law time of each
@@ -642,6 +654,7 @@ impl Timeline {
             reactions: Vec::new(),
             lifetimes: BTreeMap::new(),
             shape_samplings: BTreeMap::new(),
+            collisions: Vec::new(),
         }
     }
 
@@ -1915,6 +1928,10 @@ impl Timeline {
 
     pub fn chapters(&self) -> &[ChapterSpan] {
         &self.chapters
+    }
+
+    pub fn collisions(&self) -> &[CollisionReport] {
+        &self.collisions
     }
 }
 

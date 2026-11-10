@@ -329,18 +329,44 @@ pub(super) enum ChangeFile {
     /// `out_of_range` at its rate, and a set that does not start where its value is, is
     /// `law_jump`. Each value it sets is held from its span's end on, and no other animation
     /// changes it while the simulation plays. A simulation takes no `easing_curve`.
+    ///
+    /// With `bodies` instead of `variables` and `rates`, it moves objects as rigid bodies in the
+    /// world's xy plane, under `gravity`, colliding where they touch: carts that collide, a
+    /// block sliding down a ramp, a projectile, a pendulum striking a block, a Newton's cradle,
+    /// a seesaw. Each moving body's position and rotation are set for the span, and its
+    /// quantities are variables the `sets` read as `<object id>.<quantity>`: `x`, `y` and
+    /// `angle` of its object, `vx`, `vy` and `speed` of its center of mass, `spin` in degrees a
+    /// second, momentum `px` and `py`, and kinetic energy `ke`, turning included, so
+    /// `cart.ke` is a readout of a cart's kinetic energy and `cart.x + 0.3*cart.vx` the tip of
+    /// its velocity arrow. World units are meters and masses kilograms. The bodies step 16
+    /// times a frame, the same on every machine, and `validate` lists every collision with its
+    /// scene time under `collisions`.
     Simulate {
         /// Each variable's name and its value at the span's start, such as
         /// `{ "angle": 1.2, "spin": 0 }`. A name is letters, digits and `_`, starts with a letter,
-        /// and is not `t`, `pi`, `e`, `tau` or a function's name. At least one.
+        /// and is not `t`, `pi`, `e`, `tau` or a function's name. At least one. Leave it out
+        /// with `bodies`.
         #[schemars(extend("minProperties" = 1))]
-        variables: BTreeMap<String, FiniteNumber>,
+        variables: Option<BTreeMap<String, FiniteNumber>>,
         /// How fast each variable changes, per second of law time: one expression in the
         /// variables and `t` for every variable, by its name, such as
-        /// `{ "angle": "spin", "spin": "-9.8*sin(angle) - 0.3*spin" }`.
-        rates: BTreeMap<String, String>,
-        /// The values the simulation sets, each value of an object once. At least one.
-        #[schemars(length(min = 1))]
+        /// `{ "angle": "spin", "spin": "-9.8*sin(angle) - 0.3*spin" }`. Leave it out with
+        /// `bodies`.
+        rates: Option<BTreeMap<String, String>>,
+        /// The objects the simulation moves as rigid bodies, keyed by object id: circles, dots,
+        /// spheres and convex polygons, drawn at scale 1 and turned only about z, and, for a
+        /// fixed body, lines. Each starts where its object stands when the span starts. At least
+        /// one moves. Give `bodies` or `variables`, not both.
+        #[schemars(extend("minProperties" = 1))]
+        bodies: Option<BTreeMap<String, BodyFile>>,
+        /// How fast bodies fall, straight down the world's -y, in world units a second squared,
+        /// from 0 to 1000. The default is 9.8, Earth's in meters; 0 for none, as for carts on a
+        /// level track. Only with `bodies`.
+        gravity: Option<Gravity>,
+        /// The values the simulation sets, each value of an object once: at least one, or with
+        /// `bodies` none or more, since each moving body's position and rotation are set
+        /// already.
+        #[serde(default)]
         sets: Vec<SetFile>,
         /// The id of a chapter: law time counts from that chapter's start instead of from this
         /// simulation's span. The simulation's own chapter, or one before it.
@@ -408,6 +434,38 @@ pub(super) enum ChangeFile {
         /// scene time. Leave it out to keep the object's rotation. Only with `along`.
         faces: Option<Faces>,
     },
+}
+
+/// How one object moves as a body of a simulation: free, turning about a `pivot`, or `fixed`.
+#[derive(Deserialize, JsonSchema)]
+pub(super) struct BodyFile {
+    /// The body's mass in kilograms, more than 0, spread evenly over its shape: a circle or a dot
+    /// is a disc, a sphere a solid ball. Required unless the body is `fixed`.
+    pub(super) mass: Option<Positive>,
+    /// The velocity of its center of mass when the span starts, `[vx, vy]` in world units a
+    /// second. The default is `[0, 0]`. A pivoted body keeps only the part of it that turns it
+    /// about its pivot.
+    pub(super) velocity: Option<[FiniteNumber; 2]>,
+    /// How fast it turns when the span starts, in degrees a second, counterclockwise when
+    /// positive. The default is 0.
+    pub(super) spin: Option<FiniteNumber>,
+    /// A point of the world, `[x, y]` in world units, that the body turns about and never
+    /// leaves, as a rigid rod or an axle would hold it: the top of a pendulum's string, a
+    /// seesaw's fulcrum. The default is none: the body moves freely.
+    pub(super) pivot: Option<[FiniteNumber; 2]>,
+    /// `true` for a body that never moves but stops others: the ground, a wall, a ramp, a track.
+    /// It takes no `mass`, `velocity`, `spin` or `pivot`. The default is `false`.
+    #[serde(default)]
+    pub(super) fixed: bool,
+    /// The coefficient of restitution: how much of their closing speed two colliding bodies get
+    /// back, from 0, which leaves them moving together, to 1, an elastic collision that keeps
+    /// their kinetic energy. A collision takes the smaller of its two bodies'. The default is 1,
+    /// so the other body decides.
+    pub(super) restitution: Option<Restitution>,
+    /// The coefficient of friction, from 0 to 10: sliding bodies push back along their contact
+    /// with this times how hard they press, and bodies stay put while that holds them. A contact
+    /// takes the larger of its two bodies'. The default is 0, so the other body decides.
+    pub(super) friction: Option<Friction>,
 }
 
 /// One value a simulation sets: an object's `position` or `rotation` from three expressions, or a
@@ -554,14 +612,20 @@ impl AnimationFile {
                 ChangeFile::Simulate {
                     variables,
                     rates,
+                    bodies,
+                    gravity,
                     sets,
                     from,
                 } => read_simulate(
                     path,
-                    variables,
-                    rates,
-                    sets,
-                    from,
+                    SimulateFields {
+                        variables,
+                        rates,
+                        bodies,
+                        gravity,
+                        sets,
+                        from,
+                    },
                     self.easing_curve.is_some(),
                     start,
                 ),
@@ -652,68 +716,91 @@ fn read_linear_map(
     Err(errors)
 }
 
-/// The simulation read from `path`, or every scene error in it at once, each at its field: a
-/// variable's name that an expression cannot read; a rate missing for a variable or written for
-/// none; each mistake in each expression; a set's unknown object, a set with none or more than
-/// one of `position`, `rotation` and `value`, and a value of an object that is not a readout; and
-/// an `easing_curve`.
+/// A simulation's fields as the scene file writes them, before `read_simulate` checks how they go
+/// together.
+pub(super) struct SimulateFields {
+    pub(super) variables: Option<BTreeMap<String, FiniteNumber>>,
+    pub(super) rates: Option<BTreeMap<String, String>>,
+    pub(super) bodies: Option<BTreeMap<String, BodyFile>>,
+    pub(super) gravity: Option<Gravity>,
+    pub(super) sets: Vec<SetFile>,
+    pub(super) from: Option<String>,
+}
+
+/// How a simulation's variables move, as `read_simulate` reads them: their names, the motion,
+/// and for bodies each moving body's own position and rotation set.
+type ReadMotion = (Vec<String>, Motion, Vec<Set>);
+
+/// The simulation read from `path`, or every scene error in it at once, each at its field: both
+/// `bodies` and `variables`, or neither; a variable's name that an expression cannot read; a rate
+/// missing for a variable or written for none; each fault of each body; each mistake in each
+/// expression; a set's unknown object, a set with none or more than one of `position`,
+/// `rotation` and `value`, a set of a moving body's position or rotation, and a value of an
+/// object that is not a readout; and an `easing_curve`.
 fn read_simulate(
     path: &JsonPath,
-    variables: BTreeMap<String, FiniteNumber>,
-    mut rates: BTreeMap<String, String>,
-    sets: Vec<SetFile>,
-    from: Option<String>,
+    fields: SimulateFields,
     easing_curve: bool,
     start: &Stage,
 ) -> Result<Change, Vec<SceneError>> {
+    let SimulateFields {
+        variables,
+        rates,
+        bodies,
+        gravity,
+        sets,
+        from,
+    } = fields;
     let mut errors = Vec::new();
     if easing_curve {
         errors.push(SceneError::new(path.field("easing_curve"), SceneErrorCode::Invalid, "a simulation sets its values from its variables at every scene time, so it has no easing curve; leave out `easing_curve`"));
     }
-    for name in variables
-        .keys()
-        .filter(|name| !expr::is_variable_name(name))
-    {
-        let message = format!(
-            "`{name}` cannot name a variable: a name is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name, which an expression would read as those"
-        );
-        errors.push(SceneError::new(
-            path.field("variables").field(name),
-            SceneErrorCode::Invalid,
-            message,
-        ));
-    }
-    let names: Vec<&str> = variables
-        .keys()
+    let read: Option<ReadMotion> = match (variables, rates, bodies) {
+        (None, None, Some(bodies)) => read_bodies(path, bodies, gravity, start, &mut errors),
+        (variables, _, Some(_)) => {
+            let field = if variables.is_some() {
+                "variables"
+            } else {
+                "rates"
+            };
+            errors.push(SceneError::new(path.field(field), SceneErrorCode::Invalid, "a simulation moves its `bodies` or integrates its `variables` by their `rates`, not both; write a second simulation for the other"));
+            None
+        }
+        (None, _, None) => {
+            errors.push(SceneError::new(
+                path.field("variables"),
+                SceneErrorCode::MissingField,
+                "a simulation needs `variables` and their `rates`, or `bodies` to move",
+            ));
+            None
+        }
+        (Some(variables), rates, None) => {
+            if gravity.is_some() {
+                errors.push(SceneError::new(path.field("gravity"), SceneErrorCode::Invalid, "`gravity` pulls on bodies, and this simulation has none; write the pull in its `rates`, as `-9.8` in the rate of a vertical speed"));
+            }
+            if sets.is_empty() {
+                errors.push(SceneError::new(
+                    path.field("sets"),
+                    SceneErrorCode::MissingField,
+                    "a simulation of variables sets at least one value from them, so give `sets`",
+                ));
+            }
+            read_rates(path, variables, rates.unwrap_or_default(), &mut errors)
+        }
+    };
+    let names: Vec<&str> = read
+        .as_ref()
+        .map_or(&[][..], |(names, _, _)| names.as_slice())
+        .iter()
         .map(String::as_str)
         .chain([expr::LAW_TIME])
         .collect();
-    // `name` is how a message names the expression: a rate by its variable, a coordinate by its axis.
-    let parse = |source: &str, name: &str, at: JsonPath, errors: &mut Vec<SceneError>| {
-        Expression::parse(source, &names)
-            .map_err(|found| {
-                errors.extend(found.into_iter().map(|e| SceneError::new(at.clone(), SceneErrorCode::BadFormat, format!("`{name}` is not an expression sci_anim can read: {} (at column {} of {source:?})", e.message, e.column))));
-            })
-            .ok()
-    };
-    let mut read_rates = Vec::new();
-    for name in variables.keys() {
-        match rates.remove(name) {
-            Some(rate) => read_rates.push(parse(&rate, name, path.field("rates").field(name), &mut errors)),
-            None => errors.push(SceneError::new(path.field("rates").field(name), SceneErrorCode::MissingField, format!("missing the rate of `{name}`: every variable needs an expression for how fast it changes"))),
-        }
-    }
-    for name in rates.keys() {
-        let known: Vec<String> = variables.keys().map(|name| format!("`{name}`")).collect();
-        errors.push(SceneError::new(
-            path.field("rates").field(name),
-            SceneErrorCode::Invalid,
-            format!(
-                "no variable is named `{name}`; the variables are {}",
-                known.join(", ")
-            ),
-        ));
-    }
+    let moved: Vec<&ObjectId> = read
+        .as_ref()
+        .map_or(&[][..], |(_, _, body_sets)| body_sets.as_slice())
+        .iter()
+        .map(Set::object_id)
+        .collect();
     let mut read_sets = Vec::new();
     // The set at which each object's position, rotation or value is first set.
     let mut first_sets: BTreeMap<(String, &'static str), usize> = BTreeMap::new();
@@ -756,6 +843,18 @@ fn read_simulate(
         } else {
             "value"
         };
+        if field != "value" && moved.iter().any(|body| body.to_string() == set.object) {
+            let message = format!(
+                "`{}` is a moving body, and the simulation sets its position and rotation as it moves; set another object from its quantities, such as `{}.x`",
+                set.object, set.object
+            );
+            errors.push(SceneError::new(
+                at.field(field),
+                SceneErrorCode::Invalid,
+                message,
+            ));
+            continue;
+        }
         let first = *first_sets.entry((set.object.clone(), field)).or_insert(i);
         if first != i {
             let message = format!(
@@ -777,7 +876,9 @@ fn read_simulate(
                 .iter()
                 .zip(["x", "y", "z"])
                 .enumerate()
-                .map(|(k, (source, axis))| parse(source, axis, at.field(field).index(k), errors))
+                .map(|(k, (source, axis))| {
+                    parse_in(&names, source, axis, at.field(field).index(k), errors)
+                })
                 .collect();
             read.into_iter()
                 .collect::<Option<Vec<Expression>>>()
@@ -799,7 +900,7 @@ fn read_simulate(
                         .map_err(|error| errors.push(error))
                         .ok()
                 });
-                parse(&value, "value", at.field("value"), &mut errors)
+                parse_in(&names, &value, "value", at.field("value"), &mut errors)
                     .zip(readout)
                     .map(|(expression, object_id)| Set::Value(object_id, expression))
             }
@@ -807,27 +908,209 @@ fn read_simulate(
         };
         read_sets.push(read);
     }
-    let rates: Option<Vec<Expression>> = read_rates.into_iter().collect();
     let sets: Option<Vec<Set>> = read_sets.into_iter().collect();
-    match (rates, sets) {
-        (Some(rates), Some(sets)) if errors.is_empty() => {
+    match (read, sets) {
+        (Some((variables, motion, body_sets)), Some(sets)) if errors.is_empty() => {
             let law_time_start = from.map_or(LawTimeStart::Span, |id| {
                 LawTimeStart::Chapter(ChapterId::new(&id))
             });
-            let (variables, starts) = variables
-                .into_iter()
-                .map(|(name, start)| (name, start.get()))
-                .unzip();
             Ok(Change::Simulate(Arc::new(Simulate {
                 variables,
-                starts,
-                rates,
-                sets,
+                motion,
+                sets: body_sets.into_iter().chain(sets).collect(),
                 law_time_start,
             })))
         }
         _ => Err(errors),
     }
+}
+
+/// `source` read as an expression in `names`, or `None` with each of its mistakes pushed to
+/// `errors` at `at`. `name` is how a message names it: a rate by its variable, a coordinate by
+/// its axis.
+fn parse_in(
+    names: &[&str],
+    source: &str,
+    name: &str,
+    at: JsonPath,
+    errors: &mut Vec<SceneError>,
+) -> Option<Expression> {
+    Expression::parse(source, names)
+        .map_err(|found| {
+            errors.extend(found.into_iter().map(|e| SceneError::new(at.clone(), SceneErrorCode::BadFormat, format!("`{name}` is not an expression sci_anim can read: {} (at column {} of {source:?})", e.message, e.column))));
+        })
+        .ok()
+}
+
+/// A simulation's variables and their rates, or `None` with each fault pushed to `errors`: a
+/// name an expression cannot read, a rate missing for a variable or written for none, and each
+/// mistake in a rate.
+fn read_rates(
+    path: &JsonPath,
+    variables: BTreeMap<String, FiniteNumber>,
+    mut rates: BTreeMap<String, String>,
+    errors: &mut Vec<SceneError>,
+) -> Option<ReadMotion> {
+    for name in variables
+        .keys()
+        .filter(|name| !expr::is_variable_name(name))
+    {
+        let message = format!(
+            "`{name}` cannot name a variable: a name is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name, which an expression would read as those"
+        );
+        errors.push(SceneError::new(
+            path.field("variables").field(name),
+            SceneErrorCode::Invalid,
+            message,
+        ));
+    }
+    let names: Vec<&str> = variables
+        .keys()
+        .map(String::as_str)
+        .chain([expr::LAW_TIME])
+        .collect();
+    let mut read = Vec::new();
+    for name in variables.keys() {
+        match rates.remove(name) {
+            Some(rate) => read.push(parse_in(&names, &rate, name, path.field("rates").field(name), errors)),
+            None => errors.push(SceneError::new(path.field("rates").field(name), SceneErrorCode::MissingField, format!("missing the rate of `{name}`: every variable needs an expression for how fast it changes"))),
+        }
+    }
+    for name in rates.keys() {
+        let known: Vec<String> = variables.keys().map(|name| format!("`{name}`")).collect();
+        errors.push(SceneError::new(
+            path.field("rates").field(name),
+            SceneErrorCode::Invalid,
+            format!(
+                "no variable is named `{name}`; the variables are {}",
+                known.join(", ")
+            ),
+        ));
+    }
+    let rates: Vec<Expression> = read.into_iter().collect::<Option<_>>()?;
+    let (names, starts) = variables
+        .into_iter()
+        .map(|(name, start)| (name, start.get()))
+        .unzip();
+    Some((names, Motion::Rates { starts, rates }, Vec::new()))
+}
+
+/// A simulation's bodies, or `None` with each fault pushed to `errors`, at its body: an unknown
+/// object; an object that is not a circle, dot, sphere, convex polygon or, fixed, a line; one
+/// placed by another object; a fixed body with a `mass`, `velocity`, `spin` or `pivot`, and a
+/// moving one with no `mass`; and bodies none of which moves.
+fn read_bodies(
+    path: &JsonPath,
+    files: BTreeMap<String, BodyFile>,
+    gravity: Option<Gravity>,
+    start: &Stage,
+    errors: &mut Vec<SceneError>,
+) -> Option<ReadMotion> {
+    let mut bodies = Vec::new();
+    let mut names = Vec::new();
+    let mut body_sets = Vec::new();
+    for (id, file) in files {
+        let at = path.field("bodies").field(&id);
+        let Some((object_id, declared)) = start.objects.get_key_value(id.as_str()) else {
+            errors.push(unknown_object(at, &id, start));
+            continue;
+        };
+        let what = "a body is a circle, a dot, a sphere or a convex polygon, or when fixed a line, drawn by its own transform";
+        let collider = match (&declared.collider, &declared.placed_by) {
+            (Some(collider), PlacedBy::Itself) => collider.clone(),
+            (_, PlacedBy::Itself) => {
+                errors.push(SceneError::new(
+                    at,
+                    SceneErrorCode::Invalid,
+                    format!("`{id}` cannot be a body: {what}"),
+                ));
+                continue;
+            }
+            _ => {
+                errors.push(SceneError::new(
+                    at,
+                    SceneErrorCode::Invalid,
+                    format!("`{id}` is placed by another object, and {what}"),
+                ));
+                continue;
+            }
+        };
+        if !collider.is_line() && !collider.is_convex() {
+            errors.push(SceneError::new(at, SceneErrorCode::Invalid, format!("`{id}` is a polygon that bends inward, or has no area, and a body's polygon is convex; split it into convex bodies")));
+            continue;
+        }
+        let motion = if file.fixed {
+            for (field, written) in [
+                ("mass", file.mass.is_some()),
+                ("velocity", file.velocity.is_some()),
+                ("spin", file.spin.is_some()),
+                ("pivot", file.pivot.is_some()),
+            ] {
+                if written {
+                    errors.push(SceneError::new(at.field(field), SceneErrorCode::Invalid, format!("a fixed body never moves, so it takes no `{field}`; leave out `{field}` or `fixed`")));
+                }
+            }
+            BodyMotion::Fixed
+        } else {
+            let Some(mass) = file.mass else {
+                errors.push(SceneError::new(at.field("mass"), SceneErrorCode::MissingField, "a moving body needs its `mass` in kilograms; give `\"fixed\": true` for one that never moves"));
+                continue;
+            };
+            if collider.is_line() {
+                errors.push(SceneError::new(at, SceneErrorCode::Invalid, format!("`{id}` is a line, which has no area to spread a mass over, so only a fixed body may be a line; draw a moving rod as a thin polygon")));
+                continue;
+            }
+            let point = |point: [FiniteNumber; 2]| DVec2::new(point[0].get(), point[1].get());
+            BodyMotion::Moving {
+                mass: f64::from(mass.get()),
+                velocity: file.velocity.map_or(DVec2::ZERO, point),
+                spin: file.spin.map_or(0.0, FiniteNumber::get),
+                pivot: file.pivot.map(point),
+            }
+        };
+        if matches!(motion, BodyMotion::Moving { .. }) {
+            let first = names.len();
+            names.extend(
+                body::QUANTITIES
+                    .iter()
+                    .map(|quantity| format!("{id}.{quantity}")),
+            );
+            let transform = declared.transform;
+            body_sets.push(Set::Position(
+                object_id.clone(),
+                [
+                    Expression::variable(first),
+                    Expression::variable(first + 1),
+                    Expression::number(f64::from(transform.position.z)),
+                ],
+            ));
+            body_sets.push(Set::Rotation(
+                object_id.clone(),
+                [
+                    Expression::number(f64::from(transform.rotation.x)),
+                    Expression::number(f64::from(transform.rotation.y)),
+                    Expression::variable(first + 2),
+                ],
+            ));
+        }
+        bodies.push(Body {
+            object_id: object_id.clone(),
+            collider,
+            motion,
+            restitution: file.restitution.map_or(1.0, Restitution::get),
+            friction: file.friction.map_or(0.0, Friction::get),
+        });
+    }
+    if errors.is_empty() && body_sets.is_empty() {
+        errors.push(SceneError::new(path.field("bodies"), SceneErrorCode::Invalid, "every body here is fixed, and a simulation moves at least one; leave out `fixed` on the bodies that move"));
+    }
+    let bodies = Bodies {
+        bodies,
+        gravity: gravity.map_or(9.8, Gravity::get),
+    };
+    errors
+        .is_empty()
+        .then_some((names, Motion::Bodies(bodies), body_sets))
 }
 
 /// The object id of the readout `object` names, or the scene error at `object`: an unknown

@@ -12,6 +12,7 @@
 mod axes;
 mod axes_3d;
 mod bar_plot;
+mod body;
 mod cartoon;
 mod check_layout;
 mod cli;

@@ -120,7 +120,11 @@ impl Timeline {
                 message,
             )];
         }
-        let simulation = match Simulation::integrate(simulate, span, law_start, self.fps) {
+        let placed = match self.placed_bodies(simulate, span, start, path) {
+            Ok(placed) => placed,
+            Err(errors) => return errors,
+        };
+        let simulation = match Simulation::integrate(simulate, span, law_start, self.fps, &placed) {
             Ok(simulation) => Arc::new(simulation),
             Err(NoValue {
                 variable,
@@ -140,9 +144,25 @@ impl Timeline {
                 )];
             }
         };
+        self.collisions.extend(
+            simulation
+                .collisions
+                .iter()
+                .map(|collision| CollisionReport {
+                    collision: collision.clone(),
+                    path: path.clone(),
+                }),
+        );
+        let body_sets = simulate.body_sets();
         let mut errors = Vec::new();
         for (i, set) in simulate.sets.iter().enumerate() {
-            let at = path.field("sets").index(i);
+            // A body's own sets are not in the scene file, so their faults are the body's.
+            let body =
+                (i < body_sets).then(|| path.field("bodies").field(&set.object_id().to_string()));
+            let at = body
+                .clone()
+                .unwrap_or_else(|| path.field("sets").index(i - body_sets));
+            let field_at = |field: JsonPath| body.clone().unwrap_or(field);
             let outright = Outright::Set {
                 simulation: Arc::clone(&simulation),
                 set: i,
@@ -154,28 +174,29 @@ impl Timeline {
                     .map(|fault| {
                         let expression = match set {
                             Set::Value(..) => at.field("value"),
-                            _ => at.field(set.field()).index(fault.coordinate),
+                            _ => field_at(at.field(set.field()).index(fault.coordinate)),
                         };
                         outright.fault_error(fault, expression)
                     }),
             );
             let object_id = set.object_id();
             if !matches!(set, Set::Value(..))
-                && let Err(error) = self.guard_object(object_id, start, &at.field("object"))
+                && let Err(error) =
+                    self.guard_object(object_id, start, &field_at(at.field("object")))
             {
                 errors.push(error);
                 continue;
             }
             if matches!(set, Set::Position(..)) {
                 errors.extend(self.unplaced_error(&outright, object_id, start, span, |k| {
-                    at.field(set.field()).index(k)
+                    field_at(at.field(set.field()).index(k))
                 }));
             }
             let on = OutrightOn {
                 outright,
                 span,
-                animation: at.field(set.field()),
-                jump_at: at.field(set.field()),
+                animation: field_at(at.field(set.field())),
+                jump_at: field_at(at.field(set.field())),
             };
             let tracks = self.objects.entry(object_id.clone()).or_default();
             let declared = &start.objects[object_id];
@@ -205,6 +226,55 @@ impl Timeline {
             });
         }
         errors
+    }
+
+    /// Where each of a simulation's bodies stands when its span starts, as the timeline so far
+    /// leaves it, or the `invalid` error at each body that is scaled or turned about x or y
+    /// then, since a body moves in the world's xy plane at its drawn size. None for a simulation
+    /// by rates.
+    fn placed_bodies(
+        &self,
+        simulate: &Simulate,
+        span: (f64, f64),
+        start: &Stage,
+        path: &JsonPath,
+    ) -> Result<Vec<Placed>, Vec<SceneError>> {
+        let Motion::Bodies(bodies) = &simulate.motion else {
+            return Ok(Vec::new());
+        };
+        let stage = self.stage(start, span.0, Staging::BeforeTrails);
+        let mut errors = Vec::new();
+        let placed = bodies
+            .bodies
+            .iter()
+            .map(|body| {
+                let id = &body.object_id;
+                let Transform {
+                    position,
+                    rotation,
+                    scale,
+                } = stage.objects[id].transform;
+                if rotation.x != 0.0 || rotation.y != 0.0 || scale.x != 1.0 || scale.y != 1.0 {
+                    let message = format!(
+                        "`{id}` is turned by {rotation} and scaled by {scale} when the simulation starts, and a body moves in the world's xy plane at the size it is drawn: turned only about z, at scale 1; draw it at its size instead"
+                    );
+                    errors.push(SceneError::new(
+                        path.field("bodies").field(&id.to_string()),
+                        SceneErrorCode::Invalid,
+                        message,
+                    ));
+                }
+                Placed {
+                    position: position.truncate().as_dvec2(),
+                    angle: f64::from(rotation.z),
+                }
+            })
+            .collect();
+        if errors.is_empty() {
+            Ok(placed)
+        } else {
+            Err(errors)
+        }
     }
 
     /// Adds a follow of a shape to the object's shape track. Its errors: `unknown_chapter` at

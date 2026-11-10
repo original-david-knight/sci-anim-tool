@@ -15,7 +15,7 @@ use crate::gpu::{Gpu, GpuError, GpuIdentity, GpuKind};
 use crate::reaction::ReactionReport;
 use crate::scene::{Camera, Scene, SceneTime, Sound};
 use crate::scene_file::{ReadError, SceneError, read, schema};
-use crate::timeline::{ChapterId, ChapterSpan, StepSpan};
+use crate::timeline::{ChapterId, ChapterSpan, CollisionReport, StepSpan};
 use crate::video::VideoError;
 use crate::{
     FrameSequenceRenderError, InspectedObject, RenderError, RenderUpdate, RenderUpdateKind,
@@ -162,6 +162,10 @@ enum Outcome {
         /// Each sound with the chapter and scene time it starts at.
         #[serde(skip_serializing_if = "Vec::is_empty")]
         sounds: Vec<Sound>,
+        /// Each collision of a simulation's bodies: its scene time, the two bodies, and the
+        /// simulation's path, so a narration can land on the moment.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        collisions: Vec<CollisionReport>,
     },
     Frame {
         png: PathBuf,
@@ -361,6 +365,7 @@ fn validate(scene_file: &Path) -> Result<Outcome, Vec<ToolError>> {
         steps: scene.steps().to_vec(),
         chapters: scene.chapters().to_vec(),
         sounds: scene.sounds().to_vec(),
+        collisions: scene.collisions().to_vec(),
     })
 }
 

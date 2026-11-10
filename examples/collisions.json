@@ -1,0 +1,51 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Two carts collide", "size": 0.5, "position": [0, 3.5, 0] },
+
+    "elastic_label": { "type": "text", "text": "elastic", "size": 0.36, "align": "left", "position": [-6.6, 2.4, 0], "color": "#83c167" },
+    "elastic_track": { "type": "line", "from": [-6.6, 0], "to": [6.6, 0], "position": [0, 0.75, 0], "stroke": { "color": "#888888", "width": 0.04 } },
+    "a": { "type": "polygon", "points": [[-0.6, -0.35], [0.6, -0.35], [0.6, 0.35], [-0.6, 0.35]], "position": [-4.5, 1.1, 0], "fill": { "color": "#58c4dd" } },
+    "b": { "type": "polygon", "points": [[-0.45, -0.35], [0.45, -0.35], [0.45, 0.35], [-0.45, 0.35]], "position": [0.5, 1.1, 0], "fill": { "color": "#fc6255" } },
+    "a_mass": { "type": "math", "tex": "2\\text{ kg}", "size": 0.32, "color": "#1e1e1e", "attach": { "object": "a", "offset": [0, 0] } },
+    "b_mass": { "type": "math", "tex": "1\\text{ kg}", "size": 0.32, "color": "#1e1e1e", "attach": { "object": "b", "offset": [0, 0] } },
+    "a_tip": { "type": "dot", "radius": 0.012, "position": [-3.3, 1.75, 0], "fill": { "color": "#ffff00" } },
+    "b_tip": { "type": "dot", "radius": 0.012, "position": [0.5, 1.75, 0], "fill": { "color": "#ffff00" } },
+    "a_velocity": { "type": "arrow", "from": { "object": "a", "offset": [0, 0.65, 0] }, "to": { "object": "a_tip" }, "tip_length": 0.18, "stroke": { "color": "#ffff00", "width": 0.04 } },
+    "b_velocity": { "type": "arrow", "from": { "object": "b", "offset": [0, 0.65, 0] }, "to": { "object": "b_tip" }, "tip_length": 0.18, "stroke": { "color": "#ffff00", "width": 0.04 } },
+    "elastic_momentum_label": { "type": "math", "tex": "p =", "size": 0.36, "align": "right", "position": [2.6, 2.4, 0] },
+    "elastic_momentum": { "type": "readout", "value": 6, "decimals": 2, "unit": "\\text{ kg m/s}", "size": 0.36, "position": [3.2, 2.4, 0] },
+    "elastic_energy_label": { "type": "math", "tex": "K =", "size": 0.36, "align": "right", "position": [-1.6, 2.4, 0] },
+    "elastic_energy": { "type": "readout", "value": 9, "decimals": 2, "unit": "\\text{ J}", "size": 0.36, "position": [-1.05, 2.4, 0] },
+
+    "inelastic_label": { "type": "text", "text": "perfectly inelastic", "size": 0.36, "align": "left", "position": [-6.6, -1.2, 0], "color": "#fc6255" },
+    "inelastic_track": { "type": "line", "from": [-6.6, 0], "to": [6.6, 0], "position": [0, -2.85, 0], "stroke": { "color": "#888888", "width": 0.04 } },
+    "c": { "type": "polygon", "points": [[-0.6, -0.35], [0.6, -0.35], [0.6, 0.35], [-0.6, 0.35]], "position": [-4.5, -2.5, 0], "fill": { "color": "#58c4dd" } },
+    "d": { "type": "polygon", "points": [[-0.45, -0.35], [0.45, -0.35], [0.45, 0.35], [-0.45, 0.35]], "position": [0.5, -2.5, 0], "fill": { "color": "#fc6255" } },
+    "c_mass": { "type": "math", "tex": "2\\text{ kg}", "size": 0.32, "color": "#1e1e1e", "attach": { "object": "c", "offset": [0, 0] } },
+    "d_mass": { "type": "math", "tex": "1\\text{ kg}", "size": 0.32, "color": "#1e1e1e", "attach": { "object": "d", "offset": [0, 0] } },
+    "inelastic_momentum_label": { "type": "math", "tex": "p =", "size": 0.36, "align": "right", "position": [2.6, -1.2, 0] },
+    "inelastic_momentum": { "type": "readout", "value": 6, "decimals": 2, "unit": "\\text{ kg m/s}", "size": 0.36, "position": [3.2, -1.2, 0] },
+    "inelastic_energy_label": { "type": "math", "tex": "K =", "size": 0.36, "align": "right", "position": [-1.6, -1.2, 0] },
+    "inelastic_energy": { "type": "readout", "value": 9, "decimals": 2, "unit": "\\text{ J}", "size": 0.36, "position": [-1.05, -1.2, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2.5, "animations": [
+      { "type": "simulate", "gravity": 0,
+        "bodies": { "a": { "mass": 2, "velocity": [3, 0] }, "b": { "mass": 1 } },
+        "sets": [
+          { "object": "a_tip", "position": ["a.x + 0.4*a.vx", "a.y + 0.65", "0"] },
+          { "object": "b_tip", "position": ["b.x + 0.4*b.vx", "b.y + 0.65", "0"] },
+          { "object": "elastic_momentum", "value": "a.px + b.px" },
+          { "object": "elastic_energy", "value": "a.ke + b.ke" }
+        ] },
+      { "type": "simulate", "gravity": 0,
+        "bodies": { "c": { "mass": 2, "velocity": [3, 0] }, "d": { "mass": 1, "restitution": 0 } },
+        "sets": [
+          { "object": "inelastic_momentum", "value": "c.px + d.px" },
+          { "object": "inelastic_energy", "value": "c.ke + d.ke" }
+        ] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

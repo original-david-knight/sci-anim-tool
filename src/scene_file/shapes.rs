@@ -12,6 +12,7 @@ impl ObjectFile {
         base: &std::path::Path,
         placed: &BTreeMap<ObjectId, Object>,
     ) -> Result<Object, Faults> {
+        let collider = self.shape.collider();
         let shape_law =
             reads_law_time(&self.shape).then(|| ShapeLaw::new(self.shape.clone(), base, placed));
         let (shape, placed_by, readout) = match self.shape {
@@ -61,6 +62,7 @@ impl ObjectFile {
             plane_map: None,
             shape_law: shape_law.map(Arc::new),
             readout,
+            collider,
         })
     }
 }
@@ -880,6 +882,29 @@ impl ShapeFile {
                 | ShapeFile::Sphere { axes: Some(_), .. }
                 | ShapeFile::Dot { axes: Some(_), .. }
         )
+    }
+
+    /// What an object of this shape collides with as a simulation's body, in its own plane: a
+    /// circle's or a dot's disc, a sphere's ball, a polygon's corners, or a line's ends when both
+    /// are points in its plane.
+    fn collider(&self) -> Option<Collider> {
+        match self {
+            ShapeFile::Circle { radius, .. }
+            | ShapeFile::Dot {
+                radius, axes: None, ..
+            } => Some(Collider::Disc(f64::from(radius.get()))),
+            ShapeFile::Sphere {
+                radius, axes: None, ..
+            } => Some(Collider::Ball(f64::from(radius.get()))),
+            ShapeFile::Polygon { points, .. } => Some(Collider::corners(
+                points.iter().map(|point| point.as_dvec2()),
+            )),
+            ShapeFile::Line { from, to, .. } => Some(Collider::corners([
+                from.in_plane()?.as_dvec2(),
+                to.in_plane()?.as_dvec2(),
+            ])),
+            _ => None,
+        }
     }
 }
 

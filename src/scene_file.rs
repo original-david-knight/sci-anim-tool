@@ -23,11 +23,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use glam::{Vec2, Vec3};
+use glam::{DVec2, Vec2, Vec3};
 
 use crate::axes::{Appearance, Axes, Axis, AxisError, AxisScale, LabelError, NumberLine};
 use crate::axes_3d::Axes3d;
 use crate::bar_plot::{BarPlot, BarPlotError};
+use crate::body::{self, Bodies, Body, Collider, Motion as BodyMotion};
 use crate::data_point::DataToWorld;
 use crate::ends::{End, Ends};
 use crate::expr::{self, Expression, ExpressionError};
@@ -44,11 +45,12 @@ use crate::reaction::{AtomPairFile, Reaction};
 use crate::readout::Readout;
 use crate::scene::{
     Align, Camera, CellPadding, Color, CopyCount, Decimals, Duration, EdgeShade, FieldOfView, Fill,
-    FillRule, FiniteNumber, Font, Material, MatrixEntry, MirrorPlane, Object, ObjectId,
-    OriginCoordinate, PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig,
-    SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
+    FillRule, FiniteNumber, Font, Friction, Gravity, Material, MatrixEntry, MirrorPlane, Object,
+    ObjectId, OriginCoordinate, PlacedBy, Positive, Region, Restitution, RevolutionAngle, Scene,
+    SceneConfig, SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns,
+    UnitInterval,
 };
-use crate::simulate::{Set, Simulate};
+use crate::simulate::{Motion, Set, Simulate};
 use crate::skeletal_formula::{self, Look, SkeletalFormula};
 use crate::space_curve::{self, SpaceCurve, SpaceCurveError};
 use crate::structure_file::{self, StructureFileError};

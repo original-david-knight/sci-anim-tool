@@ -36,6 +36,10 @@ The sci-anim skill has more in [`skills/sci-anim/examples/`](../skills/sci-anim/
 - `patterns.json` grows a crystal lattice of spheres and turns it, sets 12 ticks in a ring around a dial, threads beads along a helix, and draws a vector field of arrows, each one `pattern`.
 - `facing_copies.json` turns the copies of three patterns to face along their curves: cones and tilted prisms along a helix, and arrows along a flat wave.
 
+## Physics
+
+- `collisions.json` runs two carts into each other twice at once, elastic above and perfectly inelastic below, each a simulation of bodies, with readouts of the momentum and kinetic energy they compute and velocity arrows riding the elastic carts.
+
 ## Chemistry
 
 - `molecules.json` fades in caffeine and benzene from PubChem structure files, hides benzene's hydrogens, and moves the camera and turns it to a new target.

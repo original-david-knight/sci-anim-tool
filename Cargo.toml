@@ -1,6 +1,6 @@
 [package]
 name = "sci_anim"
-version = "0.25.1"
+version = "0.26.0"
 edition = "2024"
 description = "Turns a scene file into an animation of math or science."
 license = "MIT OR Apache-2.0"
@@ -12,6 +12,7 @@ categories = ["command-line-utilities", "multimedia::video", "science", "visuali
 exclude = ["/.claude", "/.github", "/docs", "AGENTS.md", "CLAUDE.md"]
 
 [dependencies]
+libm = "0.2.16"
 bytemuck = { version = "1.25", features = ["derive"] }
 clap = { version = "4.6", features = ["derive"] }
 glam = { version = "0.34", features = ["serde"] }

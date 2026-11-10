@@ -1,0 +1,33 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Newton's cradle", "size": 0.5, "position": [0, 3.5, 0] },
+    "bar": { "type": "line", "from": [-2, 0], "to": [2, 0], "position": [0, 2, 0], "stroke": { "color": "#888888", "width": 0.08 } },
+
+    "ball_0": { "type": "sphere", "radius": 0.3, "position": [-2.920729, -0.457458, 0], "material": { "type": "standard", "color": "#58c4dd" } },
+    "ball_1": { "type": "sphere", "radius": 0.3, "position": [-0.6, -1, 0], "material": { "type": "standard", "color": "#cccccc" } },
+    "ball_2": { "type": "sphere", "radius": 0.3, "position": [0, -1, 0], "material": { "type": "standard", "color": "#cccccc" } },
+    "ball_3": { "type": "sphere", "radius": 0.3, "position": [0.6, -1, 0], "material": { "type": "standard", "color": "#cccccc" } },
+    "ball_4": { "type": "sphere", "radius": 0.3, "position": [1.2, -1, 0], "material": { "type": "standard", "color": "#fc6255" } },
+    "string_0": { "type": "line", "from": [-1.2, 2, 0], "to": { "object": "ball_0" }, "stroke": { "color": "#ece6e2", "width": 0.02 } },
+    "string_1": { "type": "line", "from": [-0.6, 2, 0], "to": { "object": "ball_1" }, "stroke": { "color": "#ece6e2", "width": 0.02 } },
+    "string_2": { "type": "line", "from": [0, 2, 0], "to": { "object": "ball_2" }, "stroke": { "color": "#ece6e2", "width": 0.02 } },
+    "string_3": { "type": "line", "from": [0.6, 2, 0], "to": { "object": "ball_3" }, "stroke": { "color": "#ece6e2", "width": 0.02 } },
+    "string_4": { "type": "line", "from": [1.2, 2, 0], "to": { "object": "ball_4" }, "stroke": { "color": "#ece6e2", "width": 0.02 } },
+
+    "say": { "type": "text", "text": "One ball in, one ball out: momentum and energy both pass along the row.", "size": 0.36, "position": [0, -3.2, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 6, "animations": [
+      { "type": "simulate",
+        "bodies": {
+          "ball_0": { "mass": 1, "pivot": [-1.2, 2] },
+          "ball_1": { "mass": 1, "pivot": [-0.6, 2] },
+          "ball_2": { "mass": 1, "pivot": [0, 2] },
+          "ball_3": { "mass": 1, "pivot": [0.6, 2] },
+          "ball_4": { "mass": 1, "pivot": [1.2, 2] }
+        } },
+      { "type": "write", "object": "say", "start": 1, "end": 2.5 }
+    ] }
+  ]
+}

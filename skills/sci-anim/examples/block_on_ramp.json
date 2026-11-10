@@ -1,0 +1,26 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A block slides down a ramp with friction", "size": 0.5, "position": [0, 3.5, 0] },
+    "ramp": { "type": "polygon", "points": [[0, 0], [8, 0], [0, 3.7305]], "position": [-6, -3, 0], "fill": { "color": "#444444" }, "stroke": { "color": "#888888", "width": 0.03 } },
+    "block": { "type": "polygon", "points": [[-0.4, -0.25], [0.4, -0.25], [0.4, 0.25], [-0.4, 0.25]], "position": [-4.5348, 0.3232, 0], "rotation": [0, 0, -25], "fill": { "color": "#58c4dd" } },
+
+    "weight": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [0, -1.2, 0] }, "tip_length": 0.2, "stroke": { "color": "#83c167", "width": 0.04 } },
+    "normal": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [0.4581, 0.9824, 0] }, "tip_length": 0.2, "stroke": { "color": "#ffff00", "width": 0.04 } },
+    "friction": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [-0.4985, 0.2325, 0] }, "tip_length": 0.15, "stroke": { "color": "#fc6255", "width": 0.04 } },
+    "path": { "type": "trail", "object": "block", "stroke": { "color": "#58c4dd", "width": 0.03 } },
+
+    "law": { "type": "math", "tex": "a = g(\\sin 25^\\circ - \\mu \\cos 25^\\circ) \\approx 2.36\\text{ m/s}^2", "size": 0.42, "position": [2.6, 1.6, 0] },
+    "speed_label": { "type": "math", "tex": "v =", "size": 0.42, "align": "right", "position": [2.4, 0.6, 0] },
+    "speed": { "type": "readout", "decimals": 2, "unit": "\\text{ m/s}", "size": 0.42, "position": [3.4, 0.6, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "law" }, { "type": "write", "object": "speed_label" }, { "type": "write", "object": "speed" }] },
+    { "type": "play", "duration": 2.3, "animations": [
+      { "type": "simulate",
+        "bodies": { "block": { "mass": 1, "friction": 0.2 }, "ramp": { "fixed": true } },
+        "sets": [{ "object": "speed", "value": "block.speed" }] }
+    ] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

@@ -1,16 +1,25 @@
-//! A simulation: an animation that integrates its variables from their starting values by their
-//! rates over its span, and sets positions, rotations and readouts' values from expressions in
-//! the variables. It is integrated once, when the scene file is read, by fourth-order Runge-Kutta
-//! at a fixed step of a fraction of a frame, and the variables at every step are kept. The stage
-//! at any scene time takes the step before it and integrates the rest of the way from there, so
-//! a frame stays a pure function of the scene and the scene time.
+//! A simulation: an animation that integrates its variables over its span, and sets positions,
+//! rotations and readouts' values from expressions in the variables. It is integrated once,
+//! when the scene file is read, and its variables are kept, so a frame stays a pure function of
+//! the scene and the scene time.
+//!
+//! Its variables move one of two ways. By their rates: fourth-order Runge-Kutta at a fixed step
+//! of a fraction of a frame, every step kept, and the stage at any scene time takes the step
+//! before it and integrates the rest of the way. Or as bodies, which `body` steps under gravity
+//! and their contacts, its variables each moving body's quantities, kept at every frame and
+//! drawn straight between two.
 
+use crate::body::{Bodies, Collision, Placed};
 use crate::expr::Expression;
 use crate::follow::{LawKind, LawTimeStart};
 use crate::scene::ObjectId;
 
 /// How many integration steps each frame of the span is cut into.
 const STEPS_PER_FRAME: f64 = 8.0;
+
+/// How many steps bodies take a frame: a collision closes no more than this share of a frame's
+/// travel before it is settled.
+const BODY_STEPS_PER_FRAME: usize = 16;
 
 /// The most frames a simulation spans, an hour at 60 frames a second, which bounds the steps it
 /// integrates and keeps when the scene file is read.
@@ -20,14 +29,35 @@ pub const MOST_FRAMES: f64 = 216_000.0;
 #[derive(Debug)]
 pub struct Simulate {
     /// The variables' names, in the order their values are kept and the expressions read them,
-    /// then `t`.
+    /// then `t`: the scene file's variables, or each moving body's quantities as
+    /// `<object id>.<quantity>`.
     pub variables: Vec<String>,
-    /// Each variable's value at the start of the span.
-    pub starts: Vec<f64>,
-    /// How fast each variable changes, per second of law time, in the variables and `t`.
-    pub rates: Vec<Expression>,
+    pub motion: Motion,
+    /// Each moving body's position and rotation first, then the scene file's sets.
     pub sets: Vec<Set>,
     pub law_time_start: LawTimeStart,
+}
+
+/// How a simulation's variables move.
+#[derive(Debug)]
+pub enum Motion {
+    /// From each variable's value at the start of the span, by how fast it changes, per second
+    /// of law time, in the variables and `t`.
+    Rates {
+        starts: Vec<f64>,
+        rates: Vec<Expression>,
+    },
+    Bodies(Bodies),
+}
+
+impl Simulate {
+    /// How many of `sets` are bodies' own, before the scene file's.
+    pub fn body_sets(&self) -> usize {
+        match &self.motion {
+            Motion::Rates { .. } => 0,
+            Motion::Bodies(bodies) => 2 * bodies.moving().count(),
+        }
+    }
 }
 
 /// One value a simulation sets, from expressions in its variables and `t`.
@@ -67,7 +97,7 @@ impl Set {
     }
 }
 
-/// A simulation integrated over its span: its variables at every step.
+/// A simulation integrated over its span: its variables at every kept step.
 #[derive(Debug)]
 pub struct Simulation {
     simulate: std::sync::Arc<Simulate>,
@@ -75,9 +105,12 @@ pub struct Simulation {
     span: (f64, f64),
     /// The scene time law time counts from.
     law_start: f64,
+    /// The scene time between two kept steps.
     step: f64,
-    /// The variables at step `k`, `k` from 0 to the step count, one after another.
+    /// The variables at kept step `k`, `k` from 0 to the count, one after another.
     steps: Vec<f64>,
+    /// Every collision of its bodies, in scene time order.
+    pub collisions: Vec<Collision>,
 }
 
 /// A variable that has no finite value at a step of the span.
@@ -89,40 +122,59 @@ pub struct NoValue {
 }
 
 impl Simulation {
-    /// Integrates `simulate` over `span`, at `STEPS_PER_FRAME` steps a frame of `fps`, with law
-    /// time counting from `law_start`. The step is the span cut evenly, so the last step ends
-    /// exactly at the span's end.
+    /// Integrates `simulate` over `span`, at `STEPS_PER_FRAME` steps a frame of `fps`, or its
+    /// bodies from `placed`, one for each body, at `BODY_STEPS_PER_FRAME`, with law time counting
+    /// from `law_start`. The step is the span cut evenly, so the last step ends exactly at the
+    /// span's end.
     pub fn integrate(
         simulate: &std::sync::Arc<Simulate>,
         span: (f64, f64),
         law_start: f64,
         fps: f64,
+        placed: &[Placed],
     ) -> Result<Simulation, NoValue> {
-        let count = ((span.1 - span.0) * fps * STEPS_PER_FRAME).ceil().max(1.0) as usize;
-        let step = (span.1 - span.0) / count as f64;
-        let mut simulation = Simulation {
+        let simulation = |step: f64, steps: Vec<f64>, collisions: Vec<Collision>| Simulation {
             simulate: std::sync::Arc::clone(simulate),
             span,
             law_start,
             step,
-            steps: simulate.starts.clone(),
+            steps,
+            collisions,
         };
-        let size = simulate.starts.len();
-        for k in 0..count {
-            let scene_time = span.0 + step * k as f64;
-            let values = simulation.steps[k * size..(k + 1) * size].to_vec();
-            let next = simulation.advance(&values, scene_time, step);
-            if let Some(variable) = next.iter().position(|value| !value.is_finite()) {
-                let scene_time = span.0 + step * (k + 1) as f64;
-                return Err(NoValue {
-                    variable,
-                    scene_time,
-                    law_time: scene_time - law_start,
-                });
+        match &simulate.motion {
+            Motion::Rates { starts, .. } => {
+                let count = ((span.1 - span.0) * fps * STEPS_PER_FRAME).ceil().max(1.0) as usize;
+                let step = (span.1 - span.0) / count as f64;
+                let mut integrated = simulation(step, starts.clone(), Vec::new());
+                let size = starts.len();
+                for k in 0..count {
+                    let scene_time = span.0 + step * k as f64;
+                    let values = integrated.steps[k * size..(k + 1) * size].to_vec();
+                    let next = integrated.advance(&values, scene_time, step);
+                    if let Some(variable) = next.iter().position(|value| !value.is_finite()) {
+                        let scene_time = span.0 + step * (k + 1) as f64;
+                        return Err(NoValue {
+                            variable,
+                            scene_time,
+                            law_time: scene_time - law_start,
+                        });
+                    }
+                    integrated.steps.extend(next);
+                }
+                Ok(integrated)
             }
-            simulation.steps.extend(next);
+            Motion::Bodies(bodies) => {
+                let frames = ((span.1 - span.0) * fps).ceil().max(1.0) as usize;
+                let count = frames * BODY_STEPS_PER_FRAME;
+                let step = (span.1 - span.0) / count as f64;
+                let run = bodies.run(placed, span.0, step, count, BODY_STEPS_PER_FRAME);
+                Ok(simulation(
+                    step * BODY_STEPS_PER_FRAME as f64,
+                    run.kept,
+                    run.collisions,
+                ))
+            }
         }
-        Ok(simulation)
     }
 
     /// The variables `dt` seconds after `values` at `scene_time`, by one step of fourth-order
@@ -141,34 +193,44 @@ impl Simulation {
     }
 
     fn rates(&self, values: &[f64], law_time: f64) -> Vec<f64> {
+        let Motion::Rates { rates, .. } = &self.simulate.motion else {
+            unreachable!("only a simulation by rates advances by them")
+        };
         let values: Vec<f64> = values
             .iter()
             .copied()
             .chain(std::iter::once(law_time))
             .collect();
-        self.simulate
-            .rates
-            .iter()
-            .map(|rate| rate.eval(&values))
-            .collect()
+        rates.iter().map(|rate| rate.eval(&values)).collect()
     }
 
-    /// The variables at a scene time, held at the span's ends outside it: the step before it,
-    /// integrated the rest of the way.
+    /// The variables at a scene time, held at the span's ends outside it: the kept step before
+    /// it, integrated the rest of the way by its rates, or for bodies drawn straight toward the
+    /// next kept step.
     pub fn variables_at(&self, scene_time: f64) -> Vec<f64> {
-        let size = self.simulate.starts.len();
+        let size = self.simulate.variables.len();
         let count = self.steps.len() / size - 1;
         let into = ((scene_time - self.span.0) / self.step).clamp(0.0, count as f64);
         let k = (into.floor() as usize).min(count);
         let values = &self.steps[k * size..(k + 1) * size];
-        let rest = (into - k as f64) * self.step;
+        let rest = into - k as f64;
         if rest <= 0.0 {
-            values.to_vec()
-        } else {
-            self.advance(values, self.span.0 + self.step * k as f64, rest)
+            return values.to_vec();
+        }
+        match &self.simulate.motion {
+            Motion::Rates { .. } => {
+                self.advance(values, self.span.0 + self.step * k as f64, rest * self.step)
+            }
+            Motion::Bodies(_) => {
+                let next = &self.steps[(k + 1) * size..(k + 2) * size];
+                values
+                    .iter()
+                    .zip(next)
+                    .map(|(value, next)| value + (next - value) * rest)
+                    .collect()
+            }
         }
     }
-
     /// The scene time law time counts from.
     pub fn law_start(&self) -> f64 {
         self.law_start
@@ -224,8 +286,10 @@ mod tests {
             .collect();
         Arc::new(Simulate {
             variables,
-            starts: starts.to_vec(),
-            rates,
+            motion: Motion::Rates {
+                starts: starts.to_vec(),
+                rates,
+            },
             sets: Vec::new(),
             law_time_start: LawTimeStart::Span,
         })
@@ -238,6 +302,7 @@ mod tests {
             (2.0, 2.0 + std::f64::consts::TAU),
             2.0,
             30.0,
+            &[],
         )
         .unwrap();
 
@@ -257,7 +322,7 @@ mod tests {
     #[test]
     fn a_scene_time_between_steps_is_integrated_from_the_step_before() {
         let simulation =
-            Simulation::integrate(&simulate(&["x"], &[1.0]), (0.0, 1.0), 0.0, 10.0).unwrap();
+            Simulation::integrate(&simulate(&["x"], &[1.0]), (0.0, 1.0), 0.0, 10.0, &[]).unwrap();
 
         let between = simulation.variables_at(0.123_456)[0];
 
@@ -271,8 +336,8 @@ mod tests {
 
     #[test]
     fn a_variable_that_runs_away_has_no_value_at_its_first_step() {
-        let found =
-            Simulation::integrate(&simulate(&["x*x"], &[1.0]), (0.0, 2.0), 0.0, 60.0).unwrap_err();
+        let found = Simulation::integrate(&simulate(&["x*x"], &[1.0]), (0.0, 2.0), 0.0, 60.0, &[])
+            .unwrap_err();
 
         assert_eq!(found.variable, 0);
         assert!(

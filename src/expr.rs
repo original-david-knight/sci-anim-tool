@@ -346,6 +346,22 @@ impl Expression {
         }
     }
 
+    /// The expression that is the value at index `k` of the values `eval` is given.
+    pub fn variable(k: usize) -> Expression {
+        Expression {
+            root: Term::Variable(k),
+            law_time: None,
+        }
+    }
+
+    /// The expression that is `value` everywhere.
+    pub fn number(value: f64) -> Expression {
+        Expression {
+            root: Term::Number(value),
+            law_time: None,
+        }
+    }
+
     /// The expression's value at `values`, one for each of the variables it was read with, in
     /// their order. NaN where the expression has none, such as `sqrt(x)` for negative `x`, and
     /// infinite where it grows without bound, such as `1/x` at 0.
@@ -499,7 +515,12 @@ fn lex(source: &str) -> Result<Vec<Token>, ExpressionError> {
             }
             c if c.is_alphabetic() || c == '_' => {
                 let start = i;
-                while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_') {
+                // A `.` between two words joins them, as a body's quantity `cart.vx` is one name.
+                while i < chars.len()
+                    && (chars[i].is_alphanumeric()
+                        || chars[i] == '_'
+                        || (chars[i] == '.' && chars.get(i + 1).is_some_and(|c| c.is_alphabetic())))
+                {
                     i += 1;
                 }
                 let text: String = chars[start..i].iter().collect();
