@@ -24,7 +24,7 @@ Every part of the tool is shaped for that loop:
 
 ### Install the skill, or your agent will guess
 
-The tool alone is not enough. An agent that has never seen sci_anim does not know the scene file's 26 object types and 17 animation types, how to pace a lesson, or the check-and-fix loop. The **sci-anim skill** teaches it all of that. The skill is a folder of Markdown files and examples that agents load when you ask for a video.
+The tool alone is not enough. An agent that has never seen sci_anim does not know the scene file's 30 object types and 17 animation types, how to pace a lesson, or the check-and-fix loop. The **sci-anim skill** teaches it all of that. The skill is a folder of Markdown files and examples that agents load when you ask for a video.
 
 The binary carries the skill that matches its version, and installs it with one command:
 
