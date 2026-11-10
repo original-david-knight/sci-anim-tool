@@ -1583,3 +1583,23 @@ fn a_text_over_a_cartoon_is_judged_by_the_cartoons_box() {
     );
     assert_eq!(clear.exit_code, 0, "{}", clear.stdout);
 }
+
+#[test]
+fn a_ray_is_judged_by_the_text_its_stroke_runs_through_and_may_leave_the_frame() {
+    // The ray leaves the lens through its focal point and runs off the frame. "clear" lies inside
+    // the ray's box but off its stroke, and "crossed" on it.
+    let objects = r#"
+        "lens": { "type": "lens", "focal_length": 1, "height": 3 },
+        "ray": { "type": "ray", "from": [-1.5, 1], "angle": 0, "optics": ["lens"], "length": 20 },
+        "clear": { "type": "text", "text": "clear", "size": 0.6, "position": [-1.2, 0.5, 0] },
+        "crossed": { "type": "text", "text": "crossed", "size": 0.6, "position": [1.6, -0.6, 0] }"#;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    assert_eq!(
+        fault_lines(&checked),
+        [r#"t=0 (the only frame): "ray" runs through "crossed""#],
+        "{}",
+        checked.stdout
+    );
+}

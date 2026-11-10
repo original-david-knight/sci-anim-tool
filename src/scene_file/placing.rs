@@ -503,10 +503,6 @@ impl ShapeFile {
         Positive::try_from(0.25).expect("positive")
     }
 
-    pub(super) fn yes() -> bool {
-        true
-    }
-
     /// A line's or an arrow's ends when either sits on an object or is a point in space, and a
     /// spring's always, with how they are drawn, taken out of the shape and left as `(0, 0)` to
     /// `(1, 0)` there, so the shape reads as a placeholder the stage replaces. `None` for a

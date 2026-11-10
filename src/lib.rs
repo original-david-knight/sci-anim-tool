@@ -708,9 +708,35 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                 _ => None,
             };
             let light = match &staged.placed_by {
-                scene::PlacedBy::Light(light) => {
-                    light.trace(&stage.objects).map(|(_, traced)| traced.report)
-                }
+                scene::PlacedBy::Light(light) => light.trace(&stage.objects).map(|(_, traced)| {
+                    let mut report = traced.report;
+                    let shows = staged.opacity.get() > 0.0 && staged.created.get() > 0.0;
+                    if let (
+                        optics::LightReport::Ray {
+                            crosses_objects, ..
+                        },
+                        Shape::Flat {
+                            path,
+                            stroke: Some(stroke),
+                            ..
+                        },
+                        true,
+                    ) = (&mut report, &staged.shape, shows)
+                    {
+                        *crosses_objects = plot::crossed_objects(
+                            path,
+                            stroke.width.get(),
+                            glam::Mat2::IDENTITY,
+                            &plot::OnFrame {
+                                plot_to_world: object_to_world,
+                                camera: draw_list.camera,
+                                scene_config: &scene.scene_config,
+                            },
+                            &shown_texts,
+                        );
+                    }
+                    report
+                }),
                 _ => None,
             };
             let detail = if let Some(report) = light {

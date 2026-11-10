@@ -419,9 +419,8 @@ pub(super) fn shape(
             height,
             stroke,
             fill,
-            focal_points,
         } => Shape::Flat {
-            path: optics::lens_path(focal_length.get(), f64::from(height.get()), focal_points),
+            path: optics::lens_path(focal_length.get(), f64::from(height.get())),
             stroke: Some(stroke),
             fill,
         },
@@ -429,13 +428,8 @@ pub(super) fn shape(
             focal_length,
             height,
             stroke,
-            focal_points,
         } => Shape::Flat {
-            path: optics::mirror_path(
-                focal_length.map(FocalLength::get),
-                f64::from(height.get()),
-                focal_points,
-            ),
+            path: optics::mirror_path(focal_length.map(FocalLength::get), f64::from(height.get())),
             stroke: Some(stroke),
             fill: None,
         },

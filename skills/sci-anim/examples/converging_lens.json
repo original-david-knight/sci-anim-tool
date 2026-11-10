@@ -3,6 +3,8 @@
     "heading": { "type": "text", "text": "A converging lens forms an image", "size": 0.5, "position": [0, 3.5, 0] },
     "axis": { "type": "line", "from": [-7, 0], "to": [7, 0], "stroke": { "color": "#666666", "width": 0.02 } },
     "lens": { "type": "lens", "focal_length": 2, "height": 5, "stroke": { "color": "#58c4dd", "width": 0.03 }, "fill": { "color": "#58c4dd", "opacity": 0.25 } },
+    "near_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [-2, 0] } },
+    "far_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [2, 0] } },
     "near_f": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [-2, -0.4] } },
     "far_f": { "type": "math", "tex": "F'", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [2, -0.4] } },
 

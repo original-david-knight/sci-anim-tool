@@ -515,7 +515,7 @@ A lens's or a mirror's `focal_length`, in world units: how far its focal points 
 _Avoid_: power, focus (alone)
 
 **Focal point**:
-A point on a lens's or a curved mirror's optical axis a focal length away, through which rays along the axis leave, or from which they seem to leave. A lens has one on each side, ticked on its drawing, and a curved mirror one in front, ticked with its center of curvature.
+A point on a lens's or a curved mirror's optical axis a focal length away, through which rays along the axis leave, or from which they seem to leave. A lens has one on each side and a curved mirror one in front; a scene marks them with dots attached to the lens or mirror.
 _Avoid_: focus (alone), F (in a name)
 
 **Optical axis**:

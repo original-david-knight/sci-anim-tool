@@ -9,9 +9,9 @@
     "friction": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [-0.4985, 0.2325, 0] }, "tip_length": 0.15, "stroke": { "color": "#fc6255", "width": 0.04 } },
     "path": { "type": "trail", "object": "block", "stroke": { "color": "#58c4dd", "width": 0.03 } },
 
-    "law": { "type": "math", "tex": "a = g(\\sin 25^\\circ - \\mu \\cos 25^\\circ) \\approx 2.36\\,\\text{m/s}^2", "size": 0.42, "position": [2.6, 1.6, 0] },
-    "speed_label": { "type": "math", "tex": "v =", "size": 0.42, "align": "right", "position": [2.4, 0.6, 0] },
-    "speed": { "type": "readout", "decimals": 2, "unit": "\\text{ m/s}", "size": 0.42, "position": [2.95, 0.6, 0] }
+    "law": { "type": "math", "tex": "a = g(\\sin 25^\\circ - \\mu \\cos 25^\\circ) \\approx 2.36\\,\\text{m/s}^2", "size": 0.42, "position": [2.6, 2.4, 0] },
+    "speed_label": { "type": "math", "tex": "v =", "size": 0.42, "align": "right", "position": [3.2, 1.3, 0] },
+    "speed": { "type": "readout", "decimals": 2, "unit": "\\text{ m/s}", "size": 0.42, "position": [3.75, 1.3, 0] }
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },

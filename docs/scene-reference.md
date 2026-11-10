@@ -289,16 +289,15 @@ The world points `object` passed through over the last `length` seconds of scene
 
 ### `lens`
 
-A thin lens across the object's own y axis, its optical axis along the object's own x: converging for a positive `focal_length`, drawn biconvex, or diverging for a negative one, drawn biconcave, with a tick across the axis at each focal point. A `ray` or an `image` that names it in `optics` bends at its middle by the thin lens equation, 1/do + 1/di = 1/f, so rays from a point meet, or seem to meet, at its image. Move it, and every ray and image through it follows. Its `scale` draws it bigger but leaves its focal length; keep it at 1. Needs sci_anim 0.26.0 or later.
+A thin lens across the object's own y axis, its optical axis along the object's own x: converging for a positive `focal_length`, drawn biconvex, or diverging for a negative one, drawn biconcave. Mark its focal points with dots attached to it at an `offset` of the focal length, which go with it. A `ray` or an `image` that names it in `optics` bends at its middle by the thin lens equation, 1/do + 1/di = 1/f, so rays from a point meet, or seem to meet, at its image. Move it, and every ray and image through it follows. Its `scale` draws it bigger but leaves its focal length; keep it at 1. Needs sci_anim 0.26.0 or later.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | `lens` | yes |  |
 | `focal_length` | number | yes | The focal length in world units, from -1000 to 1000 and not 0: positive for a converging lens, negative for a diverging one. |
 | `height` | number |  | How tall the lens is along its own y, in world units, more than 0. A ray that passes above or below it is not bent. The default is 3. |
-| `stroke` | [Stroke](#stroke) |  | The lens's outline and the focal points' ticks. The default is white and 0.04 wide. |
+| `stroke` | [Stroke](#stroke) |  | The lens's outline. The default is white and 0.04 wide. |
 | `fill` | [Fill](#fill) |  | The lens's inside, such as a glass blue at opacity 0.3. With none, it has no fill. |
-| `focal_points` | boolean |  | Whether to draw a tick across the axis at each focal point. The default is `true`. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -315,7 +314,6 @@ A mirror across the object's own y axis, its reflecting side toward the object's
 | `focal_length` | number |  | The focal length in world units, from -1000 to 1000 and not 0: positive for a concave mirror, negative for a convex one. The default is none: a flat mirror. |
 | `height` | number |  | How tall the mirror is along its own y, in world units, more than 0. The default is 3. |
 | `stroke` | [Stroke](#stroke) |  | The mirror's color and width. The default is white and 0.04 wide. |
-| `focal_points` | boolean |  | Whether a curved mirror draws a tick across its axis at its focal point and its center of curvature. The default is `true`. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |

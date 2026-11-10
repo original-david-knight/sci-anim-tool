@@ -36,5 +36,5 @@ Preconditions:
 ## Gotchas
 
 - A ray that misses a lens's `height` passes it unbent. Make the lens tall enough for every principal ray of the object's whole move.
-- Give each ray a `length` that ends in the frame.
+- `check-layout` judges a ray by the text its stroke runs through, reported as "runs through", not by its box, and lets it run off the frame.
 - An image hides while the object stands on a focal point, where it lies at infinity.

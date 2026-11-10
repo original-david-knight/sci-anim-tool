@@ -416,7 +416,8 @@ pub(super) enum ShapeFile {
     },
     /// A thin lens across the object's own y axis, its optical axis along the object's own x:
     /// converging for a positive `focal_length`, drawn biconvex, or diverging for a negative one,
-    /// drawn biconcave, with a tick across the axis at each focal point. A `ray` or an `image`
+    /// drawn biconcave. Mark its focal points with dots attached to it at an `offset` of the
+    /// focal length, which go with it. A `ray` or an `image`
     /// that names it in `optics` bends at its middle by the thin lens equation, 1/do + 1/di =
     /// 1/f, so rays from a point meet, or seem to meet, at its image. Move it, and every ray
     /// and image through it follows. Its `scale` draws it bigger but leaves its focal length;
@@ -429,14 +430,11 @@ pub(super) enum ShapeFile {
         /// above or below it is not bent. The default is 3.
         #[serde(default = "ShapeFile::default_optic_height")]
         height: Positive,
-        /// The lens's outline and the focal points' ticks. The default is white and 0.04 wide.
+        /// The lens's outline. The default is white and 0.04 wide.
         #[serde(default)]
         stroke: Stroke,
         /// The lens's inside, such as a glass blue at opacity 0.3. With none, it has no fill.
         fill: Option<Fill>,
-        /// Whether to draw a tick across the axis at each focal point. The default is `true`.
-        #[serde(default = "ShapeFile::yes")]
-        focal_points: bool,
     },
     /// A mirror across the object's own y axis, its reflecting side toward the object's own -x,
     /// with short strokes along its back: flat with no `focal_length`, concave for a positive
@@ -454,10 +452,6 @@ pub(super) enum ShapeFile {
         /// The mirror's color and width. The default is white and 0.04 wide.
         #[serde(default)]
         stroke: Stroke,
-        /// Whether a curved mirror draws a tick across its axis at its focal point and its
-        /// center of curvature. The default is `true`.
-        #[serde(default = "ShapeFile::yes")]
-        focal_points: bool,
     },
     /// A ray of light from `from`, computed at every scene time through the lenses, mirrors and
     /// media of `optics`: it bends at a lens's middle toward its source's image, reflects off a

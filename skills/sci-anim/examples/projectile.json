@@ -3,18 +3,18 @@
     "heading": { "type": "text", "text": "A projectile, and how it bounces", "size": 0.5, "position": [0, 3.5, 0] },
     "ground": { "type": "line", "from": [-7, 0], "to": [7, 0], "position": [0, -3, 0], "stroke": { "color": "#888888", "width": 0.04 } },
     "ball": { "type": "circle", "radius": 0.15, "position": [-6, -2.85, 0], "fill": { "color": "#fc6255" } },
-    "tip": { "type": "dot", "radius": 0.012, "position": [-5.4, -1.725, 0], "fill": { "color": "#ffff00" } },
+    "tip": { "type": "dot", "radius": 0.012, "position": [-5.49, -1.725, 0], "fill": { "color": "#ffff00" } },
     "velocity": { "type": "arrow", "from": { "object": "ball" }, "to": { "object": "tip" }, "tip_length": 0.18, "stroke": { "color": "#ffff00", "width": 0.04 } },
     "path": { "type": "trail", "object": "ball", "stroke": { "color": "#fc6255", "width": 0.03 } },
-    "range": { "type": "math", "tex": "R = \\frac{2 v_x v_y}{g} \\approx 6.12\\text{ m}", "size": 0.42, "position": [3.8, 2.2, 0] },
+    "range": { "type": "math", "tex": "R = \\frac{2 v_x v_y}{g} \\approx 5.20\\text{ m}", "size": 0.42, "position": [3.8, 2.2, 0] },
     "height_label": { "type": "math", "tex": "y =", "size": 0.42, "align": "right", "position": [3.2, 1.2, 0] },
-    "height": { "type": "readout", "decimals": 2, "unit": "\\text{ m}", "size": 0.42, "position": [3.75, 1.2, 0] }
+    "height": { "type": "readout", "decimals": 2, "unit": "\\text{ m}", "size": 0.42, "position": [3.95, 1.2, 0] }
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "write", "object": "range" }, { "type": "write", "object": "height_label" }, { "type": "write", "object": "height" }] },
-    { "type": "play", "duration": 4, "animations": [
+    { "type": "play", "duration": 3.2, "animations": [
       { "type": "simulate",
-        "bodies": { "ball": { "mass": 0.5, "velocity": [4, 7.5], "restitution": 0.6 }, "ground": { "fixed": true } },
+        "bodies": { "ball": { "mass": 0.5, "velocity": [3.4, 7.5], "restitution": 0.6 }, "ground": { "fixed": true } },
         "sets": [
           { "object": "tip", "position": ["ball.x + 0.15*ball.vx", "ball.y + 0.15*ball.vy", "0"] },
           { "object": "height", "value": "ball.y + 2.85" }

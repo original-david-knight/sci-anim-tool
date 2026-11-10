@@ -1,9 +1,9 @@
 {
   "objects": {
     "heading": { "type": "text", "text": "Refraction, and total internal reflection", "size": 0.5, "position": [0, 3.5, 0] },
-    "glass": { "type": "polygon", "points": [[-7.2, -4.2], [7.2, -4.2], [7.2, 0], [-7.2, 0]], "fill": { "color": "#58c4dd", "opacity": 0.18 }, "stroke": { "color": "#58c4dd", "width": 0.03 }, "refractive_index": 1.5 },
-    "air_label": { "type": "math", "tex": "n_1 = 1", "size": 0.4, "position": [-5.6, 0.5, 0] },
-    "glass_label": { "type": "math", "tex": "n_2 = 1.5", "size": 0.4, "position": [-5.6, -0.6, 0] },
+    "glass": { "type": "polygon", "points": [[-7, -3.9], [7, -3.9], [7, 0], [-7, 0]], "fill": { "color": "#58c4dd", "opacity": 0.18 }, "stroke": { "color": "#58c4dd", "width": 0.03 }, "refractive_index": 1.5 },
+    "air_label": { "type": "math", "tex": "n_1 = 1", "size": 0.4, "position": [5.6, 0.5, 0] },
+    "glass_label": { "type": "math", "tex": "n_2 = 1.5", "size": 0.4, "position": [5.6, -0.6, 0] },
     "normal": { "type": "line", "from": [-3, 2.4], "to": [-3, -2.4], "stroke": { "color": "#888888", "width": 0.02, "dash": [0.12, 0.1] } },
     "emitter": { "type": "dot", "radius": 0.1, "position": [-5.2, 2.6, 0], "fill": { "color": "#ffff00" } },
     "into_glass": { "type": "ray", "from": { "object": "emitter" }, "through": [-3, 0], "optics": ["glass"], "length": 3, "stroke": { "color": "#ffff00", "width": 0.035 } },

@@ -2084,7 +2084,12 @@ fn layout_faults(
     found.extend(hidden_group_atoms(report, &objects, turning));
     for (object_id, inspected) in &objects {
         let plot = &inspected["plot"];
-        for text_id in plot["crosses_objects"].as_array().into_iter().flatten() {
+        let crossed = plot["crosses_objects"]
+            .as_array()
+            .into_iter()
+            .chain(inspected["ray"]["crosses_objects"].as_array())
+            .flatten();
+        for text_id in crossed {
             let text_id = as_written(text_id);
             if !allows(allowed, object_id, &text_id)
                 && !allows(
@@ -2116,7 +2121,8 @@ fn layout_faults(
                 &objects,
             ));
         }
-        if inspected["in_frame"] != "whole" {
+        // A ray that runs off the frame is light leaving the picture.
+        if inspected["in_frame"] != "whole" && inspected.get("ray").is_none() {
             let pixels = pixel_box(inspected);
             found.push(format!(
                 "\"{object_id}\" is cut off by the frame: its box runs from {} to {} pixels",
@@ -2253,8 +2259,12 @@ fn layout_faults(
                     continue;
                 }
             }
-            if a.get("plot").is_some() || b.get("plot").is_some() {
-                // A plot reports the text its stroke runs through, in crosses_objects, above.
+            if [a, b]
+                .iter()
+                .any(|o| o.get("plot").is_some() || o.get("ray").is_some())
+            {
+                // A plot or a ray reports the text its stroke runs through, in crosses_objects,
+                // above, and meets the lenses and glass it passes on purpose.
                 continue;
             }
             let filled = [(first, a), (second, b)].into_iter().find(|(id, o)| {

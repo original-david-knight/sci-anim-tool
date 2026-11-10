@@ -102,7 +102,7 @@ pub struct Traced {
 
 /// What `inspect` reports of a ray or an image.
 #[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "snake_case", untagged)]
+#[serde(untagged)]
 pub enum LightReport {
     Ray {
         /// The world points the ray passes through: its source, each point it bends at, and its
@@ -114,6 +114,9 @@ pub enum LightReport {
         /// Whether that image lies behind the ray, so its last part only seems to come from it.
         #[serde(skip_serializing_if = "Option::is_none")]
         virtual_image: Option<bool>,
+        /// The text and math objects the ray's stroke runs through on the frame, which
+        /// `check-layout` reports, as it does a plot's.
+        crosses_objects: Vec<String>,
     },
     Image {
         from: [f64; 2],
@@ -423,7 +426,7 @@ fn bend(optic: Optic, source: DVec3, at: DVec2, going: DVec2) -> Option<(DVec2, 
 
 /// Snell's law at an edge of outward normal `normal`, from index `from` to `to`: the direction
 /// the ray goes on in, or the reflected direction past the critical angle.
-pub fn refract(direction: DVec2, normal: DVec2, from: f64, to: f64) -> (DVec2, bool) {
+fn refract(direction: DVec2, normal: DVec2, from: f64, to: f64) -> (DVec2, bool) {
     let facing = if direction.dot(normal) > 0.0 {
         -normal
     } else {
@@ -677,6 +680,7 @@ fn ray(points: Vec<DVec2>, imaged: Option<DVec3>, back_trace: bool) -> Traced {
             points: points.iter().map(|p| p.to_array()).collect(),
             image: image.map(|p| p.to_array()),
             virtual_image,
+            crosses_objects: Vec::new(),
         },
     }
 }
@@ -724,8 +728,8 @@ fn arrow(from: DVec2, to: DVec2, tip_length: f64, dashed: bool) -> Option<Path> 
 }
 
 /// A lens drawn about its object's position: a biconvex outline for a converging lens or a
-/// biconcave one for a diverging lens, `height` tall, with a tick at each focal point.
-pub fn lens_path(focal_length: f64, height: f64, focal_points: bool) -> Path {
+/// biconcave one for a diverging lens, `height` tall.
+pub fn lens_path(focal_length: f64, height: f64) -> Path {
     let (h, w) = (height / 2.0, 0.07 * height);
     let mut path = kurbo::BezPath::new();
     if focal_length > 0.0 {
@@ -740,18 +744,12 @@ pub fn lens_path(focal_length: f64, height: f64, focal_points: bool) -> Path {
         path.quad_to((0.0, 0.0), (-w, -h));
     }
     path.close_path();
-    if focal_points {
-        for x in [-focal_length, focal_length] {
-            ticks(&mut path, x);
-        }
-    }
     Path::from_bez(path).expect("a lens has a size")
 }
 
 /// A mirror drawn about its object's position, facing its own -x: a line, or an arc of the
-/// circle of twice its focal length's radius, `height` tall, short strokes along its back, and
-/// with `focal_points` a tick at its focal point and at its center of curvature.
-pub fn mirror_path(focal_length: Option<f64>, height: f64, focal_points: bool) -> Path {
+/// circle of twice its focal length's radius, `height` tall, with short strokes along its back.
+pub fn mirror_path(focal_length: Option<f64>, height: f64) -> Path {
     let h = height / 2.0;
     let surface = |y: f64| match focal_length {
         None => DVec2::new(0.0, y),
@@ -775,17 +773,7 @@ pub fn mirror_path(focal_length: Option<f64>, height: f64, focal_points: bool) -
         path.move_to(point(on));
         path.line_to(point(on + DVec2::new(0.18, -0.12)));
     }
-    if let (true, Some(f)) = (focal_points, focal_length) {
-        ticks(&mut path, -f);
-        ticks(&mut path, -2.0 * f);
-    }
     Path::from_bez(path).expect("a mirror has a size")
-}
-
-/// A short tick across the optical axis at `x`.
-fn ticks(path: &mut kurbo::BezPath, x: f64) {
-    path.move_to((x, -0.12));
-    path.line_to((x, 0.12));
 }
 
 /// What `trace` gives before the stage places a light: a short line, replaced at every scene
