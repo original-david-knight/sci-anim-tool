@@ -18,6 +18,7 @@ use crate::ends::Ends;
 pub use crate::group::Attachment;
 use crate::group::{Glow, GroupId, Groups};
 use crate::molecule::{Molecule, Representation};
+use crate::optics::{Light, Optic};
 use crate::path::{Path, UnderMap};
 use crate::pattern::Pattern;
 use crate::plane_map::PlaneMap;
@@ -274,6 +275,9 @@ pub struct Object {
     /// For a circle, a dot, a sphere, a polygon or a line drawn by its own points: what it
     /// collides with when a simulation moves it, or holds it fixed, as a body.
     pub collider: Option<Collider>,
+    /// For a lens, a mirror, or a polygon or circle with a refractive index: what it does to a
+    /// ray that names it.
+    pub optic: Option<Optic>,
 }
 
 impl Object {
@@ -404,9 +408,11 @@ pub fn own_to_world(objects: &BTreeMap<ObjectId, Object>, id: &ObjectId) -> Flat
             }
             .flat_to_world()
         }
-        PlacedBy::Itself | PlacedBy::Attachment(_) | PlacedBy::DataPoint(_) | PlacedBy::Ends(_) => {
-            object.flat_to_world()
-        }
+        PlacedBy::Itself
+        | PlacedBy::Attachment(_)
+        | PlacedBy::DataPoint(_)
+        | PlacedBy::Ends(_)
+        | PlacedBy::Light(_) => object.flat_to_world(),
     }
 }
 
@@ -429,6 +435,9 @@ pub enum PlacedBy {
     /// A line, an arrow or a spring with an end on an object, or a spring, lies between its two
     /// ends, and the stage draws it again between them at every scene time.
     Ends(Ends),
+    /// A ray or an image is traced through its optics at every scene time, in the world's xy
+    /// plane at the height of its source.
+    Light(Arc<Light>),
 }
 
 /// What an object is, after the scene file's shapes have become paths.
@@ -1332,6 +1341,17 @@ value_rule!(
     Gravity(f64) from f64,
     schema: { "type": "number", "minimum": 0, "maximum": 1000, "description": "World units a second squared, from 0 to 1000." },
     accepts: |v| (0.0..=1000.0).contains(&v));
+
+value_rule!(
+    /// A lens's or a mirror's focal length, in world units from -1000 to 1000 and not 0.
+    FocalLength(f64) from f64,
+    schema: { "type": "number", "minimum": -1000, "maximum": 1000, "not": { "const": 0 }, "description": "World units, from -1000 to 1000, not 0." },
+    accepts: |v| (-1000.0..=1000.0).contains(&v) && v != 0.0);
+value_rule!(
+    /// A refractive index, from 1 to 5.
+    RefractiveIndex(f64) from f64,
+    schema: { "type": "number", "minimum": 1, "maximum": 5, "description": "From 1 to 5." },
+    accepts: |v| (1.0..=5.0).contains(&v));
 
 impl Decimals {
     pub fn none() -> Self {

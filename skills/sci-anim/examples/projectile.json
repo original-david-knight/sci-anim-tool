@@ -8,7 +8,7 @@
     "path": { "type": "trail", "object": "ball", "stroke": { "color": "#fc6255", "width": 0.03 } },
     "range": { "type": "math", "tex": "R = \\frac{2 v_x v_y}{g} \\approx 6.12\\text{ m}", "size": 0.42, "position": [3.8, 2.2, 0] },
     "height_label": { "type": "math", "tex": "y =", "size": 0.42, "align": "right", "position": [3.2, 1.2, 0] },
-    "height": { "type": "readout", "decimals": 2, "unit": "\\text{ m}", "size": 0.42, "position": [4.2, 1.2, 0] }
+    "height": { "type": "readout", "decimals": 2, "unit": "\\text{ m}", "size": 0.42, "position": [3.75, 1.2, 0] }
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "write", "object": "range" }, { "type": "write", "object": "height_label" }, { "type": "write", "object": "height" }] },

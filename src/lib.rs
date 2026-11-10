@@ -29,6 +29,7 @@ mod member;
 mod mesh;
 mod molecule;
 mod morph;
+mod optics;
 mod path;
 mod pattern;
 mod plane_map;
@@ -456,6 +457,12 @@ enum ShapeDetail {
     Ends {
         ends: ends::EndsReport,
     },
+    Ray {
+        ray: optics::LightReport,
+    },
+    Image {
+        image: optics::LightReport,
+    },
     Trail {
         trail: trail::TrailReport,
     },
@@ -700,7 +707,18 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                 scene::PlacedBy::Ends(ends) => Some(ends),
                 _ => None,
             };
-            let detail = if let Some(ends) = ends {
+            let light = match &staged.placed_by {
+                scene::PlacedBy::Light(light) => {
+                    light.trace(&stage.objects).map(|(_, traced)| traced.report)
+                }
+                _ => None,
+            };
+            let detail = if let Some(report) = light {
+                Some(match report {
+                    ray @ optics::LightReport::Ray { .. } => ShapeDetail::Ray { ray },
+                    image @ optics::LightReport::Image { .. } => ShapeDetail::Image { image },
+                })
+            } else if let Some(ends) = ends {
                 let (from, to) = (
                     ends.from.world(&stage.objects),
                     ends.to.world(&stage.objects),

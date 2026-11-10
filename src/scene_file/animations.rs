@@ -683,6 +683,7 @@ fn read_linear_map(
             (_, PlacedBy::Attachment(attachment)) => Some(format!("is attached to `{}` and sits beside it; name `{}` instead, and `{object_id}` stays beside it wherever the map carries it", attachment.object, attachment.object)),
             (_, PlacedBy::DataPoint(axes)) => Some(format!("is a data point, placed in the data coordinates of `{axes}`; name `{axes}` instead, and the point goes with them")),
             (_, PlacedBy::Ends(_)) => Some("is placed by its ends and lies between them; name the objects its ends sit on instead".to_string()),
+            (_, PlacedBy::Light(_)) => Some("is traced through its optics; name its source and the lenses and mirrors it passes instead".to_string()),
             _ => None,
         };
         match why {
@@ -1487,6 +1488,11 @@ fn read_carry(
         PlacedBy::Ends(_) => {
             return refuse(format!(
                 "`{along_id}` is placed by its ends and drawn again between them at every scene time, so it has no curve of its own to carry along; carry along a shape placed by its own transform"
+            ));
+        }
+        PlacedBy::Light(_) => {
+            return refuse(format!(
+                "`{along_id}` is traced through its optics again at every scene time, so it has no curve of its own to carry along; carry along a shape placed by its own transform"
             ));
         }
         PlacedBy::DataPoint(axes) if matches!(along_object.shape, Shape::Flat { .. }) => {

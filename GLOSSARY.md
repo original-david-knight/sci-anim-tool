@@ -354,7 +354,7 @@ _Avoid_: hitbox, bounds, bounding box (a bounding box is a report's), path (a pa
 
 **Collision**:
 Two bodies meeting faster than 0.05 world units a second, settled at once, each pair as if it collided alone, the pair that closes fastest first, so a collision passes along a row of touching balls. Its restitution sets how much of the closing speed comes back, and its friction how much sliding along the contact it stops. Slower meetings are resting contact: the bodies hold each other up, with friction, and give back no speed. `validate` lists every collision under `collisions`, with its scene time, its two bodies and its simulation's path, so a narration can land on it.
-_Avoid_: impact (alone), hit, contact (for a collision; resting contact is not one), crossed label, crossed object, event, marker
+_Avoid_: impact (alone), hit (for a collision), contact (for a collision; resting contact is not one), crossed label, crossed object, event, marker
 
 **Restitution**:
 The coefficient of restitution of a body, from 0 to 1: the share of their closing speed two colliding bodies get back. 1 is an elastic collision, which keeps their kinetic energy, and 0 a perfectly inelastic one, which leaves them moving together. A collision takes the smaller of its two bodies' restitutions, and a body's is 1 unless written.
@@ -495,6 +495,56 @@ _Avoid_: adapter (except wgpu's `Adapter`, in the module that uses wgpu), graphi
 **GPU kind**:
 What sort of GPU a driver says it offers: `discrete`, a GPU of its own; `integrated`, one built into the processor; `other`, one whose driver names no kind, as OpenGL's do; `virtual`, one a virtual machine is given; or `cpu`, a driver that draws on the processor. A command draws on a discrete GPU when the machine has one, then an integrated one, and so on in that order. `--gpu KIND` draws on the first GPU of that kind instead, and is a GPU error when the machine has none.
 _Avoid_: power preference (except wgpu's `PowerPreference`), device type (except wgpu's `DeviceType`), adapter type
+
+### Optics
+
+**Optical element**:
+An object that does something to light, which a ray or an image names in its `optics`: a lens, a mirror, or a medium.
+_Avoid_: optic (alone, in prose), optical component, surface (a surface is a solid)
+
+**Lens**:
+An optical element that is a thin lens across its object's own y axis, `height` tall, its optical axis along its object's own x: converging for a positive focal length, drawn biconvex, diverging for a negative one, drawn biconcave. A ray bends at its middle plane toward the image of its source, by the thin lens equation, 1/do + 1/di = 1/f.
+_Avoid_: glass (a medium is glass), refractor
+
+**Mirror**:
+An optical element that reflects on its object's own -x side, `height` tall: flat with no focal length, concave for a positive one, convex for a negative one, curved on the circle of twice its focal length's radius through its object's position. A ray reflects where it meets the drawn mirror, toward the image of its source by the mirror equation, and stops at its back.
+_Avoid_: reflector, mirror plane (a mirror plane is a mirror image's), mirror image (a mirror image is a molecule's)
+
+**Focal length**:
+A lens's or a mirror's `focal_length`, in world units: how far its focal points lie from it, positive when it converges light and negative when it spreads it.
+_Avoid_: power, focus (alone)
+
+**Focal point**:
+A point on a lens's or a curved mirror's optical axis a focal length away, through which rays along the axis leave, or from which they seem to leave. A lens has one on each side, ticked on its drawing, and a curved mirror one in front, ticked with its center of curvature.
+_Avoid_: focus (alone), F (in a name)
+
+**Optical axis**:
+The line through a lens or a curved mirror, along its object's own x axis, that its focal points and center of curvature lie on.
+_Avoid_: principal axis, axis (alone; axes are a plot's)
+
+**Medium**:
+An optical element that is glass, water or another clear region: a polygon or circle with a `refractive_index`. A ray refracts at each of its edges by Snell's law, and reflects whole inside it past the critical angle. Air outside every medium has index 1.
+_Avoid_: material (a material is how a surface looks), block (for glass; a block is a body), glass (alone, for the term)
+
+**Refractive index**:
+How much a medium slows light, from 1 to 5, its `refractive_index`: 1.33 for water, 1.5 for glass. A ray crossing from index n1 to n2 keeps n1 sin θ1 = n2 sin θ2, and from the denser side past the critical angle, whose sine is n2/n1, it reflects whole.
+_Avoid_: index (alone, which a copy has), n (in a name), IOR
+
+**Ray**:
+An object that draws a ray of light from its `from` through the optical elements of its `optics`, traced again at every scene time: bent at each lens, reflected off each mirror and refracted at each edge of a medium it meets, in the order it meets them, and running `length` past its last bend. It is placed by its light, with no position, rotation or scale of its own. A create draws it from its source along its path.
+_Avoid_: beam, light (alone), line (a line is an object), trace (a back trace is a ray's dashed part)
+
+**Principal ray**:
+A ray a ray diagram draws from an object's tip that a lens or curved mirror sends somewhere easy to draw, as `principal` names it: `parallel` along the optical axis, `focal` through the focal point on the object's side, or `center` through a lens's middle or toward a mirror's center of curvature.
+_Avoid_: chief ray (one kind of principal ray), construction ray
+
+**Image**:
+The point where the rays from a point meet after a lens or mirror, real when they meet there and virtual when they only seem to come from it, and the object that draws the image of an arrow through the lenses and mirrors of its `optics`: an arrow between the images of its `from` and `to`, solid when real and dashed when virtual, upside down when inverted, hidden while the image lies at infinity. Its magnification is its height over the arrow's.
+_Avoid_: picture, frame (a frame is an image of the scene), reflection (alone)
+
+**Back trace**:
+The dashed part a ray with `back_trace` draws, from where it leaves its last lens or mirror back to the virtual image of its source, which its light only seems to come from.
+_Avoid_: extension, virtual ray, dotted line
 
 ### Plots
 

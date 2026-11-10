@@ -169,6 +169,9 @@ pub(super) enum ShapeFile {
         stroke: Option<Stroke>,
         /// The circle's inside. With none, the circle has no fill.
         fill: Option<Fill>,
+        /// The refractive index of the glass or water the circle stands for, from 1 to 5, so a
+        /// `ray` that names it refracts at its edge, as at a drop of water. The default is none.
+        refractive_index: Option<RefractiveIndex>,
     },
     /// A filled disc about the object's position that marks a point: the tip of a vector, the
     /// map origin of a linear map, a point on a curve. Its own scale and rotation reshape it as a
@@ -411,6 +414,116 @@ pub(super) enum ShapeFile {
         #[serde(default)]
         stroke: Stroke,
     },
+    /// A thin lens across the object's own y axis, its optical axis along the object's own x:
+    /// converging for a positive `focal_length`, drawn biconvex, or diverging for a negative one,
+    /// drawn biconcave, with a tick across the axis at each focal point. A `ray` or an `image`
+    /// that names it in `optics` bends at its middle by the thin lens equation, 1/do + 1/di =
+    /// 1/f, so rays from a point meet, or seem to meet, at its image. Move it, and every ray
+    /// and image through it follows. Its `scale` draws it bigger but leaves its focal length;
+    /// keep it at 1. Needs sci_anim 0.26.0 or later.
+    Lens {
+        /// The focal length in world units, from -1000 to 1000 and not 0: positive for a
+        /// converging lens, negative for a diverging one.
+        focal_length: FocalLength,
+        /// How tall the lens is along its own y, in world units, more than 0. A ray that passes
+        /// above or below it is not bent. The default is 3.
+        #[serde(default = "ShapeFile::default_optic_height")]
+        height: Positive,
+        /// The lens's outline and the focal points' ticks. The default is white and 0.04 wide.
+        #[serde(default)]
+        stroke: Stroke,
+        /// The lens's inside, such as a glass blue at opacity 0.3. With none, it has no fill.
+        fill: Option<Fill>,
+        /// Whether to draw a tick across the axis at each focal point. The default is `true`.
+        #[serde(default = "ShapeFile::yes")]
+        focal_points: bool,
+    },
+    /// A mirror across the object's own y axis, its reflecting side toward the object's own -x,
+    /// with short strokes along its back: flat with no `focal_length`, concave for a positive
+    /// one and convex for a negative one, an arc of the circle of twice its focal length's
+    /// radius through the object's position. A `ray` that names it reflects off it, and an
+    /// `image` names it to draw the image it makes, by the mirror equation 1/do + 1/di = 1/f;
+    /// a ray that meets its back stops there. Needs sci_anim 0.26.0 or later.
+    Mirror {
+        /// The focal length in world units, from -1000 to 1000 and not 0: positive for a
+        /// concave mirror, negative for a convex one. The default is none: a flat mirror.
+        focal_length: Option<FocalLength>,
+        /// How tall the mirror is along its own y, in world units, more than 0. The default is 3.
+        #[serde(default = "ShapeFile::default_optic_height")]
+        height: Positive,
+        /// The mirror's color and width. The default is white and 0.04 wide.
+        #[serde(default)]
+        stroke: Stroke,
+        /// Whether a curved mirror draws a tick across its axis at its focal point and its
+        /// center of curvature. The default is `true`.
+        #[serde(default = "ShapeFile::yes")]
+        focal_points: bool,
+    },
+    /// A ray of light from `from`, computed at every scene time through the lenses, mirrors and
+    /// media of `optics`: it bends at a lens's middle toward its source's image, reflects off a
+    /// mirror, refracts by Snell's law at each edge of a polygon or circle with a
+    /// `refractive_index`, and reflects whole inside one past the critical angle. It ends
+    /// `length` past the last point it bends at. Aim it with `principal`, `through` or `angle`.
+    /// It is placed by its light: it has no `position`, `rotation` or `scale` of its own, and
+    /// is hidden while an object its ends sit on is. A `create` draws it from its source along
+    /// its path, so principal rays drawn one after another build a ray diagram. `inspect`
+    /// reports its `points`, and the `image` its source has at the last lens or mirror.
+    /// Needs sci_anim 0.26.0 or later.
+    Ray {
+        /// Where the ray starts: a point `[x, y]` in the world, or an end on an object, as
+        /// `{ "object": "candle", "offset": [0, 1.5, 0] }` for the tip of an arrow standing on
+        /// `candle`.
+        from: EndFile,
+        /// A principal ray of the first lens or curved mirror in `optics`: `parallel` along its
+        /// axis, `focal` through, or toward, its focal point on the source's side, or `center`
+        /// through a lens's middle or toward a mirror's center of curvature. Give one of
+        /// `principal`, `through` and `angle`.
+        principal: Option<PrincipalFile>,
+        /// A point the ray passes through on its way out, written as `from` is.
+        through: Option<EndFile>,
+        /// The ray's direction from `from`, in degrees counterclockwise from +x.
+        angle: Option<f64>,
+        /// The object ids of the lenses, mirrors and media the ray may meet, each a `lens`, a
+        /// `mirror`, or a `polygon` or `circle` with a `refractive_index`. It meets whichever
+        /// lies first along its way, as often as it reaches one, up to 64 times.
+        optics: Vec<String>,
+        /// How far the ray runs past the last point it bends at, in world units, more than 0.
+        /// The default is 10.
+        #[serde(default = "ShapeFile::default_ray_length")]
+        length: Positive,
+        /// `true` to draw a dashed line from where the ray leaves its last lens or mirror back
+        /// to the virtual image its source has there, as a ray diagram does for a diverging lens,
+        /// a convex mirror or an object inside a focal length. Nothing is drawn for a real image.
+        /// The default is `false`.
+        #[serde(default)]
+        back_trace: bool,
+        /// The ray's color and width. The default is white and 0.04 wide.
+        #[serde(default)]
+        stroke: Stroke,
+    },
+    /// The image of the arrow from `from` to `to` through the lenses and mirrors of `optics`, in
+    /// the order the light meets them, computed at every scene time: an arrow from the image of
+    /// `from` to the image of `to`, upside down when inverted, with a solid shaft when real and
+    /// a dashed one when virtual. Move the object or a lens and it moves, grows and turns over
+    /// as the optics say. It draws nothing while the image lies at infinity, as when the
+    /// object stands at a focal point. It is placed by its light, as a `ray` is. `inspect`
+    /// reports its `magnification` and whether it is `real`. Needs sci_anim 0.26.0 or later.
+    Image {
+        /// The object's foot, often on the optical axis, written as a ray's `from` is.
+        from: EndFile,
+        /// The object's tip, written as `from` is.
+        to: EndFile,
+        /// The object ids of the lenses and mirrors that form the image, in the order the light
+        /// meets them.
+        #[schemars(length(min = 1))]
+        optics: Vec<String>,
+        /// The length of the image's tip in world units, more than 0. The default is 0.25.
+        #[serde(default = "ShapeFile::default_image_tip")]
+        tip_length: Positive,
+        /// The image's color and width. The default is white and 0.04 wide.
+        #[serde(default)]
+        stroke: Stroke,
+    },
     /// A number typeset as math, with `unit` after it, such as a speed that counts as a ball
     /// falls. Its `value` changes as a track does: a `count` eases it to a `to`, a follow with
     /// `"sets": "value"` sets it from a law with one expression, `value`, and a simulation sets
@@ -447,6 +560,11 @@ pub(super) enum ShapeFile {
         stroke: Option<Stroke>,
         /// The polygon's inside. With none, it has no fill.
         fill: Option<Fill>,
+        /// The refractive index of the glass or water the polygon stands for, from 1 to 5, so a
+        /// `ray` that names it refracts at each edge by Snell's law: 1.33 for water, 1.5 for
+        /// glass. A plate of glass, a triangle of glass and a flat interface are polygons. The
+        /// default is none.
+        refractive_index: Option<RefractiveIndex>,
     },
     /// Part of a circle about the object's position, from `start_angle` degrees counterclockwise
     /// from +x, sweeping `sweep` degrees, counterclockwise when positive. A fill fills the
@@ -1296,4 +1414,13 @@ pub(super) enum CellFile {
 pub(super) struct MathCellFile {
     /// LaTeX math, set as a `math` object's `tex` is, such as `\\frac{1}{2}`.
     pub(super) tex: String,
+}
+
+/// A principal ray of a lens or a curved mirror.
+#[derive(Clone, Copy, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub(super) enum PrincipalFile {
+    Parallel,
+    Focal,
+    Center,
 }

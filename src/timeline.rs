@@ -22,6 +22,7 @@ use crate::follow::{self, Carry, Follow, Followed, Law, LawTimeStart, Outright};
 use crate::group::Glow;
 use crate::member::{Member, OwnColors};
 use crate::morph::{MorphEnd, MorphPlan};
+use crate::path::Path;
 use crate::pattern;
 use crate::plane_map::{LinearMap, PLANE_MAP_BOUND, PlaneMap};
 use crate::reaction::{Blend, CarriedGlow, GroupRef, Reaction, Side};
@@ -919,6 +920,13 @@ impl Timeline {
                     message,
                 ))
             }
+            PlacedBy::Light(_) => Err(SceneError::new(
+                path.clone(),
+                SceneErrorCode::PlacedByLight,
+                format!(
+                    "`{object_id}` is traced through its optics, so move, follow or carry its source or the lenses and mirrors it passes instead"
+                ),
+            )),
             PlacedBy::Attachment(attachment) => {
                 let to = attachment
                     .group

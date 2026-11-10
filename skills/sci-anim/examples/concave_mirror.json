@@ -1,0 +1,26 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A concave mirror", "size": 0.5, "position": [0, 3.5, 0] },
+    "axis": { "type": "line", "from": [-7, 0], "to": [7, 0], "stroke": { "color": "#666666", "width": 0.02 } },
+    "mirror": { "type": "mirror", "focal_length": 2, "height": 4.6, "position": [3, 0, 0], "stroke": { "color": "#ece6e2", "width": 0.05 } },
+    "f_label": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-2, -0.4] } },
+    "c_label": { "type": "math", "tex": "C", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-4, -0.4] } },
+    "foot": { "type": "dot", "radius": 0.05, "position": [-4, 0, 0], "fill": { "color": "#fc6255" } },
+    "candle": { "type": "arrow", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 1, 0] }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.05 } },
+    "parallel": { "type": "ray", "from": { "object": "foot", "offset": [0, 1, 0] }, "principal": "parallel", "optics": ["mirror"], "length": 7, "back_trace": true, "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "focal": { "type": "ray", "from": { "object": "foot", "offset": [0, 1, 0] }, "principal": "focal", "optics": ["mirror"], "length": 7, "back_trace": true, "stroke": { "color": "#ff862f", "width": 0.03 } },
+    "center": { "type": "ray", "from": { "object": "foot", "offset": [0, 1, 0] }, "principal": "center", "optics": ["mirror"], "length": 7, "back_trace": true, "stroke": { "color": "#83c167", "width": 0.03 } },
+    "image": { "type": "image", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 1, 0] }, "optics": ["mirror"], "tip_length": 0.2, "stroke": { "color": "#fc6255", "width": 0.05 }, "opacity": 0 },
+    "law": { "type": "math", "tex": "\\frac{1}{d_o} + \\frac{1}{d_i} = \\frac{2}{R}", "size": 0.45, "position": [-4.8, -2.5, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "create", "object": "axis" }, { "type": "create", "object": "mirror" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "f_label" }, { "type": "write", "object": "c_label" }, { "type": "create", "object": "candle" }, { "type": "write", "object": "law" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "parallel" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "focal" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "center" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "image", "to": 1 }] },
+    { "type": "play", "duration": 5, "animations": [{ "type": "move", "object": "foot", "to": [1.8, 0, 0] }] },
+    { "type": "wait", "duration": 1 }
+  ]
+}
