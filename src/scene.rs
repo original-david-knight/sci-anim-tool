@@ -1077,14 +1077,16 @@ pub enum Align {
     Right,
 }
 
-/// The typeface a text object is set in: Libertinus Sans or Libertinus Serif. Math is always set
-/// in New Computer Modern Math. No variant doc comments, for the reason `FillRule` gives.
+/// The typeface a text object is set in: Libertinus Sans, Libertinus Serif, or JetBrains Mono, whose
+/// characters all take the same width. Math is always set in New Computer Modern Math. No variant
+/// doc comments, for the reason `FillRule` gives.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum Font {
     #[default]
     Sans,
     Serif,
+    Mono,
 }
 
 /// The plane an object's `mirror` reflects it through, named by the axis it crosses at right

@@ -93,7 +93,7 @@ A flat shape that is a string of plain characters typeset in its font, line by l
 _Avoid_: caption (a caption is a text or math object with an attachment), textbox, typography
 
 **Font**:
-The typeface a text object is set in: `sans`, the default, is Libertinus Sans, and `serif` is Libertinus Serif. Math is always set in New Computer Modern Math. Every font is bundled into the tool, and none is read from the system.
+The typeface a text object is set in: `sans`, the default, is Libertinus Sans, `serif` is Libertinus Serif, and `mono` is JetBrains Mono, whose characters are all one width. Math is always set in New Computer Modern Math. Every font is bundled into the tool, and none is read from the system.
 _Avoid_: typeface, font family, font face
 
 **Math**:

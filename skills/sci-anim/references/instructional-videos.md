@@ -32,7 +32,7 @@ If the user gave no length, aim for 45 to 120 seconds.
 - A heading is the question the video answers, or the name of the idea on screen now. It is never the name of a tool feature. Change it when the idea changes.
 - Never set text smaller than `size` 0.3. At 1080p, 0.3 is about 40 pixels tall. `check-layout` lists text too small or too faint to read. A text dimmed and left faded is judged at its faded opacity: white on `#101824` reads down to about opacity 0.25, and a dimmer color needs more.
 - A sans text is about 0.45 × `size` × characters wide. A 50-character sentence at `size` 0.4 is about 9 world units wide, which fits. Math has no such rule: a fraction or a long equation is far wider than its characters suggest. Read its width from `bounding_box` in `inspect` before you place things beside it.
-- Write text with a `write`. Use `serif` only to set a quotation or a book title apart.
+- Write text with a `write`. Use `serif` only to set a quotation or a book title apart, and `mono` (sci_anim 0.28.0 or later) for code and terminal output.
 
 ## Pacing
 

@@ -7,6 +7,7 @@ Read `instructional-videos.md` first. `../examples/derivative.json` is a complet
 - A `text` object is plain characters. A `math` object is LaTeX math in `tex`. Use `math` for anything with a symbol, an exponent or a fraction, and `\text{...}` for words inside it.
 - JSON doubles every backslash: `"tex": "\\frac{a}{b}"`.
 - Plain text draws `–`, `→`, `×`, `·`, `≈`, `°`, `²`, `₂`, Greek and Cyrillic, so "CO₂ has two C=O bonds" can be a `text`. `validate` reports a character the fonts lack.
+- `"font": "mono"` (sci_anim 0.28.0 or later) sets a text in JetBrains Mono: every character, a space too, is 0.6 × `size` wide, so a column of code or of `ls -l` output lines up and a line of n characters is 0.6 × `size` × n wide. It draws `!=` and `->` as their two signs, and covers the box drawing characters `tree` prints (`├──`, `│`) and `✓`, `✗`, `❯`, `●`. It takes no glyph from another font, so `validate` reports any character it lacks.
 - `\frac`, `\sqrt`, `\sum`, `\int`, `\vec`, `\hat`, `\mathbb`, `\text`, `\mathrm`, `pmatrix`, `cases` and `aligned` all work. `validate` reports any command that does not, at its `tex`.
 - To color one term, wrap it in `\textcolor`: `"tex": "y = \\textcolor{#58c4dd}{x}^2"`. `{\color{#58c4dd} x + y}` colors the rest of its group. Every other glyph takes the object's `color`.
 - A color in `tex` is `#rrggbb` or a LaTeX name such as `red` or `blue`. Use the hex colors of `instructional-videos.md`, so x in the equation matches x on the plot. `validate` reports any other color, such as `[HTML]{58C4DD}`, at its `tex`.
