@@ -812,12 +812,15 @@ fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
                 });
             }
             if animation["type"] == "simulate" {
-                let variables: Vec<String> = animation
-                    .get("variables")
-                    .or_else(|| animation.get("bodies"))
-                    .and_then(Value::as_object)
-                    .map(|variables| variables.keys().cloned().collect())
-                    .unwrap_or_default();
+                let variables: Vec<String> = match animation.get("circuit") {
+                    Some(circuit) => vec![format!("circuit {}", as_written(circuit))],
+                    None => animation
+                        .get("variables")
+                        .or_else(|| animation.get("bodies"))
+                        .and_then(Value::as_object)
+                        .map(|variables| variables.keys().cloned().collect())
+                        .unwrap_or_default(),
+                };
                 spans.push(FrameSpan {
                     wording: format!(
                         "simulation {number} (of {}) of {wording}",

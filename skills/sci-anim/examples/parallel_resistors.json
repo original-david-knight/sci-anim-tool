@@ -1,0 +1,40 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Resistors in parallel share one voltage", "size": 0.5, "position": [0, 3.5, 0] },
+    "circuit": { "type": "circuit", "position": [-5.9, -1.9, 0], "spacing": 1.15, "current_dots": { "speed": 0.4 },
+      "components": [
+        { "id": "B", "kind": "battery", "emf": 12, "from": [0, 0], "to": [0, 3] },
+        { "kind": "wire", "from": [0, 3], "to": [2, 3] },
+        { "id": "R1", "kind": "resistor", "resistance": 3, "from": [2, 3], "to": [2, 0], "label": "R_1 = 3\\,\\Omega" },
+        { "kind": "wire", "from": [2, 3], "to": [4, 3] },
+        { "id": "R2", "kind": "resistor", "resistance": 6, "from": [4, 3], "to": [4, 0], "label": "R_2 = 6\\,\\Omega" },
+        { "kind": "wire", "from": [4, 0], "to": [2, 0] },
+        { "kind": "wire", "from": [2, 0], "to": [0, 0] }
+      ] },
+    "sum": { "type": "math", "tex": "\\frac{1}{R} = \\frac{1}{R_1} + \\frac{1}{R_2}, \\quad R = 2\\,\\Omega", "size": 0.48, "position": [3.9, 1.6, 0], "opacity": 0 },
+    "i1_symbol": { "type": "math", "tex": "I_1 =", "size": 0.45, "align": "right", "position": [3.4, 0.1, 0], "opacity": 0 },
+    "i1": { "type": "readout", "value": 4, "decimals": 2, "unit": "\\text{ A}", "size": 0.45, "position": [4.0, 0.1, 0], "opacity": 0 },
+    "i2_symbol": { "type": "math", "tex": "I_2 =", "size": 0.45, "align": "right", "position": [3.4, -0.9, 0], "opacity": 0 },
+    "i2": { "type": "readout", "value": 2, "decimals": 2, "unit": "\\text{ A}", "size": 0.45, "position": [4.0, -0.9, 0], "opacity": 0 },
+    "total_symbol": { "type": "math", "tex": "I_1 + I_2 =", "size": 0.45, "align": "right", "position": [3.4, -1.9, 0], "opacity": 0 },
+    "total": { "type": "readout", "value": 6, "decimals": 2, "unit": "\\text{ A}", "size": 0.45, "position": [4.0, -1.9, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "circuit" }] },
+    { "type": "play", "duration": 8, "animations": [
+      { "type": "simulate", "circuit": "circuit", "sets": [
+        { "object": "i1", "value": "circuit.R1.current" },
+        { "object": "i2", "value": "circuit.R2.current" },
+        { "object": "total", "value": "circuit.B.current" }
+      ] },
+      { "type": "fade", "object": "i1_symbol", "to": 1, "end": 0.5 },
+      { "type": "fade", "object": "i1", "to": 1, "end": 0.5 },
+      { "type": "fade", "object": "i2_symbol", "to": 1, "start": 1, "end": 1.5 },
+      { "type": "fade", "object": "i2", "to": 1, "start": 1, "end": 1.5 },
+      { "type": "fade", "object": "total_symbol", "to": 1, "start": 2.5, "end": 3 },
+      { "type": "fade", "object": "total", "to": 1, "start": 2.5, "end": 3 },
+      { "type": "fade", "object": "sum", "to": 1, "start": 4, "end": 5 }
+    ] }
+  ]
+}

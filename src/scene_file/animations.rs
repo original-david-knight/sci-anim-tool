@@ -359,6 +359,20 @@ pub(super) enum ChangeFile {
         /// one moves. Give `bodies` or `variables`, not both.
         #[schemars(extend("minProperties" = 1))]
         bodies: Option<BTreeMap<String, BodyFile>>,
+        /// The object id of a `circuit` to solve over the span, instead of `variables` or `bodies`:
+        /// every component's current, voltage, power, charge and energy at every step, its
+        /// capacitors charging and its inductors' currents building, from where its last
+        /// simulation left it. Each component's quantities are variables the `sets` read as
+        /// `<circuit id>.<component id>.<quantity>`: `current`, `voltage`, `power` and `charge`,
+        /// `energy` of a battery, resistor, bulb, capacitor or inductor, and `closed` of a
+        /// switch, so `circuit.C.voltage` is a readout of a capacitor charging. `sets` may be
+        /// empty, since the circuit's dots of current and bulbs move with it. Needs sci_anim
+        /// 0.27.0 or later.
+        circuit: Option<String>,
+        /// Switches of the `circuit` to close or open, each `at` a time in the span. Only with
+        /// `circuit`.
+        #[serde(default)]
+        switches: Vec<SwitchingFile>,
         /// How fast bodies fall, straight down the world's -y, in world units a second squared,
         /// from 0 to 1000. The default is 9.8, Earth's in meters; 0 for none, as for carts on a
         /// level track. Only with `bodies`.
@@ -466,6 +480,18 @@ pub(super) struct BodyFile {
     /// with this times how hard they press, and bodies stay put while that holds them. A contact
     /// takes the larger of its two bodies'. The default is 0, so the other body decides.
     pub(super) friction: Option<Friction>,
+}
+
+/// A switch of a circuit set closed or open at a time in a simulation's span.
+#[derive(Deserialize, JsonSchema)]
+pub(super) struct SwitchingFile {
+    /// The id of a `switch` component of the simulation's circuit.
+    pub(super) switch: String,
+    /// `true` to close it, `false` to open it.
+    pub(super) closed: bool,
+    /// When, in seconds from the span's start, from 0 to the span's length. The default is 0.
+    #[serde(default = "FiniteNumber::zero")]
+    pub(super) at: FiniteNumber,
 }
 
 /// One value a simulation sets: an object's `position` or `rotation` from three expressions, or a
@@ -613,6 +639,8 @@ impl AnimationFile {
                     variables,
                     rates,
                     bodies,
+                    circuit,
+                    switches,
                     gravity,
                     sets,
                     from,
@@ -622,6 +650,8 @@ impl AnimationFile {
                         variables,
                         rates,
                         bodies,
+                        circuit,
+                        switches,
                         gravity,
                         sets,
                         from,
@@ -723,6 +753,8 @@ pub(super) struct SimulateFields {
     pub(super) variables: Option<BTreeMap<String, FiniteNumber>>,
     pub(super) rates: Option<BTreeMap<String, String>>,
     pub(super) bodies: Option<BTreeMap<String, BodyFile>>,
+    pub(super) circuit: Option<String>,
+    pub(super) switches: Vec<SwitchingFile>,
     pub(super) gravity: Option<Gravity>,
     pub(super) sets: Vec<SetFile>,
     pub(super) from: Option<String>,
@@ -748,6 +780,8 @@ fn read_simulate(
         variables,
         rates,
         bodies,
+        circuit,
+        switches,
         gravity,
         sets,
         from,
@@ -756,38 +790,56 @@ fn read_simulate(
     if easing_curve {
         errors.push(SceneError::new(path.field("easing_curve"), SceneErrorCode::Invalid, "a simulation sets its values from its variables at every scene time, so it has no easing curve; leave out `easing_curve`"));
     }
-    let read: Option<ReadMotion> = match (variables, rates, bodies) {
-        (None, None, Some(bodies)) => read_bodies(path, bodies, gravity, start, &mut errors),
-        (variables, _, Some(_)) => {
-            let field = if variables.is_some() {
-                "variables"
-            } else {
-                "rates"
-            };
-            errors.push(SceneError::new(path.field(field), SceneErrorCode::Invalid, "a simulation moves its `bodies` or integrates its `variables` by their `rates`, not both; write a second simulation for the other"));
+    if circuit.is_none() && !switches.is_empty() {
+        errors.push(SceneError::new(path.field("switches"), SceneErrorCode::Invalid, "`switches` close and open a circuit's switches, and this simulation solves no `circuit`; give `circuit`, or leave `switches` out"));
+    }
+    let mixed = [
+        ("variables", variables.is_some()),
+        ("rates", rates.is_some()),
+        ("bodies", bodies.is_some()),
+        ("gravity", gravity.is_some()),
+    ]
+    .into_iter()
+    .find_map(|(field, written)| written.then_some(field));
+    let read: Option<ReadMotion> = match (circuit, mixed) {
+        (Some(_), Some(field)) => {
+            errors.push(SceneError::new(path.field(field), SceneErrorCode::Invalid, format!("a simulation of a circuit solves the circuit alone; leave out `{field}`, or write a second simulation for it")));
             None
         }
-        (None, _, None) => {
-            errors.push(SceneError::new(
-                path.field("variables"),
-                SceneErrorCode::MissingField,
-                "a simulation needs `variables` and their `rates`, or `bodies` to move",
-            ));
-            None
-        }
-        (Some(variables), rates, None) => {
-            if gravity.is_some() {
-                errors.push(SceneError::new(path.field("gravity"), SceneErrorCode::Invalid, "`gravity` pulls on bodies, and this simulation has none; write the pull in its `rates`, as `-9.8` in the rate of a vertical speed"));
+        (Some(circuit), None) => read_circuit_motion(path, &circuit, switches, start, &mut errors),
+        (None, _) => match (variables, rates, bodies) {
+            (None, None, Some(bodies)) => read_bodies(path, bodies, gravity, start, &mut errors),
+            (variables, _, Some(_)) => {
+                let field = if variables.is_some() {
+                    "variables"
+                } else {
+                    "rates"
+                };
+                errors.push(SceneError::new(path.field(field), SceneErrorCode::Invalid, "a simulation moves its `bodies` or integrates its `variables` by their `rates`, not both; write a second simulation for the other"));
+                None
             }
-            if sets.is_empty() {
+            (None, _, None) => {
                 errors.push(SceneError::new(
+                    path.field("variables"),
+                    SceneErrorCode::MissingField,
+                    "a simulation needs `variables` and their `rates`, or `bodies` to move",
+                ));
+                None
+            }
+            (Some(variables), rates, None) => {
+                if gravity.is_some() {
+                    errors.push(SceneError::new(path.field("gravity"), SceneErrorCode::Invalid, "`gravity` pulls on bodies, and this simulation has none; write the pull in its `rates`, as `-9.8` in the rate of a vertical speed"));
+                }
+                if sets.is_empty() {
+                    errors.push(SceneError::new(
                     path.field("sets"),
                     SceneErrorCode::MissingField,
                     "a simulation of variables sets at least one value from them, so give `sets`",
                 ));
+                }
+                read_rates(path, variables, rates.unwrap_or_default(), &mut errors)
             }
-            read_rates(path, variables, rates.unwrap_or_default(), &mut errors)
-        }
+        },
     };
     let names: Vec<&str> = read
         .as_ref()
@@ -1510,6 +1562,7 @@ fn read_carry(
             Shape::BarPlot(_) => "a bar plot, whose bars are many shapes",
             Shape::Table(_) => "a table, whose glyphs and rulings are many curves",
             Shape::SkeletalFormula(_) => "a skeletal formula, whose bonds and atom symbols are many curves",
+            Shape::Circuit(_) => "a circuit, whose symbols and wires are many curves",
             Shape::NumberLine(_) => "a number line",
             Shape::Axes3d(_) => "3D axes",
             Shape::Sphere { .. } => "a sphere",
@@ -1678,6 +1731,7 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                     stroke: Some(_), ..
                 }
                 | Shape::Axes(_)
+                | Shape::Circuit(_)
                 | Shape::BarPlot(_)
                 | Shape::NumberLine(_)
                 | Shape::Axes3d(_)
@@ -1973,6 +2027,7 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                 Shape::Molecule { .. }
                 | Shape::SkeletalFormula(_)
                 | Shape::Axes(_)
+                | Shape::Circuit(_)
                 | Shape::NumberLine(_)
                 | Shape::Axes3d(_) => {
                     return refuse(
@@ -2000,4 +2055,83 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
         ChangeFile::CameraZoom { to } => Change::CameraZoom { to },
     };
     Ok(change)
+}
+
+/// A simulation of the circuit `circuit`, or `None` with each fault pushed to `errors`: an
+/// unknown object, one that is not a circuit, and a switching that names no switch of it or
+/// falls before the span.
+fn read_circuit_motion(
+    path: &JsonPath,
+    circuit: &str,
+    switches: Vec<SwitchingFile>,
+    start: &Stage,
+    errors: &mut Vec<SceneError>,
+) -> Option<ReadMotion> {
+    let Some((object_id, object)) = start.objects.get_key_value(circuit) else {
+        errors.push(unknown_object(path.field("circuit"), circuit, start));
+        return None;
+    };
+    let Shape::Circuit(drawn) = &object.shape else {
+        errors.push(SceneError::new(
+            path.field("circuit"),
+            SceneErrorCode::Invalid,
+            format!("`{circuit}` is not a circuit; name an object of type `circuit`"),
+        ));
+        return None;
+    };
+    let network = Arc::clone(&drawn.network);
+    let switch_ids: Vec<String> = network
+        .components
+        .iter()
+        .filter(|c| c.kind == circuit::Kind::Switch)
+        .filter_map(|c| c.id.as_ref().map(|id| format!("`{id}`")))
+        .collect();
+    let mut switchings = Vec::new();
+    for (i, switching) in switches.into_iter().enumerate() {
+        let at = path.field("switches").index(i);
+        let found = network
+            .components
+            .iter()
+            .position(|c| c.id.as_deref() == Some(switching.switch.as_str()));
+        match found {
+            Some(k) if network.components[k].kind == circuit::Kind::Switch => {
+                if switching.at.get() < 0.0 {
+                    errors.push(SceneError::new(
+                        at.field("at"),
+                        SceneErrorCode::OutOfRange,
+                        "a switch is set a time from the span's start, 0 or more",
+                    ));
+                }
+                switchings.push(circuit::Switching {
+                    component: k,
+                    closed: switching.closed,
+                    at: switching.at.get(),
+                });
+            }
+            _ => {
+                let known = if switch_ids.is_empty() {
+                    "it has none".to_string()
+                } else {
+                    format!("its switches are {}", switch_ids.join(", "))
+                };
+                errors.push(SceneError::new(
+                    at.field("switch"),
+                    SceneErrorCode::Invalid,
+                    format!(
+                        "the circuit `{circuit}` has no switch `{}`; {known}",
+                        switching.switch
+                    ),
+                ));
+            }
+        }
+    }
+    switchings.sort_by(|a, b| a.at.total_cmp(&b.at));
+    let motion = circuit::CircuitMotion {
+        object: object_id.clone(),
+        quantities: network.quantities(),
+        network,
+        switchings,
+    };
+    let names = motion.names(circuit);
+    Some((names, Motion::Circuit(motion), Vec::new()))
 }

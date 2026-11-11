@@ -2,6 +2,7 @@
 //! carry, and a simulation's sets.
 
 use super::*;
+use crate::circuit::{self, CircuitMotion};
 
 impl Timeline {
     /// Samples each surface a follow runs at the same points at every scene time: every point it
@@ -124,7 +125,21 @@ impl Timeline {
             Ok(placed) => placed,
             Err(errors) => return errors,
         };
-        let simulation = match Simulation::integrate(simulate, span, law_start, self.fps, &placed) {
+        let circuit_state = match &simulate.motion {
+            Motion::Circuit(motion) => match self.circuit_start(motion, span, path) {
+                Ok(state) => state,
+                Err(errors) => return errors,
+            },
+            _ => Vec::new(),
+        };
+        let simulation = match Simulation::integrate(
+            simulate,
+            span,
+            law_start,
+            self.fps,
+            &placed,
+            &circuit_state,
+        ) {
             Ok(simulation) => Arc::new(simulation),
             Err(NoValue {
                 variable,
@@ -144,6 +159,9 @@ impl Timeline {
                 )];
             }
         };
+        if let Motion::Circuit(motion) = &simulate.motion {
+            self.push_circuit_run(motion, &simulation, span, path);
+        }
         self.collisions.extend(
             simulation
                 .collisions
@@ -654,5 +672,161 @@ fn shape_faults(
             );
             errors.push(SceneError::new(at, code, message));
         }
+    }
+}
+
+impl Timeline {
+    /// Where a simulation of a circuit starts: where the circuit's last simulation left it, or as
+    /// declared. Its errors: `conflicting_animations` while another simulation of the circuit
+    /// runs; `out_of_range` at a switching after the span; and `invalid` at `switches` for a
+    /// switching that makes a loop with no resistance, or a time constant shorter than the
+    /// simulation's step can follow.
+    fn circuit_start(
+        &self,
+        motion: &CircuitMotion,
+        span: (f64, f64),
+        path: &JsonPath,
+    ) -> Result<Vec<f64>, Vec<SceneError>> {
+        let last = self
+            .circuits
+            .get(&motion.object)
+            .and_then(|circuit| circuit.runs.last());
+        if let Some(last) = last
+            && last.span().1 > span.0 + 1e-9
+        {
+            let message = format!(
+                "another simulation of the circuit `{}` runs until scene time {}, and a circuit is solved by one simulation at a time; start this one after it",
+                motion.object,
+                follow::short(last.span().1)
+            );
+            return Err(vec![SceneError::new(
+                path.field("circuit"),
+                SceneErrorCode::ConflictingAnimations,
+                message,
+            )]);
+        }
+        let network = &motion.network;
+        let state = match last {
+            Some(last) => motion.state(&last.variables_at(last.span().1)).to_vec(),
+            None => network.rest(),
+        };
+        let length = span.1 - span.0;
+        let mut errors = Vec::new();
+        let step = 1.0 / (self.fps * crate::simulate::STEPS_PER_FRAME);
+        let mut configuration = state.clone();
+        let check = |configuration: &[f64], when: &str, errors: &mut Vec<SceneError>| {
+            let closed: Vec<bool> = (0..network.components.len())
+                .map(|i| {
+                    network.components[i].kind == circuit::Kind::Switch
+                        && configuration[3 * i + 2] == 1.0
+                })
+                .collect();
+            if let Some((_, message)) = network.loop_fault(&closed) {
+                errors.push(SceneError::new(
+                    path.field("switches"),
+                    SceneErrorCode::Invalid,
+                    format!("{when}, {message}"),
+                ));
+            } else if let Some((i, tau)) = network.shortest_time_constant(configuration)
+                && tau < 4.0 * step
+            {
+                let message = format!(
+                    "{when}, {} has a time constant of {} s, and a simulation steps every {} s at this frame rate, too coarse to follow it; give it a larger value or more resistance, so its time constant is at least {} s",
+                    circuit::describe(&network.components[i], i),
+                    follow::short(tau),
+                    follow::short(step),
+                    follow::short(4.0 * step)
+                );
+                errors.push(SceneError::new(
+                    path.clone(),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                ));
+            }
+        };
+        check(&configuration, "when the simulation starts", &mut errors);
+        for (k, switching) in motion.switchings.iter().enumerate() {
+            if switching.at > length + 1e-9 {
+                let message = format!(
+                    "a switching at {} s falls after the span ends at {} s; set it within the span",
+                    follow::short(switching.at),
+                    follow::short(length)
+                );
+                errors.push(SceneError::new(
+                    path.field("switches"),
+                    SceneErrorCode::OutOfRange,
+                    message,
+                ));
+            }
+            configuration[3 * switching.component + 2] = f64::from(u8::from(switching.closed));
+            let id = network.components[switching.component]
+                .id
+                .as_deref()
+                .unwrap_or_default();
+            let verb = if switching.closed { "closes" } else { "opens" };
+            if motion.switchings[k + 1..]
+                .iter()
+                .all(|s| s.at != switching.at)
+            {
+                check(
+                    &configuration,
+                    &format!("when `{id}` {verb} at {} s", follow::short(switching.at)),
+                    &mut errors,
+                );
+            }
+        }
+        if errors.is_empty() {
+            Ok(state)
+        } else {
+            Err(errors)
+        }
+    }
+
+    /// Keeps a simulation of a circuit for the stages after it, with what it reports and the most
+    /// power its bulbs draw.
+    fn push_circuit_run(
+        &mut self,
+        motion: &CircuitMotion,
+        simulation: &Arc<Simulation>,
+        span: (f64, f64),
+        path: &JsonPath,
+    ) {
+        let bulb_powers: Vec<usize> = motion
+            .quantities
+            .iter()
+            .enumerate()
+            .filter(|(_, (i, q))| {
+                *q == circuit::Quantity::Power
+                    && matches!(
+                        motion.network.components[*i].kind,
+                        circuit::Kind::Bulb { .. }
+                    )
+            })
+            .map(|(k, _)| k)
+            .collect();
+        let most = simulation
+            .kept()
+            .flat_map(|values| bulb_powers.iter().map(move |&k| values[k]))
+            .fold(0.0, f64::max);
+        let named = |values: Vec<f64>| -> BTreeMap<String, f64> {
+            let names = &simulation.names();
+            motion
+                .quantities
+                .iter()
+                .enumerate()
+                .map(|(k, _)| (names[k].clone(), values[k]))
+                .collect()
+        };
+        self.circuit_reports.push(CircuitRunReport {
+            circuit: motion.object.clone(),
+            path: path.clone(),
+            start: span.0,
+            end: span.1,
+            at_start: named(simulation.variables_at(span.0)),
+            at_end: named(simulation.variables_at(span.1)),
+        });
+        let runs = self.circuits.entry(motion.object.clone()).or_default();
+        runs.full_power = runs.full_power.max(most);
+        runs.runs.push(Arc::clone(simulation));
     }
 }

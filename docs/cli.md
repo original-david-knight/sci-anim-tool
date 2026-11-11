@@ -72,7 +72,7 @@ sci_anim validate <SCENE_FILE>
 
 Checks the scene file against the schema and the rules the schema cannot state, such as an animation that names an object id the scene does not have. It lists the scene errors it finds, each at the JSON path of the bad field, and exits 1 when there is one.
 
-For a good file the report gives the scene's `duration` in seconds, each step's `path`, `start` and `end` in `steps`, and each chapter's `id`, `start` and `end` in `chapters` when the scene has chapters, and each collision of a simulation's bodies in `collisions`, with its `scene_time`, its two `bodies` and the simulation's `path`, when the scene has one:
+For a good file the report gives the scene's `duration` in seconds, each step's `path`, `start` and `end` in `steps`, and each chapter's `id`, `start` and `end` in `chapters` when the scene has chapters, and each collision of a simulation's bodies in `collisions`, with its `scene_time`, its two `bodies` and the simulation's `path`, when the scene has one, and each simulation of a circuit in `circuits`, with its `circuit`, `path`, `start` and `end`, and every quantity it names, as `circuit.R1.current`, `at_start` and `at_end` of its span:
 
 ```json
 {

@@ -24,7 +24,7 @@ _Avoid_: backdrop
 
 **Stage**:
 The camera and objects of a scene as they stand at one scene time. A scene declares its start stage, and the timeline changes it.
-_Avoid_: state, scene graph
+_Avoid_: state (a circuit state is a circuit's), scene graph
 
 **Agent**:
 The AI program that writes scene files and runs the tool. A person can do the same things, but the tool is designed for an agent first.
@@ -34,7 +34,7 @@ _Avoid_: client, bot, user (when the agent is meant)
 
 **Object**:
 A named thing in a scene that can be seen and animated, such as a circle, an equation, a set of axes or a molecule.
-_Avoid_: mobject, entity, node, item, element (an element is chemical)
+_Avoid_: mobject, entity, node (a node is a circuit's), item, element (an element is chemical)
 
 **Object id**:
 The name a scene gives an object. The timeline refers to objects by their object ids.
@@ -180,7 +180,7 @@ _Avoid_: CA trace (for one of another atom name), backbone (a polymer chain's at
 
 **Tube**:
 A solid made by carrying a circle of a radius along a space curve, always square to the curve, on a frame that turns no more than the curve does, so it never twists. A disc closes each end, and a tube along a closed space curve closes on itself with no ends. A spring is drawn as a tube along a helix. Its cross-section is a circle; a cartoon carries one that changes along the curve. On 3D axes its curve is in their data coordinates, and it is cut into pieces where the curve leaves their box, each closed by a disc. `inspect` reports the world point at each end of its curve, and of each curve point of a curve through curve points.
-_Avoid_: pipe, cable, wire, sweep (an arc's sweep is its angle), extrusion
+_Avoid_: pipe, cable, wire (a wire is a circuit's component), sweep (an arc's sweep is its angle), extrusion
 
 **Spring**:
 A solid that is a coil of `turns` turns of a `radius` about the straight line between its two ends, drawn as a tube along a helix, so it stretches and squashes as its ends move and keeps its turns.
@@ -192,7 +192,7 @@ _Avoid_: trace (an atom trace is a space curve through a PDB file's atoms), path
 
 **Pattern**:
 An object that draws one shape, a flat shape or a solid, at every copy of a layout. Each copy may take its own position, rotation, scale, color share and starting opacity from expressions in its index and place, and its pick of a palette. A pattern is one object, so one animation changes every copy, and it draws its copies as one picture: its scale and a copy's scale size the whole copy, stroke included.
-_Avoid_: array, loop, repeat, instances, clones, group (an atom group is a molecule's)
+_Avoid_: array, loop (a loop of components is a circuit's), repeat, instances, clones, group (an atom group is a molecule's)
 
 **Layout**:
 Where a pattern's copies go: a `grid` of counts along x, y and z at one spacing, centered on the pattern's position, a `ring` of copies around a circle in the pattern's own plane, or `along` a space curve, spaced evenly by length, where each copy may face the curve's tangent.
@@ -369,8 +369,8 @@ How fast a simulation's bodies fall, straight down the world's -y, in world unit
 _Avoid_: g (alone, in a name), weight (weight is a force)
 
 **Quantity**:
-One number of a moving body that a simulation's sets read as `<object id>.<quantity>`: `x`, `y` and `angle` of its object's transform, `vx`, `vy` and `speed` of its center of mass, `spin` in degrees a second, momentum `px` and `py`, and kinetic energy `ke`, turning included. A body's quantities are its simulation's variables.
-_Avoid_: property, attribute, field (a field is the scene file's), state, observable
+One number of a moving body that a simulation's sets read as `<object id>.<quantity>`: `x`, `y` and `angle` of its object's transform, `vx`, `vy` and `speed` of its center of mass, `spin` in degrees a second, momentum `px` and `py`, and kinetic energy `ke`, turning included. Or one number of a circuit's component, read as `<circuit id>.<component id>.<quantity>`: `current`, `voltage`, `power`, `charge`, `energy` and a switch's `closed`. A body's and a circuit's quantities are its simulation's variables.
+_Avoid_: property, attribute, field (a field is the scene file's), state (a circuit state is a circuit's), observable
 
 **Carry**:
 What a follow with `along` does: it moves an object along the path of a flat shape or a plot, or the space curve of a tube, by length in that object's own space over its span, shaped by its easing curve, wherever that object is at each scene time. A carry and a create of a plot with the same span and easing curve keep the object on the pen's end.
@@ -512,7 +512,7 @@ _Avoid_: reflector, mirror plane (a mirror plane is a mirror image's), mirror im
 
 **Focal length**:
 A lens's or a mirror's `focal_length`, in world units: how far its focal points lie from it, positive when it converges light and negative when it spreads it.
-_Avoid_: power, focus (alone)
+_Avoid_: power (power is a component's quantity), focus (alone)
 
 **Focal point**:
 A point on a lens's or a curved mirror's optical axis a focal length away, through which rays along the axis leave, or from which they seem to leave. A lens has one on each side and a curved mirror one in front; a scene marks them with dots attached to the lens or mirror.
@@ -545,6 +545,44 @@ _Avoid_: picture, frame (a frame is an image of the scene), reflection (alone)
 **Back trace**:
 The dashed part a ray with `back_trace` draws, from where it leaves its last lens or mirror back to the virtual image of its source, which its light only seems to come from.
 _Avoid_: extension, virtual ray, dotted line
+
+### Circuits
+
+**Circuit**:
+An object that draws an electric circuit as a schematic: its components on the edges of a grid in its own plane, `spacing` world units apart, with grid point `[0, 0]` at its position. A simulation of it solves its currents and voltages by modified nodal analysis; before the first, it stands as declared with no current shown, and after one it holds where that simulation left it.
+_Avoid_: schematic (for the object), network (for the object), diagram, board
+
+**Component**:
+One part of a circuit on one grid edge, from its `from` grid point to its `to` grid point, drawn with its standard symbol: a battery, resistor, bulb, capacitor, inductor, switch, ammeter, voltmeter or wire. Every component but a wire has an id, which names its quantities.
+_Avoid_: element (an element is chemical), part (a path's part is one run of it), device, branch (a branch is an atom group's), edge (alone)
+
+**Node**:
+A grid point where component ends meet, and so one voltage. A node of three or more ends is marked with a junction dot. `inspect` reports each node's voltage.
+_Avoid_: junction (for every node), vertex, point (alone), net
+
+**Junction dot**:
+The filled dot a circuit draws at a node where three or more component ends meet, so a crossing that joins reads apart from one that does not.
+_Avoid_: node dot, connection dot, solder point
+
+**Ground**:
+The node a circuit holds at 0 volts, drawn with the ground symbol below it. With none, each separate part of a circuit is measured from its first battery's negative end.
+_Avoid_: earth, reference (alone), zero (for the node), fixed body (a fixed body is a simulation's)
+
+**Circuit state**:
+What a circuit carries from one instant to the next, three numbers a component: the charge that has passed through it, the energy it has delivered or turned to heat, and its own value, a capacitor's voltage, an inductor's current or a switch's 1 for closed. Every quantity is solved from it at any instant. A simulation of a circuit starts from the circuit state the last one left.
+_Avoid_: memory, history, snapshot, stage (a stage is every object's at a scene time)
+
+**Switching**:
+One entry of a circuit simulation's `switches`: a switch set closed or open `at` seconds into the span, from which the circuit is solved again.
+_Avoid_: event, toggle, throw, collision (a collision is two bodies')
+
+**Dots of current**:
+The dots a circuit's `current_dots` spaces along every wire and component, carried forward by the charge that has passed through it, in the conventional direction from a battery's positive end round to its negative end, so they move at a speed in proportion to the current and stand still where it is zero.
+_Avoid_: electrons (they move the conventional way), particles, flow arrows, marching ants
+
+**Time constant**:
+How long a capacitor or an inductor takes to close 1 - 1/e, about 63%, of the gap to where it settles: the capacitance times the resistance it meets, or the inductance over it. A simulation of a circuit refuses one shorter than four of its steps.
+_Avoid_: tau (alone, in a name), half-life, rise time, decay rate
 
 ### Plots
 

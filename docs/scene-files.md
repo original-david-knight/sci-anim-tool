@@ -91,7 +91,7 @@ Every object also takes these fields:
 
 The order of keys in a scene file does not matter.
 
-sci_anim has 30 object types. This list groups them by what they draw. The [scene file reference](scene-reference.md#objects) has the fields of each.
+sci_anim has 31 object types. This list groups them by what they draw. The [scene file reference](scene-reference.md#objects) has the fields of each.
 
 - Flat shapes: `circle`, `dot`, `line`, `arrow`, `polygon`, `arc`, and `path`.
 - Text and math: `text`, `math` typeset from LaTeX, `table`, and `readout`, a number that changes.
@@ -101,6 +101,7 @@ sci_anim has 30 object types. This list groups them by what they draw. The [scen
 - Repetition: `pattern`, one shape drawn at many places, such as a crystal lattice or the ticks of a clock.
 - Motion: `trail`, the path an object leaves behind it.
 - Optics: `lens` and `mirror`, and `ray` and `image`, traced through them and through glass, a `polygon` or `circle` with a `refractive_index`, at every scene time.
+- Circuits: `circuit`, a schematic of batteries, resistors, bulbs, capacitors, inductors, switches and meters on a grid, whose currents and voltages a `simulate` solves.
 
 ## The timeline is a list of steps
 
@@ -146,7 +147,7 @@ Most animations ease a value from where it is to a `to`. A `follow` sets a value
 
 The follow in the scene above carries the dot along the curve. Its law gives x = -2 + 4t/3 and y = x², so the dot runs from x = -2 to x = 2 over 3 seconds and stays on the plot.
 
-A law gives the value outright. At the start of its span it must give the value the object already has, or `validate` reports a `law_jump` error with both values. A follow can also carry an object along another object's curve with `along`, and a `simulate` animation integrates rates, such as a pendulum with drag, or moves `bodies` that collide, such as two carts or a Newton's cradle.
+A law gives the value outright. At the start of its span it must give the value the object already has, or `validate` reports a `law_jump` error with both values. A follow can also carry an object along another object's curve with `along`, and a `simulate` animation integrates rates, such as a pendulum with drag, or moves `bodies` that collide, such as two carts or a Newton's cradle, or solves a `circuit`, such as a capacitor charging through a resistor.
 
 ## Chapters carry narration
 

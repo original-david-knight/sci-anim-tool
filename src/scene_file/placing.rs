@@ -491,6 +491,30 @@ impl ShapeFile {
         Positive::try_from(0.03).expect("positive")
     }
 
+    pub(super) fn default_spacing() -> Positive {
+        Positive::try_from(1.0).expect("positive")
+    }
+
+    pub(super) fn one() -> Positive {
+        Positive::try_from(1.0).expect("positive")
+    }
+
+    pub(super) fn default_circuit_stroke_width() -> Positive {
+        Positive::try_from(0.03).expect("positive")
+    }
+
+    pub(super) fn default_dot_spacing() -> Positive {
+        Positive::try_from(0.35).expect("positive")
+    }
+
+    pub(super) fn default_dot_color() -> Color {
+        Color {
+            r: 0xff,
+            g: 0xcc,
+            b: 0x33,
+        }
+    }
+
     pub(super) fn default_optic_height() -> Positive {
         Positive::try_from(3.0).expect("positive")
     }

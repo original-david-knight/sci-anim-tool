@@ -15,7 +15,7 @@ use crate::gpu::{Gpu, GpuError, GpuIdentity, GpuKind};
 use crate::reaction::ReactionReport;
 use crate::scene::{Camera, Scene, SceneTime, Sound};
 use crate::scene_file::{ReadError, SceneError, read, schema};
-use crate::timeline::{ChapterId, ChapterSpan, CollisionReport, StepSpan};
+use crate::timeline::{ChapterId, ChapterSpan, CircuitRunReport, CollisionReport, StepSpan};
 use crate::video::VideoError;
 use crate::{
     FrameSequenceRenderError, InspectedObject, RenderError, RenderUpdate, RenderUpdateKind,
@@ -167,6 +167,10 @@ enum Outcome {
         /// simulation's path, so a narration can land on the moment.
         #[serde(skip_serializing_if = "Vec::is_empty")]
         collisions: Vec<CollisionReport>,
+        /// Each simulation of a circuit: the circuit, the simulation's path and span, and every
+        /// quantity it names at the span's start and end.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        circuits: Vec<CircuitRunReport>,
     },
     Frame {
         png: PathBuf,
@@ -367,6 +371,7 @@ fn validate(scene_file: &Path) -> Result<Outcome, Vec<ToolError>> {
         chapters: scene.chapters().to_vec(),
         sounds: scene.sounds().to_vec(),
         collisions: scene.collisions().to_vec(),
+        circuits: scene.circuit_reports().to_vec(),
     })
 }
 

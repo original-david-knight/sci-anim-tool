@@ -18,6 +18,7 @@ use serde::Serialize;
 
 use crate::axes::Drawing;
 use crate::axes_3d::{Axes3d, Facing};
+use crate::circuit::drawing::Circuit;
 use crate::group::{BALL_AND_STICK_GLOW, Glow, GlowLook};
 use crate::molecule::{Drawn, Representation};
 use crate::path::{Path, UnderMap};
@@ -350,6 +351,7 @@ impl Shape {
             Shape::SkeletalFormula(formula) => {
                 (formula_meshes(formula, bake, created.get()), placed)
             }
+            Shape::Circuit(circuit) => (circuit_meshes(circuit, bake, created.get()), placed),
             Shape::Mix(paths) => (
                 paths
                     .iter()
@@ -2324,6 +2326,93 @@ impl MeshBuilder {
             self.triangles.push([b, a + 1, b + 1]);
         }
     }
+}
+
+/// A circuit at a create's created share: its bulbs' glows, its symbols and wires drawn along
+/// their path over the first half with its plates and dots filling in, then its letters and labels
+/// fading in, and its dots of current once it is whole. Its strokes, fills and glyphs are
+/// overlays, so a see-through glow lies behind them.
+fn circuit_meshes(circuit: &Circuit, bake: Bake, created: f32) -> Vec<Mesh> {
+    let (stroke_share, glyph_share) = created_shares(created, true, !circuit.glyphs.is_empty());
+    let look = circuit.look;
+    let overlay = |mesh: Mesh| Mesh {
+        overlay: true,
+        ..mesh
+    };
+    let mut meshes: Vec<Mesh> = Vec::new();
+    if created >= 1.0 {
+        for (path, opacity) in circuit.glows() {
+            let fill = Fill {
+                color: Circuit::GLOW,
+                opacity: UnitInterval::clamped(opacity),
+                rule: FillRule::NonZero,
+            };
+            meshes.extend(path_meshes(&path, bake, None, 0.0, Some(fill), 1.0));
+        }
+    }
+    let stroke = Stroke {
+        color: look.color,
+        width: look.stroke_width,
+        dash: None,
+    };
+    meshes.extend(path_meshes(
+        &circuit.stroke_path(),
+        bake,
+        Some(stroke),
+        stroke_share,
+        None,
+        0.0,
+    ));
+    if let Some(fills) = &circuit.fills {
+        meshes.extend(
+            path_meshes(
+                fills,
+                bake,
+                None,
+                0.0,
+                Some(Fill::solid(look.color)),
+                stroke_share,
+            )
+            .into_iter()
+            .map(overlay),
+        );
+    }
+    if created >= 1.0
+        && let (Some(dots), Some(path)) = (circuit.dots, circuit.dot_path())
+    {
+        meshes.extend(
+            path_meshes(&path, bake, None, 0.0, Some(Fill::solid(dots.color)), 1.0)
+                .into_iter()
+                .map(overlay),
+        );
+    }
+    meshes.extend(
+        written_meshes(&circuit.glyphs, look.size, bake, glyph_share)
+            .into_iter()
+            .map(overlay),
+    );
+    meshes
+}
+
+/// The glyphs of one label of a circuit, written whole, placed as the circuit is, for measuring.
+pub fn circuit_label_meshes(
+    circuit: &Circuit,
+    label: &crate::circuit::drawing::Label,
+    to_world: FlatToWorld,
+) -> Vec<Mesh> {
+    circuit.glyphs[label.glyphs.clone()]
+        .iter()
+        .flat_map(|glyph| {
+            path_meshes(
+                &glyph.path,
+                Bake::of(to_world),
+                None,
+                0.0,
+                Some(Fill::solid(glyph.color)),
+                1.0,
+            )
+        })
+        .collect()
 }
 
 #[cfg(test)]

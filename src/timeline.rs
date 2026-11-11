@@ -366,6 +366,31 @@ pub struct Timeline {
     shape_samplings: BTreeMap<ObjectId, ShapeSampling>,
     /// Every collision of a simulation's bodies, in timeline order.
     collisions: Vec<CollisionReport>,
+    /// Each circuit's simulations, in timeline order.
+    circuits: BTreeMap<ObjectId, CircuitRuns>,
+    /// Each simulation of a circuit's values at its start and end, in timeline order.
+    circuit_reports: Vec<CircuitRunReport>,
+}
+
+/// A circuit's simulations, and the most power any of its bulbs draws in them, at which a bulb
+/// glows its brightest.
+#[derive(Debug, Default)]
+struct CircuitRuns {
+    runs: Vec<Arc<Simulation>>,
+    full_power: f64,
+}
+
+/// One simulation of a circuit, which `validate` reports so an author can check its numbers
+/// without drawing: the circuit, the simulation's path and span, and every quantity it names at
+/// the span's start and end.
+#[derive(Clone, Debug, Serialize)]
+pub struct CircuitRunReport {
+    pub circuit: ObjectId,
+    pub path: JsonPath,
+    pub start: f64,
+    pub end: f64,
+    pub at_start: BTreeMap<String, f64>,
+    pub at_end: BTreeMap<String, f64>,
 }
 
 /// Two bodies colliding, and the simulation that moves them, which `validate` reports so a
@@ -541,6 +566,7 @@ impl Colors {
             | Shape::Molecule { .. }
             | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
+            | Shape::Circuit(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => Colors {
                 stroke: None,
@@ -609,6 +635,7 @@ impl Colors {
             | Shape::Molecule { .. }
             | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
+            | Shape::Circuit(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => {}
         }
@@ -656,6 +683,8 @@ impl Timeline {
             lifetimes: BTreeMap::new(),
             shape_samplings: BTreeMap::new(),
             collisions: Vec::new(),
+            circuits: BTreeMap::new(),
+            circuit_reports: Vec::new(),
         }
     }
 
@@ -1940,6 +1969,10 @@ impl Timeline {
 
     pub fn collisions(&self) -> &[CollisionReport] {
         &self.collisions
+    }
+
+    pub fn circuit_reports(&self) -> &[CircuitRunReport] {
+        &self.circuit_reports
     }
 }
 
