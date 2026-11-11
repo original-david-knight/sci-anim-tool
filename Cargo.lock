@@ -2934,7 +2934,7 @@ dependencies = [
 
 [[package]]
 name = "sci_anim"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "bytemuck",
  "clap",
@@ -2942,6 +2942,7 @@ dependencies = [
  "half",
  "jsonschema",
  "kurbo",
+ "libm",
  "lyon",
  "mitex",
  "mitex-spec-gen",

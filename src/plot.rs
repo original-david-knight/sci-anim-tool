@@ -296,7 +296,7 @@ pub fn report(
 /// maps onto pixels by one scale and a shift, so there the test is exact: each straight piece
 /// of the stroke reaches half the stroke's width at its depth, and each glyph is its box. A
 /// curve can pass between two glyphs without crossing the object.
-fn crossed_objects(
+pub(crate) fn crossed_objects(
     path: &Path,
     stroke_width: f32,
     matrix: Mat2,

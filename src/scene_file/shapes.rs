@@ -12,6 +12,8 @@ impl ObjectFile {
         base: &std::path::Path,
         placed: &BTreeMap<ObjectId, Object>,
     ) -> Result<Object, Faults> {
+        let collider = self.shape.collider();
+        let optic = self.shape.optic();
         let shape_law =
             reads_law_time(&self.shape).then(|| ShapeLaw::new(self.shape.clone(), base, placed));
         let (shape, placed_by, readout) = match self.shape {
@@ -61,6 +63,8 @@ impl ObjectFile {
             plane_map: None,
             shape_law: shape_law.map(Arc::new),
             readout,
+            collider,
+            optic,
         })
     }
 }
@@ -333,6 +337,7 @@ pub(super) fn shape(
             radius,
             stroke,
             fill,
+            ..
         } => Shape::Flat {
             path: Path::circle(radius.get())
                 .map_err(at("radius", "the radius is too small to draw"))?,
@@ -409,10 +414,41 @@ pub(super) fn shape(
         ShapeFile::Readout { .. } => {
             unreachable!("`into_object` reads a readout, and a pattern draws none")
         }
+        ShapeFile::Lens {
+            focal_length,
+            height,
+            stroke,
+            fill,
+        } => Shape::Flat {
+            path: optics::lens_path(focal_length.get(), f64::from(height.get())),
+            stroke: Some(stroke),
+            fill,
+        },
+        ShapeFile::Mirror {
+            focal_length,
+            height,
+            stroke,
+        } => Shape::Flat {
+            path: optics::mirror_path(focal_length.map(FocalLength::get), f64::from(height.get())),
+            stroke: Some(stroke),
+            fill: None,
+        },
+        // The stage traces a ray and an image at every scene time.
+        ShapeFile::Ray { stroke, .. } => Shape::Flat {
+            path: optics::unplaced(),
+            stroke: Some(stroke),
+            fill: None,
+        },
+        ShapeFile::Image { stroke, .. } => Shape::Flat {
+            path: optics::unplaced(),
+            stroke: Some(stroke),
+            fill: Some(Fill::solid(stroke.color)),
+        },
         ShapeFile::Polygon {
             points,
             stroke,
             fill,
+            ..
         } => Shape::Flat {
             path: Path::polygon(&points).map_err(at(
                 "points",
@@ -881,6 +917,63 @@ impl ShapeFile {
                 | ShapeFile::Dot { axes: Some(_), .. }
         )
     }
+
+    /// What an object of this shape collides with as a simulation's body, in its own plane: a
+    /// circle's or a dot's disc, a sphere's ball, a polygon's corners, or a line's ends when both
+    /// are points in its plane.
+    fn collider(&self) -> Option<Collider> {
+        match self {
+            ShapeFile::Circle { radius, .. }
+            | ShapeFile::Dot {
+                radius, axes: None, ..
+            } => Some(Collider::Disc(f64::from(radius.get()))),
+            ShapeFile::Sphere {
+                radius, axes: None, ..
+            } => Some(Collider::Ball(f64::from(radius.get()))),
+            ShapeFile::Polygon { points, .. } => Some(Collider::corners(
+                points.iter().map(|point| point.as_dvec2()),
+            )),
+            ShapeFile::Line { from, to, .. } => Some(Collider::corners([
+                from.in_plane()?.as_dvec2(),
+                to.in_plane()?.as_dvec2(),
+            ])),
+            _ => None,
+        }
+    }
+
+    /// What an object of this shape does to light: a lens, a mirror, or a polygon or circle with
+    /// a refractive index.
+    fn optic(&self) -> Option<Optic> {
+        match self {
+            ShapeFile::Lens {
+                focal_length,
+                height,
+                ..
+            } => Some(Optic::Lens {
+                focal_length: focal_length.get(),
+                height: f64::from(height.get()),
+            }),
+            ShapeFile::Mirror {
+                focal_length,
+                height,
+                ..
+            } => Some(Optic::Mirror {
+                focal_length: focal_length.map(FocalLength::get),
+                height: f64::from(height.get()),
+            }),
+            ShapeFile::Circle {
+                refractive_index: Some(index),
+                ..
+            }
+            | ShapeFile::Polygon {
+                refractive_index: Some(index),
+                ..
+            } => Some(Optic::Medium {
+                refractive_index: index.get(),
+            }),
+            _ => None,
+        }
+    }
 }
 
 /// Why a pattern does not draw `shape` at every copy, or `None` for a shape it draws.
@@ -921,6 +1014,22 @@ fn not_one_shape(shape: &ShapeFile) -> Option<&'static str> {
         }
         ShapeFile::Readout { .. } => {
             "a `readout` sets one number at every copy; write a separate `readout` for each"
+        }
+        ShapeFile::Lens { .. } | ShapeFile::Mirror { .. } => {
+            "a lens or a mirror bends rays as one element, which a copy cannot be; write a separate object for each"
+        }
+        ShapeFile::Ray { .. } | ShapeFile::Image { .. } => {
+            "a ray or an image is traced through its optics, which a copy cannot place; write a separate object for each"
+        }
+        ShapeFile::Circle {
+            refractive_index: Some(_),
+            ..
+        }
+        | ShapeFile::Polygon {
+            refractive_index: Some(_),
+            ..
+        } => {
+            "a copy does not refract rays; leave out `refractive_index`, or write a separate object for each piece of glass"
         }
         ShapeFile::Line { from, to, .. } | ShapeFile::Arrow { from, to, .. }
             if from.in_plane().is_none() || to.in_plane().is_none() =>

@@ -68,6 +68,215 @@ pub(super) fn check_trails(objects: &mut BTreeMap<ObjectId, Object>, errors: &mu
     }
 }
 
+/// Reads ends against the objects read so far: an end on an object needs one that has a position
+/// of its own, not attached and not placed by its own ends.
+pub(super) struct EndReader<'a> {
+    pub(super) objects: &'a BTreeMap<ObjectId, Object>,
+    pub(super) attached: &'a [&'a str],
+    pub(super) ended_ids: &'a [String],
+}
+
+impl EndReader<'_> {
+    /// The end `file` of the object `id` at `field` under `at`, or `None` with its scene error
+    /// pushed to `errors`.
+    pub(super) fn read(
+        &self,
+        file: EndFile,
+        id: &str,
+        at: &JsonPath,
+        field: &str,
+        errors: &mut Vec<SceneError>,
+    ) -> Option<End> {
+        let (objects, attached, ended_ids) = (self.objects, self.attached, self.ended_ids);
+        match file {
+            EndFile::Point(point) => match point.as_slice() {
+                [x, y] => Some(End::Point(Vec3::new(*x, *y, 0.0))),
+                [x, y, z] => Some(End::Point(Vec3::new(*x, *y, *z))),
+                _ => unreachable!("the schema allows two or three numbers"),
+            },
+            EndFile::OnCurve(OnCurveFile { object: on, .. })
+            | EndFile::OnPlot(OnPlotFile { object: on, .. })
+            | EndFile::OnAtom(OnAtomFile { object: on, .. })
+            | EndFile::On(OnObjectFile { object: on, .. })
+                if !objects.contains_key(on.as_str()) =>
+            {
+                let ids: Vec<String> = objects.keys().map(|k| format!("`{k}`")).collect();
+                errors.push(SceneError::new(
+                    at.field(field).field("object"),
+                    SceneErrorCode::UnknownObject,
+                    format!(
+                        "no object has the id `{on}`; the objects are {}",
+                        ids.join(", ")
+                    ),
+                ));
+                None
+            }
+            EndFile::OnCurve(on) => {
+                let (object, declared) = objects.get_key_value(on.object.as_str())?;
+                let curve = match &declared.shape {
+                    Shape::Solid {
+                        solid: Solid::Tube { curve, .. },
+                        ..
+                    } if !ended_ids.contains(&on.object) => Ok(curve),
+                    Shape::Solid {
+                        solid: Solid::Tube { .. },
+                        ..
+                    } => Err(format!(
+                        "`{object}`, a spring, which is placed by its own ends and drawn again between them"
+                    )),
+                    Shape::Flat { .. } if matches!(declared.placed_by, PlacedBy::Axes(_)) => {
+                        Err(format!(
+                            "`{object}`, a plot, whose curve is read at an `x` in its axes' data coordinates; write `{{ \"object\": \"{object}\", \"x\": ... }}`"
+                        ))
+                    }
+                    _ => Err(format!(
+                        "`{object}`, which is not a tube and has no space curve; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
+                    )),
+                };
+                let curve = match curve {
+                    Ok(curve) => curve,
+                    Err(why) => {
+                        errors.push(SceneError::new(at.field(field).field("object"), SceneErrorCode::Invalid, format!("an end of `{id}` at a `u` sits on a tube's space curve, and cannot sit on {why}")));
+                        return None;
+                    }
+                };
+                let (lo, hi) = curve.u_range();
+                if !(lo..=hi).contains(&on.u) {
+                    errors.push(SceneError::new(
+                        at.field(field).field("u"),
+                        SceneErrorCode::OutOfRange,
+                        format!(
+                            "u {} lies outside `{object}`'s u range, {lo} to {hi}; write a u within it",
+                            on.u
+                        ),
+                    ));
+                    return None;
+                }
+                Some(End::OnCurve {
+                    object: object.clone(),
+                    u: on.u,
+                })
+            }
+            EndFile::OnPlot(on) => {
+                let (object, declared) = objects.get_key_value(on.object.as_str())?;
+                let axes = match (&declared.placed_by, &declared.shape) {
+                    (PlacedBy::Axes(axes), Shape::Flat { .. }) => match &objects[axes].shape {
+                        Shape::Axes(axes) => Some(axes),
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                let Some(axes) = axes else {
+                    let hint = if matches!(
+                        declared.shape,
+                        Shape::Solid {
+                            solid: Solid::Tube { .. },
+                            ..
+                        }
+                    ) {
+                        format!(
+                            "a tube, whose space curve is read at a `u`; write `{{ \"object\": \"{object}\", \"u\": ... }}`"
+                        )
+                    } else {
+                        format!(
+                            "not a plot; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
+                        )
+                    };
+                    errors.push(SceneError::new(
+                        at.field(field).field("object"),
+                        SceneErrorCode::Invalid,
+                        format!(
+                            "an end of `{id}` at an `x` sits on a plot's curve, and `{object}` is {hint}"
+                        ),
+                    ));
+                    return None;
+                };
+                let (lo, hi) = axes.x.range();
+                if !(lo..=hi).contains(&on.x) {
+                    errors.push(SceneError::new(
+                        at.field(field).field("x"),
+                        SceneErrorCode::OutOfRange,
+                        format!(
+                            "x {} lies outside the x range of `{object}`'s axes, {lo} to {hi}; write an x within it",
+                            on.x
+                        ),
+                    ));
+                    return None;
+                }
+                Some(End::OnPlot {
+                    object: object.clone(),
+                    x: axes.x.to_local(on.x),
+                })
+            }
+            EndFile::OnAtom(on) => {
+                let (object, declared) = objects.get_key_value(on.object.as_str())?;
+                let Shape::Molecule { molecule, .. } = &declared.shape else {
+                    errors.push(SceneError::new(
+                        at.field(field).field("object"),
+                        SceneErrorCode::Invalid,
+                        format!(
+                            "an end of `{id}` at an `atom` sits on an atom of a molecule, and `{object}` is not a molecule; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
+                        ),
+                    ));
+                    return None;
+                };
+                let Some(atom) = molecule.atom_number(on.atom) else {
+                    errors.push(SceneError::new(
+                        at.field(field).field("atom"),
+                        SceneErrorCode::NoSuchAtom,
+                        format!(
+                            "`{object}` has {}, and an end of `{id}` names atom {}",
+                            molecule.numbering(),
+                            on.atom
+                        ),
+                    ));
+                    return None;
+                };
+                Some(End::OnAtom {
+                    object: object.clone(),
+                    atom,
+                })
+            }
+            EndFile::On(on) => {
+                let (object, declared) = objects.get_key_value(on.object.as_str())?;
+                let why = if on.object == id {
+                    Some("itself".to_string())
+                } else if attached.contains(&on.object.as_str())
+                    || ended_ids.contains(&on.object)
+                    || matches!(declared.shape, Shape::Trail(_))
+                    || !matches!(
+                        declared.placed_by,
+                        PlacedBy::Itself | PlacedBy::DataPoint(_)
+                    )
+                {
+                    Some(format!(
+                        "`{object}`, which is a plot, a trail, attached or placed by its own ends, and so has no position of its own"
+                    ))
+                } else {
+                    None
+                };
+                if let Some(why) = why {
+                    let instead = if matches!(declared.placed_by, PlacedBy::Axes(_))
+                        && matches!(declared.shape, Shape::Flat { .. })
+                    {
+                        format!(
+                            "; an end on a plot's curve is `{{ \"object\": \"{object}\", \"x\": ... }}`, at an x of its axes"
+                        )
+                    } else {
+                        String::new()
+                    };
+                    errors.push(SceneError::new(at.field(field).field("object"), SceneErrorCode::Invalid, format!("an end of `{id}` cannot sit on {why}; sit it on an object placed by its own transform, or on a data point{instead}")));
+                    return None;
+                }
+                Some(End::On {
+                    object: object.clone(),
+                    offset: Vec3::from_array(on.offset),
+                })
+            }
+        }
+    }
+}
+
 /// Places each line, arrow and spring with an end on an object, or a spring, by its ends, once
 /// every object is read. Errors are at the end at fault, or at `position` for a transform of its
 /// own.
@@ -75,200 +284,18 @@ pub(super) fn place_by_ends(
     objects: &mut BTreeMap<ObjectId, Object>,
     ended: Vec<(String, (EndFile, EndFile, crate::ends::Drawn))>,
     attached: &[&str],
+    ended_ids: &[String],
     camera: &Camera,
     errors: &mut Vec<SceneError>,
 ) {
-    let ended_ids: Vec<String> = ended.iter().map(|(id, _)| id.clone()).collect();
     for (id, (from, to, drawn)) in ended {
         let at = JsonPath::root().field("objects").field(&id);
-        let mut end = |file: EndFile, field: &str| -> Option<End> {
-            match file {
-                EndFile::Point(point) => match point.as_slice() {
-                    [x, y] => Some(End::Point(Vec3::new(*x, *y, 0.0))),
-                    [x, y, z] => Some(End::Point(Vec3::new(*x, *y, *z))),
-                    _ => unreachable!("the schema allows two or three numbers"),
-                },
-                EndFile::OnCurve(OnCurveFile { object: on, .. })
-                | EndFile::OnPlot(OnPlotFile { object: on, .. })
-                | EndFile::OnAtom(OnAtomFile { object: on, .. })
-                | EndFile::On(OnObjectFile { object: on, .. })
-                    if !objects.contains_key(on.as_str()) =>
-                {
-                    let ids: Vec<String> = objects.keys().map(|k| format!("`{k}`")).collect();
-                    errors.push(SceneError::new(
-                        at.field(field).field("object"),
-                        SceneErrorCode::UnknownObject,
-                        format!(
-                            "no object has the id `{on}`; the objects are {}",
-                            ids.join(", ")
-                        ),
-                    ));
-                    None
-                }
-                EndFile::OnCurve(on) => {
-                    let (object, declared) = objects.get_key_value(on.object.as_str())?;
-                    let curve = match &declared.shape {
-                        Shape::Solid {
-                            solid: Solid::Tube { curve, .. },
-                            ..
-                        } if !ended_ids.contains(&on.object) => Ok(curve),
-                        Shape::Solid {
-                            solid: Solid::Tube { .. },
-                            ..
-                        } => Err(format!(
-                            "`{object}`, a spring, which is placed by its own ends and drawn again between them"
-                        )),
-                        Shape::Flat { .. } if matches!(declared.placed_by, PlacedBy::Axes(_)) => {
-                            Err(format!(
-                                "`{object}`, a plot, whose curve is read at an `x` in its axes' data coordinates; write `{{ \"object\": \"{object}\", \"x\": ... }}`"
-                            ))
-                        }
-                        _ => Err(format!(
-                            "`{object}`, which is not a tube and has no space curve; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
-                        )),
-                    };
-                    let curve = match curve {
-                        Ok(curve) => curve,
-                        Err(why) => {
-                            errors.push(SceneError::new(at.field(field).field("object"), SceneErrorCode::Invalid, format!("an end of `{id}` at a `u` sits on a tube's space curve, and cannot sit on {why}")));
-                            return None;
-                        }
-                    };
-                    let (lo, hi) = curve.u_range();
-                    if !(lo..=hi).contains(&on.u) {
-                        errors.push(SceneError::new(
-                            at.field(field).field("u"),
-                            SceneErrorCode::OutOfRange,
-                            format!(
-                                "u {} lies outside `{object}`'s u range, {lo} to {hi}; write a u within it",
-                                on.u
-                            ),
-                        ));
-                        return None;
-                    }
-                    Some(End::OnCurve {
-                        object: object.clone(),
-                        u: on.u,
-                    })
-                }
-                EndFile::OnPlot(on) => {
-                    let (object, declared) = objects.get_key_value(on.object.as_str())?;
-                    let axes = match (&declared.placed_by, &declared.shape) {
-                        (PlacedBy::Axes(axes), Shape::Flat { .. }) => match &objects[axes].shape {
-                            Shape::Axes(axes) => Some(axes),
-                            _ => None,
-                        },
-                        _ => None,
-                    };
-                    let Some(axes) = axes else {
-                        let hint = if matches!(
-                            declared.shape,
-                            Shape::Solid {
-                                solid: Solid::Tube { .. },
-                                ..
-                            }
-                        ) {
-                            format!(
-                                "a tube, whose space curve is read at a `u`; write `{{ \"object\": \"{object}\", \"u\": ... }}`"
-                            )
-                        } else {
-                            format!(
-                                "not a plot; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
-                            )
-                        };
-                        errors.push(SceneError::new(
-                            at.field(field).field("object"),
-                            SceneErrorCode::Invalid,
-                            format!(
-                                "an end of `{id}` at an `x` sits on a plot's curve, and `{object}` is {hint}"
-                            ),
-                        ));
-                        return None;
-                    };
-                    let (lo, hi) = axes.x.range();
-                    if !(lo..=hi).contains(&on.x) {
-                        errors.push(SceneError::new(
-                            at.field(field).field("x"),
-                            SceneErrorCode::OutOfRange,
-                            format!(
-                                "x {} lies outside the x range of `{object}`'s axes, {lo} to {hi}; write an x within it",
-                                on.x
-                            ),
-                        ));
-                        return None;
-                    }
-                    Some(End::OnPlot {
-                        object: object.clone(),
-                        x: axes.x.to_local(on.x),
-                    })
-                }
-                EndFile::OnAtom(on) => {
-                    let (object, declared) = objects.get_key_value(on.object.as_str())?;
-                    let Shape::Molecule { molecule, .. } = &declared.shape else {
-                        errors.push(SceneError::new(
-                            at.field(field).field("object"),
-                            SceneErrorCode::Invalid,
-                            format!(
-                                "an end of `{id}` at an `atom` sits on an atom of a molecule, and `{object}` is not a molecule; an end on an object's position is `{{ \"object\": \"{object}\", \"offset\": [0, 0, 0] }}`"
-                            ),
-                        ));
-                        return None;
-                    };
-                    let Some(atom) = molecule.atom_number(on.atom) else {
-                        errors.push(SceneError::new(
-                            at.field(field).field("atom"),
-                            SceneErrorCode::NoSuchAtom,
-                            format!(
-                                "`{object}` has {}, and an end of `{id}` names atom {}",
-                                molecule.numbering(),
-                                on.atom
-                            ),
-                        ));
-                        return None;
-                    };
-                    Some(End::OnAtom {
-                        object: object.clone(),
-                        atom,
-                    })
-                }
-                EndFile::On(on) => {
-                    let (object, declared) = objects.get_key_value(on.object.as_str())?;
-                    let why = if on.object == id {
-                        Some("itself".to_string())
-                    } else if attached.contains(&on.object.as_str())
-                        || ended_ids.contains(&on.object)
-                        || matches!(declared.shape, Shape::Trail(_))
-                        || !matches!(
-                            declared.placed_by,
-                            PlacedBy::Itself | PlacedBy::DataPoint(_)
-                        )
-                    {
-                        Some(format!(
-                            "`{object}`, which is a plot, a trail, attached or placed by its own ends, and so has no position of its own"
-                        ))
-                    } else {
-                        None
-                    };
-                    if let Some(why) = why {
-                        let instead = if matches!(declared.placed_by, PlacedBy::Axes(_))
-                            && matches!(declared.shape, Shape::Flat { .. })
-                        {
-                            format!(
-                                "; an end on a plot's curve is `{{ \"object\": \"{object}\", \"x\": ... }}`, at an x of its axes"
-                            )
-                        } else {
-                            String::new()
-                        };
-                        errors.push(SceneError::new(at.field(field).field("object"), SceneErrorCode::Invalid, format!("an end of `{id}` cannot sit on {why}; sit it on an object placed by its own transform, or on a data point{instead}")));
-                        return None;
-                    }
-                    Some(End::On {
-                        object: object.clone(),
-                        offset: Vec3::from_array(on.offset),
-                    })
-                }
-            }
+        let reader = EndReader {
+            objects,
+            attached,
+            ended_ids,
         };
+        let mut end = |file: EndFile, field: &str| reader.read(file, &id, &at, field, errors);
         let (Some(from), Some(to)) = (end(from, "from"), end(to, "to")) else {
             continue;
         };
@@ -464,6 +491,18 @@ impl ShapeFile {
         Positive::try_from(0.03).expect("positive")
     }
 
+    pub(super) fn default_optic_height() -> Positive {
+        Positive::try_from(3.0).expect("positive")
+    }
+
+    pub(super) fn default_ray_length() -> Positive {
+        Positive::try_from(10.0).expect("positive")
+    }
+
+    pub(super) fn default_image_tip() -> Positive {
+        Positive::try_from(0.25).expect("positive")
+    }
+
     /// A line's or an arrow's ends when either sits on an object or is a point in space, and a
     /// spring's always, with how they are drawn, taken out of the shape and left as `(0, 0)` to
     /// `(1, 0)` there, so the shape reads as a placeholder the stage replaces. `None` for a
@@ -516,4 +555,242 @@ impl ShapeFile {
             drawn,
         ))
     }
+}
+
+/// A ray's or an image's light as its file writes it, read out of its shape once every object is
+/// read.
+pub(super) enum LightFile {
+    Ray {
+        from: EndFile,
+        principal: Option<PrincipalFile>,
+        through: Option<EndFile>,
+        angle: Option<f64>,
+        optics: Vec<String>,
+        length: Positive,
+        back_trace: bool,
+    },
+    Image {
+        from: EndFile,
+        to: EndFile,
+        optics: Vec<String>,
+        tip_length: Positive,
+    },
+}
+
+impl ShapeFile {
+    /// A ray's or an image's light, which `place_by_light` reads. `None` for any other shape.
+    pub(super) fn light(&self) -> Option<LightFile> {
+        match self {
+            ShapeFile::Ray {
+                from,
+                principal,
+                through,
+                angle,
+                optics,
+                length,
+                back_trace,
+                ..
+            } => Some(LightFile::Ray {
+                from: from.clone(),
+                principal: *principal,
+                through: through.clone(),
+                angle: *angle,
+                optics: optics.clone(),
+                length: *length,
+                back_trace: *back_trace,
+            }),
+            ShapeFile::Image {
+                from,
+                to,
+                optics,
+                tip_length,
+                ..
+            } => Some(LightFile::Image {
+                from: from.clone(),
+                to: to.clone(),
+                optics: optics.clone(),
+                tip_length: *tip_length,
+            }),
+            _ => None,
+        }
+    }
+}
+
+/// Places each ray and image by its light, once every object is read and placed by its ends.
+/// Errors are at the field at fault: an end, an aim given more or less than once, an element
+/// that is unknown, named twice, not a lens, mirror or medium, or not placed by its own
+/// transform, a medium in an image, a principal ray with no lens or curved mirror to be one of,
+/// and a transform of its own.
+pub(super) fn place_by_light(
+    objects: &mut BTreeMap<ObjectId, Object>,
+    lit: Vec<(String, LightFile)>,
+    attached: &[&str],
+    ended_ids: &[String],
+    errors: &mut Vec<SceneError>,
+) {
+    let mut placed = Vec::new();
+    for (id, file) in lit {
+        let at = JsonPath::root().field("objects").field(&id);
+        let reader = EndReader {
+            objects,
+            attached,
+            ended_ids,
+        };
+        let count = errors.len();
+        let light = match file {
+            LightFile::Ray {
+                from,
+                principal,
+                through,
+                angle,
+                optics,
+                length,
+                back_trace,
+            } => {
+                let from = reader.read(from, &id, &at, "from", errors);
+                let elements = read_elements(objects, &optics, &at, false, errors);
+                let given = [principal.is_some(), through.is_some(), angle.is_some()]
+                    .into_iter()
+                    .filter(|given| *given)
+                    .count();
+                if given != 1 {
+                    let (code, message) = if given == 0 {
+                        (
+                            SceneErrorCode::MissingField,
+                            "a ray needs a way to leave its source: give `principal`, `through` or `angle`",
+                        )
+                    } else {
+                        (
+                            SceneErrorCode::Invalid,
+                            "a ray leaves its source one way; give one of `principal`, `through` and `angle`",
+                        )
+                    };
+                    errors.push(SceneError::new(at.clone(), code, message));
+                }
+                let aim = match (principal, through, angle) {
+                    (Some(principal), _, _) => {
+                        let curved = elements.iter().flatten().any(|element| {
+                            matches!(
+                                element.optic,
+                                Optic::Lens { .. }
+                                    | Optic::Mirror {
+                                        focal_length: Some(_),
+                                        ..
+                                    }
+                            )
+                        });
+                        if !curved {
+                            errors.push(SceneError::new(at.field("principal"), SceneErrorCode::Invalid, "a principal ray is one of a lens or a curved mirror, and `optics` names neither; name the lens or mirror, or aim the ray with `through` or `angle`"));
+                        }
+                        Some(Aim::Principal(match principal {
+                            PrincipalFile::Parallel => Principal::Parallel,
+                            PrincipalFile::Focal => Principal::Focal,
+                            PrincipalFile::Center => Principal::Center,
+                        }))
+                    }
+                    (_, Some(through), _) => reader
+                        .read(through, &id, &at, "through", errors)
+                        .map(Aim::Through),
+                    (_, _, Some(angle)) => Some(Aim::Angle(angle)),
+                    (None, None, None) => None,
+                };
+                match (from, aim, elements.into_iter().collect::<Option<Vec<_>>>()) {
+                    (Some(from), Some(aim), Some(elements)) => Some(Light::Ray {
+                        from,
+                        aim,
+                        elements: elements.into(),
+                        reach: f64::from(length.get()),
+                        back_trace,
+                    }),
+                    _ => None,
+                }
+            }
+            LightFile::Image {
+                from,
+                to,
+                optics,
+                tip_length,
+            } => {
+                let from = reader.read(from, &id, &at, "from", errors);
+                let to = reader.read(to, &id, &at, "to", errors);
+                let elements = read_elements(objects, &optics, &at, true, errors);
+                match (from, to, elements.into_iter().collect::<Option<Vec<_>>>()) {
+                    (Some(from), Some(to), Some(elements)) => Some(Light::Image {
+                        from,
+                        to,
+                        elements: elements.into(),
+                        tip_length: tip_length.get(),
+                    }),
+                    _ => None,
+                }
+            }
+        };
+        if objects[id.as_str()].transform != Transform::default() {
+            let message = format!(
+                "`{id}` is traced through its optics, with no position, rotation or scale of its own; move its source or its lenses instead"
+            );
+            errors.push(SceneError::new(
+                at.field("position"),
+                SceneErrorCode::PlacedByLight,
+                message,
+            ));
+        }
+        if let Some(light) = light.filter(|_| errors.len() == count) {
+            placed.push((id, light));
+        }
+    }
+    for (id, light) in placed {
+        let traced = light.trace(objects);
+        let object = objects.get_mut(id.as_str()).expect("read above");
+        if let Some((z, traced)) = traced {
+            object.transform.position.z = z;
+            if let Shape::Flat { path, .. } = &mut object.shape {
+                *path = traced.path;
+            }
+        }
+        object.placed_by = PlacedBy::Light(Arc::new(light));
+    }
+}
+
+/// The elements `optics` names, each `None` with its scene error pushed to `errors` at its place
+/// in `optics`: an unknown object, one named twice, one that is not a lens, a mirror or a polygon
+/// or circle with a refractive index, one not placed by its own transform, and for an image a
+/// medium.
+fn read_elements(
+    objects: &BTreeMap<ObjectId, Object>,
+    optics: &[String],
+    at: &JsonPath,
+    image: bool,
+    errors: &mut Vec<SceneError>,
+) -> Vec<Option<Element>> {
+    optics
+        .iter()
+        .enumerate()
+        .map(|(i, name)| {
+            let here = at.field("optics").index(i);
+            let Some((object, declared)) = objects.get_key_value(name.as_str()) else {
+                let ids: Vec<String> = objects.keys().map(|k| format!("`{k}`")).collect();
+                errors.push(SceneError::new(here, SceneErrorCode::UnknownObject, format!("no object has the id `{name}`; the objects are {}", ids.join(", "))));
+                return None;
+            };
+            if optics[..i].contains(name) {
+                errors.push(SceneError::new(here, SceneErrorCode::DuplicateObject, format!("`{name}` is already in `optics`, and a ray meets each element wherever it lies, so name it once")));
+                return None;
+            }
+            let why = match (&declared.optic, &declared.placed_by) {
+                (None, _) => Some(format!("`{name}` does nothing to light: name a `lens`, a `mirror`, or a `polygon` or `circle` with a `refractive_index`")),
+                (Some(_), placed_by) if *placed_by != PlacedBy::Itself => Some(format!("`{name}` is placed by another object, and an optical element is placed by its own transform")),
+                (Some(Optic::Medium { .. }), _) if image => Some(format!("`{name}` is a medium, and an image is formed here by lenses and mirrors alone; trace rays through `{name}` instead")),
+                _ => None,
+            };
+            if let Some(why) = why {
+                errors.push(SceneError::new(here, SceneErrorCode::Invalid, why));
+                return None;
+            }
+            Some(Element {
+                object: object.clone(),
+                optic: declared.optic.expect("checked above"),
+            })
+        })
+        .collect()
 }

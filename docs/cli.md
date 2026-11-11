@@ -72,7 +72,7 @@ sci_anim validate <SCENE_FILE>
 
 Checks the scene file against the schema and the rules the schema cannot state, such as an animation that names an object id the scene does not have. It lists the scene errors it finds, each at the JSON path of the bad field, and exits 1 when there is one.
 
-For a good file the report gives the scene's `duration` in seconds, each step's `path`, `start` and `end` in `steps`, and each chapter's `id`, `start` and `end` in `chapters` when the scene has chapters:
+For a good file the report gives the scene's `duration` in seconds, each step's `path`, `start` and `end` in `steps`, and each chapter's `id`, `start` and `end` in `chapters` when the scene has chapters, and each collision of a simulation's bodies in `collisions`, with its `scene_time`, its two `bodies` and the simulation's `path`, when the scene has one:
 
 ```json
 {
@@ -198,7 +198,7 @@ The report on stdout is the same with or without `--updates`, and only the repor
 sci_anim check-layout <SCENE_FILE> [--out <DIR>]
 ```
 
-Checks the layout of the scene at the middle and end of every step, at the start, middle and end of every animation's span, and at every frame time of a follow or a simulation. It prints each layout fault on a line of its own, such as:
+Checks the layout of the scene at the middle and end of every step, at the start, middle and end of every animation's span, and at every frame time of a follow or a simulation, and in a scene with a `ray` or an `image` of every other animation, since a ray swings as what it is traced from or through moves. It prints each layout fault on a line of its own, such as:
 
 ```text
 t=0 (the only frame): "c" is cut off by the frame: its box runs from [2000, 407] to [2266, 673] pixels

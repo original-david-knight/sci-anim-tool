@@ -1583,3 +1583,105 @@ fn a_text_over_a_cartoon_is_judged_by_the_cartoons_box() {
     );
     assert_eq!(clear.exit_code, 0, "{}", clear.stdout);
 }
+
+#[test]
+fn a_ray_is_judged_by_the_text_its_stroke_runs_through_and_may_leave_the_frame() {
+    // The ray leaves the lens through its focal point and runs off the frame. "clear" lies inside
+    // the ray's box but off its stroke, and "crossed" on it.
+    let objects = r#"
+        "lens": { "type": "lens", "focal_length": 1, "height": 3 },
+        "ray": { "type": "ray", "from": [-1.5, 1], "angle": 0, "optics": ["lens"], "length": 20 },
+        "clear": { "type": "text", "text": "clear", "size": 0.6, "position": [-1.2, 0.5, 0] },
+        "crossed": { "type": "text", "text": "crossed", "size": 0.6, "position": [1.6, -0.6, 0] }"#;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    assert_eq!(
+        fault_lines(&checked),
+        [r#"t=0 (the only frame): "ray" runs through "crossed""#],
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_ray_is_checked_at_every_frame_time_of_a_move_it_follows() {
+    // The ray falls straight down from the moving dot, so it crosses "label" only while the dot
+    // passes over it, between the move's start, middle and end.
+    let objects = r#"
+        "lens": { "type": "lens", "focal_length": 1, "height": 1, "position": [3.5, 3, 0] },
+        "source": { "type": "dot", "radius": 0.05, "position": [-3, 1.5, 0] },
+        "ray": { "type": "ray", "from": { "object": "source" }, "angle": -90, "optics": ["lens"], "length": 3 },
+        "label": { "type": "text", "text": "x", "size": 0.3, "position": [-1.6, 0, 0] }"#;
+    let timeline = r#"{ "type": "play", "duration": 1, "animations": [{ "type": "move", "object": "source", "to": [3, 1.5, 0], "easing_curve": "linear" }] }"#;
+
+    let checked = check_layout(&scene(objects, timeline), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.len() == 1
+            && faults[0].contains(r#"of move 0 of step 0"#)
+            && faults[0].ends_with(r#""ray" runs through "label""#),
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_thin_straight_line_through_text_is_a_fault() {
+    let objects = r##"
+        "rule": { "type": "line", "from": [0, -2], "to": [0, 2], "stroke": { "color": "#ffffff", "width": 0.02 } },
+        "word": { "type": "text", "text": "crossed", "size": 0.6, "position": [0, 0, 0] }"##;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.len() == 1 && faults[0].contains(r#""rule" and "word" overlap by"#),
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn text_beside_a_slope_is_judged_by_the_polygon_not_its_box() {
+    // The ramp's box holds both white texts; only "on" lies on the light triangle itself.
+    let objects = r##"
+        "ramp": { "type": "polygon", "points": [[-3, -1], [3, -1], [-3, 2]], "fill": { "color": "#eeeeee" } },
+        "above": { "type": "text", "text": "above", "size": 0.3, "position": [1.5, 1.2, 0] },
+        "on": { "type": "text", "text": "on", "size": 0.3, "position": [-2, -0.5, 0] }"##;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.iter().all(|line| !line.contains("\"above\""))
+            && faults.iter().any(|line| line.contains("\"on\"")),
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_trail_is_judged_by_the_text_its_stroke_runs_through() {
+    // The dot's arc goes up and over "under", which lies inside the trail's box, off its stroke,
+    // and ends through "crossed".
+    let objects = r#"
+        "ball": { "type": "dot", "radius": 0.05, "position": [-3, -2, 0] },
+        "arc": { "type": "trail", "object": "ball" },
+        "under": { "type": "text", "text": "under", "size": 0.3, "position": [0, -1.5, 0] },
+        "crossed": { "type": "text", "text": "crossed", "size": 0.3, "position": [2.8, -1.6, 0] }"#;
+    let timeline = r#"{ "type": "play", "duration": 1, "animations": [{ "type": "follow", "object": "ball", "law": { "x": "-3 + 6*t", "y": "-2 + 12*t - 12*t^2", "z": "0" } }] }"#;
+
+    let checked = check_layout(&scene(objects, timeline), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.iter().all(|line| !line.contains("\"under\""))
+            && faults
+                .iter()
+                .any(|line| line.ends_with(r#""arc" runs through "crossed""#)),
+        "{}",
+        checked.stdout
+    );
+}

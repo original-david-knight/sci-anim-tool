@@ -13,10 +13,12 @@ use serde::{Deserialize, Serialize};
 use crate::axes::{Axes, NumberLine};
 use crate::axes_3d::Axes3d;
 use crate::bar_plot::BarPlot;
+use crate::body::Collider;
 use crate::ends::Ends;
 pub use crate::group::Attachment;
 use crate::group::{Glow, GroupId, Groups};
 use crate::molecule::{Molecule, Representation};
+use crate::optics::{Light, Optic};
 use crate::path::{Path, UnderMap};
 use crate::pattern::Pattern;
 use crate::plane_map::PlaneMap;
@@ -27,7 +29,7 @@ use crate::skeletal_formula::SkeletalFormula;
 use crate::space_curve::SpaceCurve;
 use crate::surface::Surface;
 use crate::table::Table;
-use crate::timeline::{ChapterSpan, StepSpan, Timeline};
+use crate::timeline::{ChapterSpan, CollisionReport, StepSpan, Timeline};
 use crate::trail::Trail;
 
 pub struct Scene {
@@ -67,6 +69,11 @@ impl Scene {
 
     pub fn chapters(&self) -> &[ChapterSpan] {
         self.timeline.chapters()
+    }
+
+    /// Every collision of a simulation's bodies, in timeline order.
+    pub fn collisions(&self) -> &[CollisionReport] {
+        self.timeline.collisions()
     }
 
     pub fn sounds(&self) -> &[Sound] {
@@ -265,6 +272,12 @@ pub struct Object {
     /// For a readout: its decimals, unit and the glyphs of each number it shows. `shape` is the
     /// glyphs of its value, which the timeline's value track replaces at every scene time.
     pub readout: Option<Arc<Readout>>,
+    /// For a circle, a dot, a sphere, a polygon or a line drawn by its own points: what it
+    /// collides with when a simulation moves it, or holds it fixed, as a body.
+    pub collider: Option<Collider>,
+    /// For a lens, a mirror, or a polygon or circle with a refractive index: what it does to a
+    /// ray that names it.
+    pub optic: Option<Optic>,
 }
 
 impl Object {
@@ -395,9 +408,11 @@ pub fn own_to_world(objects: &BTreeMap<ObjectId, Object>, id: &ObjectId) -> Flat
             }
             .flat_to_world()
         }
-        PlacedBy::Itself | PlacedBy::Attachment(_) | PlacedBy::DataPoint(_) | PlacedBy::Ends(_) => {
-            object.flat_to_world()
-        }
+        PlacedBy::Itself
+        | PlacedBy::Attachment(_)
+        | PlacedBy::DataPoint(_)
+        | PlacedBy::Ends(_)
+        | PlacedBy::Light(_) => object.flat_to_world(),
     }
 }
 
@@ -420,6 +435,9 @@ pub enum PlacedBy {
     /// A line, an arrow or a spring with an end on an object, or a spring, lies between its two
     /// ends, and the stage draws it again between them at every scene time.
     Ends(Ends),
+    /// A ray or an image is traced through its optics at every scene time, in the world's xy
+    /// plane at the height of its source.
+    Light(Arc<Light>),
 }
 
 /// What an object is, after the scene file's shapes have become paths.
@@ -1307,6 +1325,33 @@ value_rule!(
     FiniteNumber(f64) from f64,
     schema: { "type": "number", "description": "A number." },
     accepts: |v| v.is_finite());
+
+value_rule!(
+    /// A body's coefficient of restitution, from 0 to 1.
+    Restitution(f64) from f64,
+    schema: { "type": "number", "minimum": 0, "maximum": 1, "description": "From 0 to 1." },
+    accepts: |v| (0.0..=1.0).contains(&v));
+value_rule!(
+    /// A body's coefficient of friction, from 0 to 10.
+    Friction(f64) from f64,
+    schema: { "type": "number", "minimum": 0, "maximum": 10, "description": "From 0 to 10." },
+    accepts: |v| (0.0..=10.0).contains(&v));
+value_rule!(
+    /// How fast a simulation's bodies fall, in world units a second squared, from 0 to 1000.
+    Gravity(f64) from f64,
+    schema: { "type": "number", "minimum": 0, "maximum": 1000, "description": "World units a second squared, from 0 to 1000." },
+    accepts: |v| (0.0..=1000.0).contains(&v));
+
+value_rule!(
+    /// A lens's or a mirror's focal length, in world units from -1000 to 1000 and not 0.
+    FocalLength(f64) from f64,
+    schema: { "type": "number", "minimum": -1000, "maximum": 1000, "not": { "const": 0 }, "description": "World units, from -1000 to 1000, not 0." },
+    accepts: |v| (-1000.0..=1000.0).contains(&v) && v != 0.0);
+value_rule!(
+    /// A refractive index, from 1 to 5.
+    RefractiveIndex(f64) from f64,
+    schema: { "type": "number", "minimum": 1, "maximum": 5, "description": "From 1 to 5." },
+    accepts: |v| (1.0..=5.0).contains(&v));
 
 impl Decimals {
     pub fn none() -> Self {

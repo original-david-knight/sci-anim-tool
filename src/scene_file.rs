@@ -23,11 +23,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use glam::{Vec2, Vec3};
+use glam::{DVec2, Vec2, Vec3};
 
 use crate::axes::{Appearance, Axes, Axis, AxisError, AxisScale, LabelError, NumberLine};
 use crate::axes_3d::Axes3d;
 use crate::bar_plot::{BarPlot, BarPlotError};
+use crate::body::{self, Bodies, Body, Collider, Motion as BodyMotion};
 use crate::data_point::DataToWorld;
 use crate::ends::{End, Ends};
 use crate::expr::{self, Expression, ExpressionError};
@@ -36,6 +37,7 @@ use crate::group::{Attachment, Glow, GroupAtoms, Groups};
 use crate::member::Member;
 use crate::molecule::{Representation, StandardResidue};
 use crate::morph::MorphEnd;
+use crate::optics::{self, Aim, Element, Light, Optic, Principal};
 use crate::path::{Path, PathError, UnderMap};
 use crate::pattern::{self, CopyExpressions, CopyIndex, PaletteIndex, Pattern, ToColor};
 use crate::plane_map::{LinearMap, MatrixRoute, NoTurningRoute};
@@ -44,11 +46,12 @@ use crate::reaction::{AtomPairFile, Reaction};
 use crate::readout::Readout;
 use crate::scene::{
     Align, Camera, CellPadding, Color, CopyCount, Decimals, Duration, EdgeShade, FieldOfView, Fill,
-    FillRule, FiniteNumber, Font, Material, MatrixEntry, MirrorPlane, Object, ObjectId,
-    OriginCoordinate, PlacedBy, Positive, Region, RevolutionAngle, Scene, SceneConfig,
-    SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
+    FillRule, FiniteNumber, FocalLength, Font, Friction, Gravity, Material, MatrixEntry,
+    MirrorPlane, Object, ObjectId, OriginCoordinate, PlacedBy, Positive, RefractiveIndex, Region,
+    Restitution, RevolutionAngle, Scene, SceneConfig, SecondsIntoStep, Shape, Solid, Sound, Stage,
+    Stroke, Sweep, Transform, Turns, UnitInterval,
 };
-use crate::simulate::{Set, Simulate};
+use crate::simulate::{Motion, Set, Simulate};
 use crate::skeletal_formula::{self, Look, SkeletalFormula};
 use crate::space_curve::{self, SpaceCurve, SpaceCurveError};
 use crate::structure_file::{self, StructureFileError};
@@ -560,6 +563,9 @@ pub enum SceneErrorCode {
     /// A position, rotation or scale, or a move, scale, rotate or follow, of a trail: it is
     /// drawn where its object has been.
     PlacedByTrail,
+    /// A position, rotation or scale, or a move, scale, rotate, follow, morph or linear map, of a
+    /// ray or an image: it is traced through its optics.
+    PlacedByLight,
     /// A count, or a follow of `value`, names an object that is not a readout.
     NotReadout,
     /// A follow with `along` whose curve starts farther than 0.001 from where the object stands
@@ -663,6 +669,7 @@ impl SceneFile {
             .partition(|(_, o)| o.shape.names_axes());
         let mut attaches = Vec::new();
         let mut ended = Vec::new();
+        let mut lit = Vec::new();
         for (id, mut object) in others.into_iter().chain(plots) {
             let groups_file: BTreeMap<String, GroupAtoms> = match &mut object.shape {
                 ShapeFile::Molecule { groups, .. } | ShapeFile::SkeletalFormula { groups, .. } => {
@@ -675,6 +682,7 @@ impl SceneFile {
             };
             let attach = object.attach.take();
             let ends = object.shape.take_ends();
+            let light = object.shape.light();
             match object.into_object(base, &objects) {
                 Ok(mut object) => {
                     if let Shape::Molecule {
@@ -707,6 +715,7 @@ impl SceneFile {
                     }
                     attaches.extend(attach.map(|a| (id.clone(), a)));
                     ended.extend(ends.map(|e| (id.clone(), e)));
+                    lit.extend(light.map(|l| (id.clone(), l)));
                     objects.insert(ObjectId::new(&id), object);
                 }
                 Err(Faults(faults)) => {
@@ -725,7 +734,21 @@ impl SceneFile {
             .iter()
             .map(|(id, _): &(String, AttachFile)| id.as_str())
             .collect();
-        place_by_ends(&mut objects, ended, &attached, &self.camera, &mut errors);
+        // Neither a shape placed by its ends nor a ray or an image has a position an end can sit on.
+        let placed_by_others: Vec<String> = ended
+            .iter()
+            .map(|(id, _)| id.clone())
+            .chain(lit.iter().map(|(id, _)| id.clone()))
+            .collect();
+        place_by_ends(
+            &mut objects,
+            ended,
+            &attached,
+            &placed_by_others,
+            &self.camera,
+            &mut errors,
+        );
+        place_by_light(&mut objects, lit, &attached, &placed_by_others, &mut errors);
         attach_all(&mut objects, attaches, &mut errors);
         // The timeline resolves object ids against the start stage, so it needs every object.
         if !errors.is_empty() {

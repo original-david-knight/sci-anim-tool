@@ -125,7 +125,7 @@ A `trail` draws the world points its `object` passed through, as a stroke that f
 - A trail is not created. It grows as its object moves, so it shows nothing before the object moves. Fade it in and out, and recolor its `stroke`.
 - A trail has no `position`, `rotation` or `scale` (`placed_by_trail`). Its object is not a plot or another trail (`invalid`).
 - Its points stay where the object was in the world: a trail of a data point does not move with its axes.
-- `inspect` reports `trail.point_count`, `trail.newest`, the point the object stands at, and `trail.newest_pixels`, with the trail's bounding box.
+- `inspect` reports `trail.point_count`, `trail.newest`, the point the object stands at, `trail.newest_pixels`, and `trail.crosses_objects`, the text its stroke runs through, with the trail's bounding box. `check-layout` judges a trail by the text it runs through, not by its box, so a label inside a projectile's arc is clear.
 
 ## A number that counts: readouts
 
@@ -174,3 +174,44 @@ When a lesson knows how fast things change but no formula for where they are, wr
 | Charging capacitor | `q` | `(V - q/C)/R` |
 | Predator and prey | `rabbits`, `foxes` | `a*rabbits - b*rabbits*foxes`, `d*rabbits*foxes - g*foxes` |
 | Epidemic | `s`, `i`, `r` | `-b*s*i`, `b*s*i - g*i`, `g*i` |
+
+## Bodies that collide: simulations of bodies
+
+From sci_anim 0.26.0 a `simulate` may move objects as rigid bodies instead of integrating variables. Name each object in `bodies`, with its `mass` in kilograms, and the simulation moves it under `gravity`, colliding with the bodies it touches. Nothing about the motion is written by hand: the carts bounce apart, the block slides, the ball lands where the physics puts it.
+
+```json
+{ "type": "simulate", "gravity": 0,
+  "bodies": {
+    "cart_a": { "mass": 2, "velocity": [3, 0] },
+    "cart_b": { "mass": 1, "restitution": 0 }
+  },
+  "sets": [
+    { "object": "a_tip", "position": ["cart_a.x + 0.4*cart_a.vx", "cart_a.y + 0.6", "0"] },
+    { "object": "momentum", "value": "cart_a.px + cart_b.px" },
+    { "object": "energy", "value": "cart_a.ke + cart_b.ke" }
+  ] }
+```
+
+- A body is a `circle`, a `dot`, a `sphere` or a convex `polygon`, drawn at scale 1, turned only about z, and placed by its own transform. A box is a polygon of four points. A circle or a dot weighs as a disc, a sphere as a solid ball. Each body starts where its object stands when the span starts, so a `move` before it is fine.
+- `velocity` is `[vx, vy]` in world units a second, `spin` degrees a second. World units are meters, so `gravity` defaults to 9.8, straight down; write `"gravity": 0` for carts on a level track that need no ground.
+- `"fixed": true` makes a body that never moves: the ground, a wall, a ramp. It takes no mass, and may also be a `line` drawn by its two points. A moving body cannot be a line: draw a rod as a thin polygon.
+- `"pivot": [x, y]` holds a body to a point of the world it turns about: a pendulum's bob with the pivot at the top of its string, a seesaw's plank with the pivot at its middle. The body only turns, so declare it where it hangs or leans when the span starts. Draw the string or rod as a `line` from the pivot to `{ "object": "bob" }`.
+- `restitution`, from 0 to 1, is how much closing speed a collision gives back: 1, the default, is elastic and keeps kinetic energy, 0 leaves the bodies moving together. A collision takes the smaller of its two bodies', so write it on one cart to make that collision inelastic. `friction`, from 0, is the coefficient of friction, and a contact takes the larger of its two bodies', so write it on the block, not the ramp.
+- Each moving body's position and rotation are set for the span. A set of them is `invalid`, so arrows and readouts are other objects. The sets read each moving body's quantities as `<object id>.<quantity>`: `x`, `y`, `angle`, `vx`, `vy`, `speed`, `spin`, `px`, `py` and `ke`, kinetic energy with turning included. Multiply by a mass yourself for anything else, as `9.8*2*cart.y` for potential energy.
+- A velocity arrow goes from `{ "object": "cart" }` to a tiny `dot` the simulation sets at `cart.x + k*cart.vx`. Keep the dot about 0.012 across, since it shows when the arrow has no length. A weight arrow keeps a fixed offset, as in Forces on a body above. A readout of momentum or energy starts at its value when the span starts, or `validate` reports `law_jump`.
+- `validate` lists every collision under `collisions`: its `scene_time`, its two `bodies` and the simulation's `path`. Start a narrated step's span on the word that names the collision at that scene time, or split the chapter there. Collisions of five balls in a row at one scene time are the strike passing along a Newton's cradle.
+- The same scene file gives the same motion to the bit on every machine and every run, at 16 steps a frame. A body simulation spans at most an hour of frames, as any simulation does.
+
+| Lesson | Bodies |
+|---|---|
+| Elastic and inelastic carts | two polygons, `"gravity": 0`, `restitution` 0 on one for perfectly inelastic |
+| A block on a ramp | a fixed triangle polygon, a block turned to the slope and declared touching it, `friction` on the block |
+| A projectile that bounces | a circle with a `velocity`, a fixed `line` as the ground, `restitution` below 1 on the ball |
+| A pendulum striking a block | a sphere with a `pivot`, a block on a fixed floor at the bob's lowest height |
+| Newton's cradle | five spheres in a row, touching, each with a `pivot` straight above it, the first declared pulled aside |
+| A seesaw or lever | a thin polygon with a `pivot` at its middle, blocks resting on it with `friction`, and a fixed floor it tips onto |
+
+The examples `../examples/newtons_cradle.json`, `../examples/block_on_ramp.json`, `../examples/projectile.json`, `../examples/pendulum_strikes_block.json` and `../examples/seesaw.json` are each one of these lessons.
+
+- A body declared overlapping another is pushed out in its first steps. Declare bodies touching or apart: a block on a ramp at the slope's surface plus half its height along the slope's normal.
+- Bodies move in the world's xy plane only; a sphere body still turns about z, so its shading does not roll.

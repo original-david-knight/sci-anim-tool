@@ -12,6 +12,7 @@
 mod axes;
 mod axes_3d;
 mod bar_plot;
+mod body;
 mod cartoon;
 mod check_layout;
 mod cli;
@@ -28,6 +29,7 @@ mod member;
 mod mesh;
 mod molecule;
 mod morph;
+mod optics;
 mod path;
 mod pattern;
 mod plane_map;
@@ -455,6 +457,12 @@ enum ShapeDetail {
     Ends {
         ends: ends::EndsReport,
     },
+    Ray {
+        ray: optics::LightReport,
+    },
+    Image {
+        image: optics::LightReport,
+    },
     Trail {
         trail: trail::TrailReport,
     },
@@ -699,7 +707,44 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                 scene::PlacedBy::Ends(ends) => Some(ends),
                 _ => None,
             };
-            let detail = if let Some(ends) = ends {
+            let light = match &staged.placed_by {
+                scene::PlacedBy::Light(light) => light.trace(&stage.objects).map(|(_, traced)| {
+                    let mut report = traced.report;
+                    let shows = staged.opacity.get() > 0.0 && staged.created.get() > 0.0;
+                    if let (
+                        optics::LightReport::Ray {
+                            crosses_objects, ..
+                        },
+                        Shape::Flat {
+                            path,
+                            stroke: Some(stroke),
+                            ..
+                        },
+                        true,
+                    ) = (&mut report, &staged.shape, shows)
+                    {
+                        *crosses_objects = plot::crossed_objects(
+                            path,
+                            stroke.width.get(),
+                            glam::Mat2::IDENTITY,
+                            &plot::OnFrame {
+                                plot_to_world: object_to_world,
+                                camera: draw_list.camera,
+                                scene_config: &scene.scene_config,
+                            },
+                            &shown_texts,
+                        );
+                    }
+                    report
+                }),
+                _ => None,
+            };
+            let detail = if let Some(report) = light {
+                Some(match report {
+                    ray @ optics::LightReport::Ray { .. } => ShapeDetail::Ray { ray },
+                    image @ optics::LightReport::Image { .. } => ShapeDetail::Image { image },
+                })
+            } else if let Some(ends) = ends {
                 let (from, to) = (
                     ends.from.world(&stage.objects),
                     ends.to.world(&stage.objects),
@@ -733,11 +778,29 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                     }
                     Shape::Trail(trail) => {
                         let newest = trail.points.last().copied();
+                        let shows = staged.opacity.get() > 0.0 && staged.created.get() > 0.0;
+                        let stroke: Vec<glam::Vec2> =
+                            trail.points.iter().map(|p| p.truncate()).collect();
+                        let crosses_objects = match (shows, path::Path::through(&stroke)) {
+                            (true, Some(path)) => plot::crossed_objects(
+                                &path,
+                                trail.stroke.width.get(),
+                                glam::Mat2::IDENTITY,
+                                &plot::OnFrame {
+                                    plot_to_world: glam::Mat4::IDENTITY,
+                                    camera: draw_list.camera,
+                                    scene_config: &scene.scene_config,
+                                },
+                                &shown_texts,
+                            ),
+                            _ => Vec::new(),
+                        };
                         Some(ShapeDetail::Trail {
                             trail: trail::TrailReport {
                                 point_count: trail.points.len(),
                                 newest,
                                 newest_pixels: newest.and_then(to_pixels),
+                                crosses_objects,
                             },
                         })
                     }

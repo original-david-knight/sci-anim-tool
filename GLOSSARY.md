@@ -144,7 +144,7 @@ _Avoid_: view, viewport, eye
 
 **Solid**:
 A shape with depth, drawn as lit faces in its material. A prism, a revolution, a tube, a surface and a sphere are solids.
-_Avoid_: mesh (a mesh is triangles), body, model (for a solid), 3D shape, primitive, volume
+_Avoid_: mesh (a mesh is triangles), body (a body is an object a simulation moves as a rigid body), model (for a solid), 3D shape, primitive, volume
 
 **Prism**:
 A solid made by pushing a region, its base, straight up by a height, with a face the shape of the base at each end. A box is a prism on a square, and a cylinder a prism on a circle.
@@ -160,7 +160,7 @@ _Avoid_: footprint, plan (for a base), profile (a profile is a revolution's), ba
 
 **Revolution**:
 A solid made by turning a region, its profile, around the object's y axis through an angle, a full circle by default. A cone is the revolution of a right triangle, and a torus of a circle drawn beside the axis.
-_Avoid_: lathe, turned part, spin, solid of rotation, revolution (in astronomy, an orbit, which a follow draws)
+_Avoid_: lathe, turned part, spin (a body's spin is how fast it turns), solid of rotation, revolution (in astronomy, an orbit, which a follow draws)
 
 **Profile**:
 The region a revolution turns around its axis, written as a circle, polygon or path on one side of the axis: half of the solid's outline.
@@ -306,7 +306,7 @@ _Avoid_: apply matrix, ApplyMatrix, apply_matrix, ApplyPointwiseFunction, matrix
 
 **Map origin**:
 The point a linear map's matrix acts about, in its `origin`, in world units: it stays where it is. Two linear maps of one object may have different map origins.
-_Avoid_: pivot, anchor (alignment avoids it), fixed point
+_Avoid_: pivot (a body's pivot is the point it turns about), anchor (alignment avoids it), fixed point
 
 **Matrix route**:
 How a linear map's matrix goes from the identity to all of the matrix as its progress runs, in its `route`. `entries`, the default, moves each entry straight, so a turn shrinks along the chord and a half turn passes through the zero matrix. `turn` turns by the rotation inside the matrix, the shorter way, while it stretches by the rest, so a rotation keeps every length at every frame; only a matrix whose determinant is more than 0 has one.
@@ -321,7 +321,7 @@ An animation that sets an object's position, rotation, scale or object opacity, 
 _Avoid_: updater, driver (a GPU's driver is one), always_redraw, tween, keyframes, move (a move eases to one place)
 
 **Simulation**:
-An animation that integrates its variables, named values such as an angle and its spin, from their starting values by their rates over its span, and sets positions, rotations and readouts' values from expressions in them at every scene time of it. Its rates read the variables and law time. It is integrated once, when the scene file is read, by fourth-order Runge-Kutta at eight steps a frame, and the stage at any scene time takes the step before it and integrates the rest of the way. A pendulum with drag, a projectile with air resistance, a charging capacitor, predator and prey, and an epidemic are each one simulation, and objects that share its variables, such as two masses on springs, move together. Each value it sets is held from its span's end on.
+An animation that integrates its variables, named values such as an angle and its spin, from their starting values by their rates over its span, and sets positions, rotations and readouts' values from expressions in them at every scene time of it. Its rates read the variables and law time. It is integrated once, when the scene file is read, by fourth-order Runge-Kutta at eight steps a frame, and the stage at any scene time takes the step before it and integrates the rest of the way. A pendulum with drag, a projectile with air resistance, a charging capacitor, predator and prey, and an epidemic are each one simulation, and objects that share its variables, such as two masses on springs, move together. Each value it sets is held from its span's end on. A simulation of bodies instead moves its bodies at sixteen steps a frame, the same on every machine, keeps their quantities at every frame and draws them straight between two, and its variables are their quantities: two carts that collide, a Newton's cradle and a seesaw are each one.
 _Avoid_: physics engine, solver, integrator, ODE (for the animation), updater, simulation (for any other animation)
 
 **Variable**:
@@ -336,13 +336,49 @@ _Avoid_: output, mapping, assignment (for a simulation's set)
 The expression that gives how fast one of a simulation's variables changes, per second of law time, in the variables and `t`. A simulation writes one rate for every variable.
 _Avoid_: derivative (alone), velocity (a rate is any variable's), slope (for a rate), delta
 
+**Body**:
+An object a simulation moves as a rigid body in the world's xy plane, by Newton's laws, under gravity and pushed by the bodies it touches: a circle, dot, sphere or convex polygon, drawn at scale 1 and turned only about z, or for a fixed body also a line. A body is free, turns about its pivot, or is fixed. Its mass is spread evenly over its shape, a circle's as a disc and a sphere's as a solid ball. Each moving body's position and rotation are set by its simulation, which starts it where its object stands when the span starts, and its quantities are the simulation's variables. Carts on a track, a block on a ramp, a projectile, a pendulum's bob, the balls of a Newton's cradle and a seesaw's plank are bodies.
+_Avoid_: rigid body (alone, for the scene file's term), physics object, actor, particle, solid (a solid is a shape with depth)
+
+**Fixed body**:
+A body that never moves but stops the bodies that meet it, written `"fixed": true`, with no mass: the ground, a wall, a ramp, a track.
+_Avoid_: static body, kinematic body, ground (for every fixed body), wall (for every fixed body)
+
+**Pivot**:
+A point of the world a body turns about and never leaves, as a rigid rod or an axle would hold it, so the body only turns: the top of a pendulum, a seesaw's fulcrum. A pivoted body meets others with the mass its moment of inertia about the pivot gives it at the point of contact.
+_Avoid_: hinge, joint, axle, fulcrum (alone)
+
+**Collider**:
+What a body collides with: its object's disc, ball, convex polygon or line, in its own plane at scale 1, read when the scene file is read.
+_Avoid_: hitbox, bounds, bounding box (a bounding box is a report's), path (a path is a flat shape's curve)
+
+**Collision**:
+Two bodies meeting faster than 0.05 world units a second, settled at once, each pair as if it collided alone, the pair that closes fastest first, so a collision passes along a row of touching balls. Its restitution sets how much of the closing speed comes back, and its friction how much sliding along the contact it stops. Slower meetings are resting contact: the bodies hold each other up, with friction, and give back no speed. `validate` lists every collision under `collisions`, with its scene time, its two bodies and its simulation's path, so a narration can land on it.
+_Avoid_: impact (alone), hit (for a collision), contact (for a collision; resting contact is not one), crossed label, crossed object, event, marker
+
+**Restitution**:
+The coefficient of restitution of a body, from 0 to 1: the share of their closing speed two colliding bodies get back. 1 is an elastic collision, which keeps their kinetic energy, and 0 a perfectly inelastic one, which leaves them moving together. A collision takes the smaller of its two bodies' restitutions, and a body's is 1 unless written.
+_Avoid_: bounciness, elasticity, bounce
+
+**Friction**:
+The coefficient of friction of a body, from 0 to 10: bodies that slide along each other push back along their contact with this times how hard they press, and bodies whose sliding it can stop stay put. A contact takes the larger of its two bodies' frictions, and a body's is 0 unless written.
+_Avoid_: drag (drag is a rate's term, as in a pendulum with drag), roughness (a material's), damping
+
+**Gravity**:
+How fast a simulation's bodies fall, straight down the world's -y, in world units a second squared: 9.8 unless written, Earth's in meters, and 0 for none.
+_Avoid_: g (alone, in a name), weight (weight is a force)
+
+**Quantity**:
+One number of a moving body that a simulation's sets read as `<object id>.<quantity>`: `x`, `y` and `angle` of its object's transform, `vx`, `vy` and `speed` of its center of mass, `spin` in degrees a second, momentum `px` and `py`, and kinetic energy `ke`, turning included. A body's quantities are its simulation's variables.
+_Avoid_: property, attribute, field (a field is the scene file's), state, observable
+
 **Carry**:
 What a follow with `along` does: it moves an object along the path of a flat shape or a plot, or the space curve of a tube, by length in that object's own space over its span, shaped by its easing curve, wherever that object is at each scene time. A carry and a create of a plot with the same span and easing curve keep the object on the pen's end.
 _Avoid_: MoveAlongPath, motion path, path animation, ride, glide
 
 **Tangent**:
 The way a curve runs at a point, toward its end. A carry with `faces: tangent` turns its object so that the object's own x axis points along the tangent, and an `along` layout with `faces: tangent` turns each copy the same way at its place, before the copy's own rotation turns it further. The object's own z axis stays square to the plane of a flat curve; on a space curve it starts as near the curve's own +z as it can, or +y on a curve that starts along z, and never twists about the curve, so on a space curve in the xy plane it stays on +z. Along straight pieces of a path that meet at joints turning less than 15 degrees, as a plot's do, the tangent turns evenly from the bisector of one joint to the next, so it follows the curve the pieces stand for; a sharper corner turns it at once.
-_Avoid_: velocity, bearing, direction of travel
+_Avoid_: velocity (a body's velocity is how fast its center of mass moves), bearing, direction of travel
 
 **Law**:
 The three expressions in law time, `t`, that a follow sets its value from, or for a readout's value or an object opacity the one expression `value`. An object opacity's law must stay within 0 to 1 at every frame time of its span. The value is what the law gives, not a change added to what the follow found, so a law must start where the value is, and the value stays at what the law gave at the span's end.
@@ -460,6 +496,56 @@ _Avoid_: adapter (except wgpu's `Adapter`, in the module that uses wgpu), graphi
 What sort of GPU a driver says it offers: `discrete`, a GPU of its own; `integrated`, one built into the processor; `other`, one whose driver names no kind, as OpenGL's do; `virtual`, one a virtual machine is given; or `cpu`, a driver that draws on the processor. A command draws on a discrete GPU when the machine has one, then an integrated one, and so on in that order. `--gpu KIND` draws on the first GPU of that kind instead, and is a GPU error when the machine has none.
 _Avoid_: power preference (except wgpu's `PowerPreference`), device type (except wgpu's `DeviceType`), adapter type
 
+### Optics
+
+**Optical element**:
+An object that does something to light, which a ray or an image names in its `optics`: a lens, a mirror, or a medium.
+_Avoid_: optic (alone, in prose), optical component, surface (a surface is a solid)
+
+**Lens**:
+An optical element that is a thin lens across its object's own y axis, `height` tall, its optical axis along its object's own x: converging for a positive focal length, drawn biconvex, diverging for a negative one, drawn biconcave. A ray bends at its middle plane toward the image of its source, by the thin lens equation, 1/do + 1/di = 1/f.
+_Avoid_: glass (a medium is glass), refractor
+
+**Mirror**:
+An optical element that reflects on its object's own -x side, `height` tall: flat with no focal length, concave for a positive one, convex for a negative one, curved on the circle of twice its focal length's radius through its object's position. A ray reflects where it meets the drawn mirror, toward the image of its source by the mirror equation, and stops at its back.
+_Avoid_: reflector, mirror plane (a mirror plane is a mirror image's), mirror image (a mirror image is a molecule's)
+
+**Focal length**:
+A lens's or a mirror's `focal_length`, in world units: how far its focal points lie from it, positive when it converges light and negative when it spreads it.
+_Avoid_: power, focus (alone)
+
+**Focal point**:
+A point on a lens's or a curved mirror's optical axis a focal length away, through which rays along the axis leave, or from which they seem to leave. A lens has one on each side and a curved mirror one in front; a scene marks them with dots attached to the lens or mirror.
+_Avoid_: focus (alone), F (in a name)
+
+**Optical axis**:
+The line through a lens or a curved mirror, along its object's own x axis, that its focal points and center of curvature lie on.
+_Avoid_: principal axis, axis (alone; axes are a plot's)
+
+**Medium**:
+An optical element that is glass, water or another clear region: a polygon or circle with a `refractive_index`. A ray refracts at each of its edges by Snell's law, and reflects whole inside it past the critical angle. Air outside every medium has index 1.
+_Avoid_: material (a material is how a surface looks), block (for glass; a block is a body), glass (alone, for the term)
+
+**Refractive index**:
+How much a medium slows light, from 1 to 5, its `refractive_index`: 1.33 for water, 1.5 for glass. A ray crossing from index n1 to n2 keeps n1 sin θ1 = n2 sin θ2, and from the denser side past the critical angle, whose sine is n2/n1, it reflects whole.
+_Avoid_: index (alone, which a copy has), n (in a name), IOR
+
+**Ray**:
+An object that draws a ray of light from its `from` through the optical elements of its `optics`, traced again at every scene time: bent at each lens, reflected off each mirror and refracted at each edge of a medium it meets, in the order it meets them, and running `length` past its last bend. It is placed by its light, with no position, rotation or scale of its own. A create draws it from its source along its path.
+_Avoid_: beam, light (alone), line (a line is an object), trace (a back trace is a ray's dashed part)
+
+**Principal ray**:
+A ray a ray diagram draws from an object's tip that a lens or curved mirror sends somewhere easy to draw, as `principal` names it: `parallel` along the optical axis, `focal` through the focal point on the object's side, or `center` through a lens's middle or toward a mirror's center of curvature.
+_Avoid_: chief ray (one kind of principal ray), construction ray
+
+**Image**:
+The point where the rays from a point meet after a lens or mirror, real when they meet there and virtual when they only seem to come from it, and the object that draws the image of an arrow through the lenses and mirrors of its `optics`: an arrow between the images of its `from` and `to`, solid when real and dashed when virtual, upside down when inverted, hidden while the image lies at infinity. Its magnification is its height over the arrow's.
+_Avoid_: picture, frame (a frame is an image of the scene), reflection (alone)
+
+**Back trace**:
+The dashed part a ray with `back_trace` draws, from where it leaves its last lens or mirror back to the virtual image of its source, which its light only seems to come from.
+_Avoid_: extension, virtual ray, dotted line
+
 ### Plots
 
 **Axes**:
@@ -496,11 +582,11 @@ _Avoid_: tick text
 
 **Crossed label**:
 A tick label or axis label of a plot's axes that the plot's stroke, at its full width, runs into the bounding box of. `inspect` names each one on the plot in `crosses_labels`, so an agent that cannot see the frame can move the plot or the label.
-_Avoid_: collision, overlap, clash, intersection (for a label)
+_Avoid_: collision (for a label; a collision is two bodies meeting), overlap, clash, intersection (for a label)
 
 **Crossed object**:
-A text or math object whose glyphs a plot's stroke, at its full width, runs into on the frame at one scene time, while both show. `inspect` names each one on the plot in `crosses_objects`. A stroke that passes between two glyphs crosses neither.
-_Avoid_: collision, overlap, clash, intersection (for an object)
+A text or math object whose glyphs the stroke of a plot, a ray or a trail, at its full width, runs into on the frame at one scene time, while both show. `inspect` names each one on the plot, ray or trail in `crosses_objects`, and `check-layout` judges those strokes by it, not by their boxes. A stroke that passes between two glyphs crosses neither.
+_Avoid_: collision (for an object; a collision is two bodies meeting), overlap, clash, intersection (for an object)
 
 **Plot**:
 A flat shape written in the data coordinates of an axes object, which the plot names in `axes`: a stroke along a curve, or a bar plot. A plot has no position, rotation or scale of its own: it is placed by its axes and is always where they are. A curve is cut at the axes' box, where it has no value, and where it jumps, as `step(x)` does at 0.
@@ -587,7 +673,7 @@ One thing wrong with the picture that the layout check prints, with the run of c
 _Avoid_: problem (the word the printed lines use, kept for their readers), issue, warning, scene error
 
 **Checked scene time**:
-A scene time the layout check reads the stage at: the middle and end of a step, the end of a chapter, the moment before a step's fades to 0 begin, the start, middle and end of an animation's span, and every frame time of a follow's span. Times within a millisecond are one. Step ends, chapter ends and the scene's duration are kept to the nanosecond, so steps of 0.7 and 0.1 seconds end at 0.8, not at their float sum. The layout check writes each checked scene time with six significant digits, or more where six would round past the scene's end, so `inspect` and `frame` take back every one it writes.
+A scene time the layout check reads the stage at: the middle and end of a step, the end of a chapter, the moment before a step's fades to 0 begin, the start, middle and end of an animation's span, and every frame time of the span of a follow, a simulation, or in a scene with a ray or an image any other animation. Times within a millisecond are one. Step ends, chapter ends and the scene's duration are kept to the nanosecond, so steps of 0.7 and 0.1 seconds end at 0.8, not at their float sum. The layout check writes each checked scene time with six significant digits, or more where six would round past the scene's end, so `inspect` and `frame` take back every one it writes.
 _Avoid_: sample (a sound's), probe, checkpoint
 
 **Contact sheet**:
@@ -822,7 +908,7 @@ _Avoid_: name (for an atom group's id), key, label (a label is visible text)
 
 **Group center**:
 The mean position of an atom group's shown atoms, or of all its atoms when none is shown. `inspect` reports it as the group's `center`, and an attachment is measured from where the frame shows it.
-_Avoid_: anchor (alignment avoids it), centroid (the whole molecule's), pivot
+_Avoid_: anchor (alignment avoids it), centroid (the whole molecule's), pivot (a body's pivot is the point it turns about)
 
 **Highlight**:
 An animation that takes the glow of a member, an atom group of a molecule or a skeletal formula, a table's cell, a pattern's copy or a bar plot's bar, to a glow share over its span, in a color the scene sets or the color the glow already has. A glow at glow share 0 shows no color, so it lights up in the highlight's color from the start of the span. Lighting a member in and out takes two highlights, as a fade in and out takes two fades.

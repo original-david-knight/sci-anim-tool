@@ -8,9 +8,9 @@ A scene file is the JSON file a scene is written in: its scene config, its camer
 - [Scene config](#scene-config)
 - [Camera](#camera)
 - [Steps](#steps): [`wait`](#wait), [`chapter`](#chapter), [`play`](#play)
-- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
+- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`lens`](#lens), [`mirror`](#mirror), [`ray`](#ray), [`image`](#image), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
 - [Animations](#animations): [`fade`](#fade), [`count`](#count), [`move`](#move), [`scale`](#scale), [`rotate`](#rotate), [`create`](#create), [`write`](#write), [`reaction`](#reaction), [`morph`](#morph), [`highlight`](#highlight), [`recolor`](#recolor), [`camera-move`](#camera-move), [`camera-look`](#camera-look), [`camera-zoom`](#camera-zoom), [`linear-map`](#linear-map), [`simulate`](#simulate), [`follow`](#follow)
-- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
+- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Body](#body), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Principal](#principal), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
 
 ## Top level
 
@@ -108,6 +108,7 @@ A flat circle about the object's position. No stroke when `stroke` is absent, an
 | `radius` | number | yes | The circle's radius in world units, more than 0. |
 | `stroke` | [Stroke](#stroke) |  | The circle's outline. With none, the circle has no stroke and cannot be created. |
 | `fill` | [Fill](#fill) |  | The circle's inside. With none, the circle has no fill. |
+| `refractive_index` | number |  | The refractive index of the glass or water the circle stands for, from 1 to 5, so a `ray` that names it refracts at its edge, as at a drop of water. The default is none. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -286,6 +287,78 @@ The world points `object` passed through over the last `length` seconds of scene
 | `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
 | `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
 
+### `lens`
+
+A thin lens across the object's own y axis, its optical axis along the object's own x: converging for a positive `focal_length`, drawn biconvex, or diverging for a negative one, drawn biconcave. Mark its focal points with dots attached to it at an `offset` of the focal length, which go with it. A `ray` or an `image` that names it in `optics` bends at its middle by the thin lens equation, 1/do + 1/di = 1/f, so rays from a point meet, or seem to meet, at its image. Move it, and every ray and image through it follows. Its `scale` draws it bigger but leaves its focal length; keep it at 1. Needs sci_anim 0.26.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `lens` | yes |  |
+| `focal_length` | number | yes | The focal length in world units, from -1000 to 1000 and not 0: positive for a converging lens, negative for a diverging one. |
+| `height` | number |  | How tall the lens is along its own y, in world units, more than 0. A ray that passes above or below it is not bent. The default is 3. |
+| `stroke` | [Stroke](#stroke) |  | The lens's outline. The default is white and 0.04 wide. |
+| `fill` | [Fill](#fill) |  | The lens's inside, such as a glass blue at opacity 0.3. With none, it has no fill. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
+### `mirror`
+
+A mirror across the object's own y axis, its reflecting side toward the object's own -x, with short strokes along its back: flat with no `focal_length`, concave for a positive one and convex for a negative one, an arc of the circle of twice its focal length's radius through the object's position. A `ray` that names it reflects off it, and an `image` names it to draw the image it makes, by the mirror equation 1/do + 1/di = 1/f; a ray that meets its back stops there. Needs sci_anim 0.26.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `mirror` | yes |  |
+| `focal_length` | number |  | The focal length in world units, from -1000 to 1000 and not 0: positive for a concave mirror, negative for a convex one. The default is none: a flat mirror. |
+| `height` | number |  | How tall the mirror is along its own y, in world units, more than 0. The default is 3. |
+| `stroke` | [Stroke](#stroke) |  | The mirror's color and width. The default is white and 0.04 wide. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
+### `ray`
+
+A ray of light from `from`, computed at every scene time through the lenses, mirrors and media of `optics`: it bends at a lens's middle toward its source's image, reflects off a mirror, refracts by Snell's law at each edge of a polygon or circle with a `refractive_index`, and reflects whole inside one past the critical angle. It ends `length` past the last point it bends at. Aim it with `principal`, `through` or `angle`. It is placed by its light: it has no `position`, `rotation` or `scale` of its own, and is hidden while an object its ends sit on is. A `create` draws it from its source along its path, so principal rays drawn one after another build a ray diagram. `inspect` reports its `points`, and the `image` its source has at the last lens or mirror. Needs sci_anim 0.26.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `ray` | yes |  |
+| `from` | [End](#end) | yes | Where the ray starts: a point `[x, y]` in the world, or an end on an object, as `{ "object": "candle", "offset": [0, 1.5, 0] }` for the tip of an arrow standing on `candle`. |
+| `principal` | [Principal](#principal) |  | A principal ray of the first lens or curved mirror in `optics`: `parallel` along its axis, `focal` through, or toward, its focal point on the source's side, or `center` through a lens's middle or toward a mirror's center of curvature. Give one of `principal`, `through` and `angle`. |
+| `through` | [End](#end) |  | A point the ray passes through on its way out, written as `from` is. |
+| `angle` | number |  | The ray's direction from `from`, in degrees counterclockwise from +x. |
+| `optics` | array of string | yes | The object ids of the lenses, mirrors and media the ray may meet, each a `lens`, a `mirror`, or a `polygon` or `circle` with a `refractive_index`. It meets whichever lies first along its way, as often as it reaches one, up to 64 times. |
+| `length` | number |  | How far the ray runs past the last point it bends at, in world units, more than 0. The default is 10. |
+| `back_trace` | boolean |  | `true` to draw a dashed line from where the ray leaves its last lens or mirror back to the virtual image its source has there, as a ray diagram does for a diverging lens, a convex mirror or an object inside a focal length. Nothing is drawn for a real image. The default is `false`. |
+| `stroke` | [Stroke](#stroke) |  | The ray's color and width. The default is white and 0.04 wide. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
+### `image`
+
+The image of the arrow from `from` to `to` through the lenses and mirrors of `optics`, in the order the light meets them, computed at every scene time: an arrow from the image of `from` to the image of `to`, upside down when inverted, with a solid shaft when real and a dashed one when virtual. Move the object or a lens and it moves, grows and turns over as the optics say. It draws nothing while the image lies at infinity, as when the object stands at a focal point. It is placed by its light, as a `ray` is. `inspect` reports its `magnification` and whether it is `real`. Needs sci_anim 0.26.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `image` | yes |  |
+| `from` | [End](#end) | yes | The object's foot, often on the optical axis, written as a ray's `from` is. |
+| `to` | [End](#end) | yes | The object's tip, written as `from` is. |
+| `optics` | array of string | yes | The object ids of the lenses and mirrors that form the image, in the order the light meets them. |
+| `tip_length` | number |  | The length of the image's tip in world units, more than 0. The default is 0.25. |
+| `stroke` | [Stroke](#stroke) |  | The image's color and width. The default is white and 0.04 wide. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
 ### `readout`
 
 A number typeset as math, with `unit` after it, such as a speed that counts as a ball falls. Its `value` changes as a track does: a `count` eases it to a `to`, a follow with `"sets": "value"` sets it from a law with one expression, `value`, and a simulation sets it. Its digits and the layout of each count of digits are typeset once, so a number that counts costs no more than one that stands still. The number is lined up on its decimal point, or on the end of its last digit with no decimals, at the object's position, so its digits keep their places as it grows; give it room to the left. It is written, faded, attached and recolored as math is. `inspect` reports its `value` and the `text` it shows under `readout`.
@@ -314,6 +387,7 @@ A closed path through `points` in order, at least three.
 | `points` | array of [number, number] | yes | The corners in order, each `[x, y]` in world units in the object's plane, measured from its position. At least three. The path closes from the last back to the first. |
 | `stroke` | [Stroke](#stroke) |  | The polygon's outline. With none, it has no stroke and cannot be created. |
 | `fill` | [Fill](#fill) |  | The polygon's inside. With none, it has no fill. |
+| `refractive_index` | number |  | The refractive index of the glass or water the polygon stands for, from 1 to 5, so a `ray` that names it refracts at each edge by Snell's law: 1.33 for water, 1.5 for glass. A plate of glass, a triangle of glass and a flat interface are polygons. The default is none. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -799,12 +873,16 @@ Carries every point of each object in `objects` by one 2x2 `matrix` about `origi
 
 Integrates `variables` from their starting values by their `rates` over its span, and sets each value in `sets` from expressions in the variables at every scene time of it: a pendulum with drag, a projectile with air resistance, a charging capacitor, predator and prey, an epidemic, or two masses on springs that share their variables. The rates read the variables and `t`, law time, which counts from the span or from the chapter `from` names, as a follow's does. It is integrated once, when the scene file is read, by fourth-order Runge-Kutta at eight steps a frame, over at most 216000 frames, an hour at 60 frames a second. A variable with no finite value at a step is `out_of_range` at its rate, and a set that does not start where its value is, is `law_jump`. Each value it sets is held from its span's end on, and no other animation changes it while the simulation plays. A simulation takes no `easing_curve`.
 
+With `bodies` instead of `variables` and `rates`, it moves objects as rigid bodies in the world's xy plane, under `gravity`, colliding where they touch: carts that collide, a block sliding down a ramp, a projectile, a pendulum striking a block, a Newton's cradle, a seesaw. Each moving body's position and rotation are set for the span, and its quantities are variables the `sets` read as `<object id>.<quantity>`: `x`, `y` and `angle` of its object, `vx`, `vy` and `speed` of its center of mass, `spin` in degrees a second, momentum `px` and `py`, and kinetic energy `ke`, turning included, so `cart.ke` is a readout of a cart's kinetic energy and `cart.x + 0.3*cart.vx` the tip of its velocity arrow. World units are meters and masses kilograms. The bodies step 16 times a frame, the same on every machine, and `validate` lists every collision with its scene time under `collisions`.
+
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | `simulate` | yes |  |
-| `variables` | map of name to number | yes | Each variable's name and its value at the span's start, such as `{ "angle": 1.2, "spin": 0 }`. A name is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name. At least one. |
-| `rates` | map of name to string | yes | How fast each variable changes, per second of law time: one expression in the variables and `t` for every variable, by its name, such as `{ "angle": "spin", "spin": "-9.8*sin(angle) - 0.3*spin" }`. |
-| `sets` | array of [Set](#set) | yes | The values the simulation sets, each value of an object once. At least one. |
+| `variables` | map of name to number |  | Each variable's name and its value at the span's start, such as `{ "angle": 1.2, "spin": 0 }`. A name is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name. At least one. Leave it out with `bodies`. |
+| `rates` | map of name to string |  | How fast each variable changes, per second of law time: one expression in the variables and `t` for every variable, by its name, such as `{ "angle": "spin", "spin": "-9.8*sin(angle) - 0.3*spin" }`. Leave it out with `bodies`. |
+| `bodies` | map of name to [Body](#body) |  | The objects the simulation moves as rigid bodies, keyed by object id: circles, dots, spheres and convex polygons, drawn at scale 1 and turned only about z, and, for a fixed body, lines. Each starts where its object stands when the span starts. At least one moves. Give `bodies` or `variables`, not both. |
+| `gravity` | number |  | How fast bodies fall, straight down the world's -y, in world units a second squared, from 0 to 1000. The default is 9.8, Earth's in meters; 0 for none, as for carts on a level track. Only with `bodies`. |
+| `sets` | array of [Set](#set) |  | The values the simulation sets, each value of an object once: at least one, or with `bodies` none or more, since each moving body's position and rotation are set already. |
 | `from` | string |  | The id of a chapter: law time counts from that chapter's start instead of from this simulation's span. The simulation's own chapter, or one before it. |
 | `easing_curve` | [Easing curve](#easing-curve) |  | See [Fields every animation takes](#fields-every-animation-takes). |
 | `start` | number |  | See [Fields every animation takes](#fields-every-animation-takes). |
@@ -908,6 +986,20 @@ One axis of a `3d-axes` object.
 How an axis lays data values along its length. `linear`, the default, puts equal steps of value at equal steps along it. `log` puts each power of ten an equal step along it, so a value 1000 times another sits three such steps past it. The variants carry no doc comments, for the reason `FillRule` gives.
 
 One of `linear`, `log`.
+
+### Body
+
+How one object moves as a body of a simulation: free, turning about a `pivot`, or `fixed`.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `mass` | number |  | The body's mass in kilograms, more than 0, spread evenly over its shape: a circle or a dot is a disc, a sphere a solid ball. Required unless the body is `fixed`. |
+| `velocity` | [number, number] |  | The velocity of its center of mass when the span starts, `[vx, vy]` in world units a second. The default is `[0, 0]`. A pivoted body keeps only the part of it that turns it about its pivot. |
+| `spin` | number |  | How fast it turns when the span starts, in degrees a second, counterclockwise when positive. The default is 0. |
+| `pivot` | [number, number] |  | A point of the world, `[x, y]` in world units, that the body turns about and never leaves, as a rigid rod or an axle would hold it: the top of a pendulum's string, a seesaw's fulcrum. The default is none: the body moves freely. |
+| `fixed` | boolean |  | `true` for a body that never moves but stops others: the ground, a wall, a ramp, a track. It takes no `mass`, `velocity`, `spin` or `pivot`. The default is `false`. |
+| `restitution` | number |  | The coefficient of restitution: how much of their closing speed two colliding bodies get back, from 0, which leaves them moving together, to 1, an elastic collision that keeps their kinetic energy. A collision takes the smaller of its two bodies'. The default is 1, so the other body decides. |
+| `friction` | number |  | The coefficient of friction, from 0 to 10: sliding bodies push back along their contact with this times how hard they press, and bodies stay put while that holds them. A contact takes the larger of its two bodies'. The default is 0, so the other body decides. |
 
 ### Category axis
 
@@ -1185,6 +1277,12 @@ It is one of these.
 - string. An expression in the copy's index and place, which gives which color of `palette` the copy picks, counting from 0, such as `mod(i, 4)`. Its value at each copy must be a whole number from 0 to one less than the palette's length. In a `grid` it reads `i`, `j` and `k`, the copy's index along x, y and z from 0, and in a `ring` or `along` it reads `i`, the copy's index from 0. In every layout it reads `x`, `y` and `z`, the copy's place in the pattern's own space. It may also read `t`, law time in seconds, so the shape changes over time while a `follow` with `"sets": "shape"` runs it, and is evaluated again at every frame time of that follow's span when the scene file is read; before that follow it is drawn at `t` of 0. The operators are `+`, `-`, `*`, `/` and `^` for a power, with parentheses. `^` binds tightest and groups to the right, so `-a^2` is `-(a^2)`. A product needs its `*`: write `2*a`, not `2a`. The constants are `pi`, `e` and `tau`. The functions of one argument are `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`, `exp`, `ln`, `log2`, `log10`, `sqrt`, `cbrt`, `abs`, `floor`, `ceil`, `sign` and `step`, and `min`, `max`, `atan2` and `mod` take two, as in `max(a, 0)`. `ln` is the natural logarithm, and there is no `log`. `atan2(y, x)` is the angle of the point (x, y) from the +x axis, from -pi to pi. `mod(a, b)` is what is left of a after taking away whole b's, with the sign of b, so `mod(-1, 3)` is 2. `step(a)` is 1 where a is 0 or more and 0 below it. Angles are in radians. At most 500 characters. It is evaluated at every copy when the scene file is read, and must have a finite value at each: the first copy where it has none is a scene error, with its index and place.
 - array of integer. One palette index a copy, in index order: a grid's `i` fastest, then `j`, then `k`.
 
+### Principal
+
+A principal ray of a lens or a curved mirror.
+
+One of `parallel`, `focal`, `center`.
+
 ### Region
 
 The region of a prism's base or a revolution's profile: what a circle's, polygon's or path's fill would fill. It has no stroke, fill or position of its own, and its coordinates are in world units from the object's position.
@@ -1330,6 +1428,22 @@ The same as [`spring`](#spring), without the [fields every object takes](#fields
 #### `trail` shape
 
 The same as [`trail`](#trail), without the [fields every object takes](#fields-every-object-takes).
+
+#### `lens` shape
+
+The same as [`lens`](#lens), without the [fields every object takes](#fields-every-object-takes).
+
+#### `mirror` shape
+
+The same as [`mirror`](#mirror), without the [fields every object takes](#fields-every-object-takes).
+
+#### `ray` shape
+
+The same as [`ray`](#ray), without the [fields every object takes](#fields-every-object-takes).
+
+#### `image` shape
+
+The same as [`image`](#image), without the [fields every object takes](#fields-every-object-takes).
 
 #### `readout` shape
 

@@ -179,6 +179,31 @@ impl Timeline {
                 None => object.opacity = UnitInterval::clamped(0.0),
             }
         }
+        // Rays and images next: each reads its source and its lenses and mirrors where the passes
+        // above left them. One with nothing to draw, as an image at infinity, is hidden.
+        let lit: Vec<(ObjectId, Option<(f32, Path)>)> = stage
+            .objects
+            .iter()
+            .filter_map(|(id, o)| match &o.placed_by {
+                PlacedBy::Light(light) => Some((
+                    id.clone(),
+                    light
+                        .trace(&stage.objects)
+                        .map(|(z, traced)| (z, traced.path)),
+                )),
+                _ => None,
+            })
+            .collect();
+        for (id, traced) in lit {
+            let object = stage.objects.get_mut(&id).expect("listed above");
+            match (traced, &mut object.shape) {
+                (Some((z, traced)), Shape::Flat { path, .. }) => {
+                    object.transform.position.z = z;
+                    *path = traced;
+                }
+                _ => object.opacity = UnitInterval::clamped(0.0),
+            }
+        }
         // Placed objects last: they read the transforms, plane maps and the camera this scene
         // time ended at, so a plot of carried axes and an object attached to a carried object go
         // with it. A plot has its axes' plane map, and an attached object has none.
@@ -186,7 +211,10 @@ impl Timeline {
             .objects
             .iter()
             .filter_map(|(id, o)| match &o.placed_by {
-                PlacedBy::Itself | PlacedBy::DataPoint(_) | PlacedBy::Ends(_) => None,
+                PlacedBy::Itself
+                | PlacedBy::DataPoint(_)
+                | PlacedBy::Ends(_)
+                | PlacedBy::Light(_) => None,
                 PlacedBy::Axes(axes) => Some((
                     id.clone(),
                     stage.objects[axes].transform,
@@ -248,6 +276,9 @@ impl Timeline {
             .iter()
             .filter(|(_, o)| match &o.placed_by {
                 PlacedBy::Ends(ends) => ends.objects().any(|on| {
+                    stage.objects[on].opacity.get() == 0.0 || stage.objects[on].created.get() == 0.0
+                }),
+                PlacedBy::Light(light) => light.end_objects().any(|on| {
                     stage.objects[on].opacity.get() == 0.0 || stage.objects[on].created.get() == 0.0
                 }),
                 _ => false,

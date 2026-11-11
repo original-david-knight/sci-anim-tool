@@ -1,0 +1,21 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A telescope of two lenses", "size": 0.5, "position": [0, 3.5, 0] },
+    "axis": { "type": "line", "from": [-7, 0], "to": [7, 0], "stroke": { "color": "#666666", "width": 0.02 } },
+    "objective": { "type": "lens", "focal_length": 4, "height": 4, "position": [-3, 0, 0], "stroke": { "color": "#58c4dd", "width": 0.03 }, "fill": { "color": "#58c4dd", "opacity": 0.25 } },
+    "eyepiece": { "type": "lens", "focal_length": 1, "height": 2.4, "position": [2, 0, 0], "stroke": { "color": "#58c4dd", "width": 0.03 }, "fill": { "color": "#58c4dd", "opacity": 0.25 } },
+    "objective_label": { "type": "math", "tex": "f_o = 4", "size": 0.38, "attach": { "object": "objective", "offset": [0, 2.45] } },
+    "eyepiece_label": { "type": "math", "tex": "f_e = 1", "size": 0.38, "attach": { "object": "eyepiece", "offset": [0, 1.65] } },
+    "top": { "type": "ray", "from": [-7, 1.4], "angle": -3, "optics": ["objective", "eyepiece"], "length": 4, "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "middle": { "type": "ray", "from": [-7, 0.6], "angle": -3, "optics": ["objective", "eyepiece"], "length": 4, "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "bottom": { "type": "ray", "from": [-7, -0.2], "angle": -3, "optics": ["objective", "eyepiece"], "length": 4, "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "magnification": { "type": "math", "tex": "M = -\\frac{f_o}{f_e} = -4", "size": 0.45, "position": [4.6, -2.6, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "create", "object": "axis" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "create", "object": "objective" }, { "type": "create", "object": "eyepiece" }, { "type": "write", "object": "objective_label" }, { "type": "write", "object": "eyepiece_label" }] },
+    { "type": "play", "duration": 3, "animations": [{ "type": "create", "object": "top" }, { "type": "create", "object": "middle" }, { "type": "create", "object": "bottom" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "magnification" }] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

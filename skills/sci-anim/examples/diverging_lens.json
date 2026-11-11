@@ -1,0 +1,27 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A diverging lens makes a smaller, upright, virtual image", "size": 0.45, "position": [0, 3.5, 0] },
+    "axis": { "type": "line", "from": [-7, 0], "to": [7, 0], "stroke": { "color": "#666666", "width": 0.02 } },
+    "lens": { "type": "lens", "focal_length": -2.5, "height": 4, "stroke": { "color": "#58c4dd", "width": 0.03 }, "fill": { "color": "#58c4dd", "opacity": 0.25 } },
+    "near_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [-2.5, 0] } },
+    "far_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [2.5, 0] } },
+    "near_f": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [-2.5, -0.4] } },
+    "far_f": { "type": "math", "tex": "F'", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [2.5, -0.4] } },
+    "foot": { "type": "dot", "radius": 0.05, "position": [-5, 0, 0], "fill": { "color": "#fc6255" } },
+    "candle": { "type": "arrow", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 1.2, 0] }, "tip_length": 0.25, "stroke": { "color": "#fc6255", "width": 0.05 } },
+    "parallel": { "type": "ray", "from": { "object": "foot", "offset": [0, 1.2, 0] }, "principal": "parallel", "optics": ["lens"], "length": 4, "back_trace": true, "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "center": { "type": "ray", "from": { "object": "foot", "offset": [0, 1.2, 0] }, "principal": "center", "optics": ["lens"], "length": 4, "stroke": { "color": "#83c167", "width": 0.03 } },
+    "focal": { "type": "ray", "from": { "object": "foot", "offset": [0, 1.2, 0] }, "principal": "focal", "optics": ["lens"], "length": 4, "back_trace": true, "stroke": { "color": "#ff862f", "width": 0.03 } },
+    "image": { "type": "image", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 1.2, 0] }, "optics": ["lens"], "tip_length": 0.2, "stroke": { "color": "#fc6255", "width": 0.05 }, "opacity": 0 },
+    "law": { "type": "math", "tex": "f < 0", "size": 0.5, "position": [4.8, -2.4, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "create", "object": "axis" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "create", "object": "lens" }, { "type": "write", "object": "near_f" }, { "type": "write", "object": "far_f" }, { "type": "create", "object": "candle" }, { "type": "write", "object": "law" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "parallel" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "center" }] },
+    { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "focal" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "image", "to": 1 }] },
+    { "type": "play", "duration": 4, "animations": [{ "type": "move", "object": "foot", "to": [-2, 0, 0] }] }
+  ]
+}

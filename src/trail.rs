@@ -59,6 +59,8 @@ pub struct TrailReport {
     pub point_count: usize,
     pub newest: Option<Vec3>,
     pub newest_pixels: Option<Vec2>,
+    /// The id of each text or math object its stroke runs through, as a plot's and a ray's.
+    pub crosses_objects: Vec<String>,
 }
 
 #[cfg(test)]
