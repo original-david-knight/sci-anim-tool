@@ -198,7 +198,7 @@ The report on stdout is the same with or without `--updates`, and only the repor
 sci_anim check-layout <SCENE_FILE> [--out <DIR>]
 ```
 
-Checks the layout of the scene at the middle and end of every step, at the start, middle and end of every animation's span, and at every frame time of a follow or a simulation, and in a scene with a `ray` or an `image` of every other animation, since a ray swings as what it is traced from or through moves. It prints each layout fault on a line of its own, such as:
+Checks the layout of the scene at the middle and end of every step, at the start, middle and end of every animation's span, and at every frame time of a follow or a simulation, and in a scene with a `ray`, an `image` or a `vector-field` of every other animation, since a ray swings as what it is traced from or through moves, and a vector field as its field sources move. It prints each layout fault on a line of its own, such as:
 
 ```text
 t=0 (the only frame): "c" is cut off by the frame: its box runs from [2000, 407] to [2266, 673] pixels

@@ -5,9 +5,10 @@
 //! stage just before a step's fades to 0 begin, the start, middle and end of every animation's
 //! span, and every frame time of each follow's and simulation's span, since a law, a carry or a
 //! simulation can take an object anywhere between three checked scene times, and in a scene with a
-//! ray or an image of every other animation's span too, since a ray swings as anything it is traced
-//! from or through moves. At each it reads the stage as `inspect` prints it and prints each layout
-//! fault: an object the frame cuts off, text over another object, a plot
+//! ray, an image or a vector field of every other animation's span too, since a ray swings as
+//! anything it is traced from or through moves, and a vector field as its field sources move. At
+//! each it reads the stage as `inspect` prints it and prints each layout fault: an object the frame
+//! cuts off, text over another object, a plot
 //! through a tick label or axis label, a caption over its molecule's atoms, an attached object
 //! showing while its molecule is faded out, text too small or too faint to read, two texts too
 //! close to read apart, two atoms that pass through each other in a reaction, two unbonded atoms
@@ -90,7 +91,7 @@ pub struct CheckLayoutFlags {
     #[arg(long)]
     no_sheet: bool,
     /// Checks only the ends of steps and chapters: no play step's middle, no animation's span
-    /// and no frame times of follows, simulations or animations beside rays.
+    /// and no frame times of follows, simulations or animations beside rays and vector fields.
     #[arg(long)]
     ends_only: bool,
     /// Two object ids whose overlap is on purpose. Give it once for each pair.
@@ -435,7 +436,7 @@ pub fn check_layout(flags: &CheckLayoutFlags) -> Result<bool, Vec<ToolError>> {
     let counts: Vec<String> = [
         (SpanOf::Follow, "follows"),
         (SpanOf::Simulation, "simulations"),
-        (SpanOf::Light, "animations beside rays"),
+        (SpanOf::Light, "animations beside rays and vector fields"),
     ]
     .into_iter()
     .map(|(of, words)| (frames.iter().filter(|f| f.of.contains(&of)).count(), words))
@@ -769,18 +770,19 @@ struct FrameSpan {
 enum SpanOf {
     Follow,
     Simulation,
-    /// Any other animation's span in a scene with a ray or an image, since a ray traced through
-    /// a moving object can swing anywhere between three checked scene times.
+    /// Any other animation's span in a scene with a ray, an image or a vector field, since a ray
+    /// traced through a moving object, or a field drawn from one, can swing anywhere between three
+    /// checked scene times.
     Light,
 }
 
-/// Each follow and simulation in words, with its span, and in a scene with a ray or an image
-/// every other animation too.
+/// Each follow and simulation in words, with its span, and in a scene with a ray, an image or a
+/// vector field every other animation too.
 fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
     let traces_light = lesson.file["objects"].as_object().is_some_and(|objects| {
-        objects
-            .values()
-            .any(|object| object["type"] == "ray" || object["type"] == "image")
+        objects.values().any(|object| {
+            ["ray", "image", "vector-field"].contains(&object["type"].as_str().unwrap_or_default())
+        })
     });
     let what = |animation: &Value| {
         if animation.get("along").is_some() {
@@ -848,8 +850,8 @@ fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
     spans
 }
 
-/// A frame time of one or more follows, simulations or animations beside rays, worded as the first
-/// of them in the lesson.
+/// A frame time of one or more follows, simulations or animations beside rays and vector fields,
+/// worded as the first of them in the lesson.
 struct FrameTime {
     stage_time: SceneTime,
     wording: String,
@@ -2204,6 +2206,7 @@ fn layout_faults(
             .into_iter()
             .chain(inspected["ray"]["crosses_objects"].as_array())
             .chain(inspected["trail"]["crosses_objects"].as_array())
+            .chain(inspected["vector_field"]["crosses_objects"].as_array())
             .flatten();
         for text_id in crossed {
             let text_id = as_written(text_id);
@@ -2237,8 +2240,12 @@ fn layout_faults(
                 &objects,
             ));
         }
-        // A ray that runs off the frame is light leaving the picture.
-        if inspected["in_frame"] != "whole" && inspected.get("ray").is_none() {
+        // A ray that runs off the frame is light leaving the picture, and a vector field's lines
+        // and arrows fill the picture to its edges.
+        if inspected["in_frame"] != "whole"
+            && inspected.get("ray").is_none()
+            && inspected.get("vector_field").is_none()
+        {
             let pixels = pixel_box(inspected);
             found.push(format!(
                 "\"{object_id}\" is cut off by the frame: its box runs from {} to {} pixels",
@@ -2376,10 +2383,13 @@ fn layout_faults(
                 }
             }
             if [a, b].iter().any(|o| {
-                o.get("plot").is_some() || o.get("ray").is_some() || o.get("trail").is_some()
+                ["plot", "ray", "trail", "vector_field"]
+                    .iter()
+                    .any(|detail| o.get(*detail).is_some())
             }) {
-                // A plot, a ray or a trail reports the text its stroke runs through, in crosses_objects,
-                // above, and meets the lenses and glass it passes on purpose.
+                // A plot, a ray, a trail or a vector field reports the text its strokes run through,
+                // in crosses_objects, above, and meets the lenses, glass and field sources it passes
+                // on purpose.
                 continue;
             }
             let filled = [(first, a), (second, b)].into_iter().find(|(id, o)| {
@@ -2681,6 +2691,27 @@ fn describe(report: &Value, file: &Value) -> Vec<(String, String)> {
                 surface += &format!(" on \"{}\"", as_written(axes));
             }
             words = Some(Value::from(surface));
+        }
+        if let Some(field) = inspected.get("vector_field") {
+            let drawn = match field.get("line_count") {
+                Some(count) => format!("{} field lines", as_written(count)),
+                None => format!("{} arrows", as_written(&field["arrow_count"])),
+            };
+            words = Some(Value::from(format!(
+                "the {} field of {}, as {drawn}",
+                as_written(&field["of"]),
+                declared["sources"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(|source| format!(
+                        "{} \"{}\"",
+                        as_written(&source["type"]),
+                        as_written(&source["object"])
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )));
         }
         if inspected.get("pattern").is_some() {
             let layout = declared["layout"]
