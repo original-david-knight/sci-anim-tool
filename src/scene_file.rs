@@ -29,6 +29,7 @@ use crate::axes::{Appearance, Axes, Axis, AxisError, AxisScale, LabelError, Numb
 use crate::axes_3d::Axes3d;
 use crate::bar_plot::{BarPlot, BarPlotError};
 use crate::body::{self, Bodies, Body, Collider, Motion as BodyMotion};
+use crate::circuit;
 use crate::data_point::DataToWorld;
 use crate::ends::{End, Ends};
 use crate::expr::{self, Expression, ExpressionError};
@@ -45,11 +46,11 @@ use crate::plot::{self, PlotError};
 use crate::reaction::{AtomPairFile, Reaction};
 use crate::readout::Readout;
 use crate::scene::{
-    Align, Camera, CellPadding, Color, CopyCount, Decimals, Duration, EdgeShade, FieldOfView, Fill,
-    FillRule, FiniteNumber, FocalLength, Font, Friction, Gravity, Material, MatrixEntry,
-    MirrorPlane, Object, ObjectId, OriginCoordinate, PlacedBy, Positive, RefractiveIndex, Region,
-    Restitution, RevolutionAngle, Scene, SceneConfig, SecondsIntoStep, Shape, Solid, Sound, Stage,
-    Stroke, Sweep, Transform, Turns, UnitInterval,
+    Align, Camera, CellPadding, CircuitValue, Color, CopyCount, Decimals, Duration, EdgeShade,
+    FieldOfView, Fill, FillRule, FiniteNumber, FocalLength, Font, Friction, Gravity,
+    InternalResistance, Material, MatrixEntry, MirrorPlane, Object, ObjectId, OriginCoordinate,
+    PlacedBy, Positive, RefractiveIndex, Region, Restitution, RevolutionAngle, Scene, SceneConfig,
+    SecondsIntoStep, Shape, Solid, Sound, Stage, Stroke, Sweep, Transform, Turns, UnitInterval,
 };
 use crate::simulate::{Motion, Set, Simulate};
 use crate::skeletal_formula::{self, Look, SkeletalFormula};

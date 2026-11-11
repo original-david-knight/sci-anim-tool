@@ -70,6 +70,24 @@ impl Timeline {
                 .paint(&mut object.shape);
             object.plane_map = tracks.plane_map.at(scene_time).map(|value| value.plane_map);
         }
+        for (id, runs) in &self.circuits {
+            let object = stage
+                .objects
+                .get_mut(id)
+                .expect("a circuit simulation names an object of the start stage");
+            if let Shape::Circuit(circuit) = &mut object.shape {
+                if let Some(state) = runs
+                    .runs
+                    .iter()
+                    .rev()
+                    .find(|run| run.span().0 <= scene_time)
+                    .and_then(|run| run.circuit_state_at(scene_time))
+                {
+                    circuit.state = state;
+                }
+                circuit.full_power = runs.full_power;
+            }
+        }
         for (id, tracks) in &self.objects {
             let Some(morph) = &tracks.morph else { continue };
             let phase = if scene_time < morph.span.0 {

@@ -76,6 +76,11 @@ impl Scene {
         self.timeline.collisions()
     }
 
+    /// Each simulation of a circuit, with its values at its start and end, in timeline order.
+    pub fn circuit_reports(&self) -> &[crate::timeline::CircuitRunReport] {
+        self.timeline.circuit_reports()
+    }
+
     pub fn sounds(&self) -> &[Sound] {
         &self.sounds
     }
@@ -496,6 +501,9 @@ pub enum Shape {
     /// its shown atoms at the object's position: its bonds along their path and its atom symbols,
     /// which a write draws in that order, and the glow of each lit atom group.
     SkeletalFormula(SkeletalFormula),
+    /// A schematic of components on a grid, solved at every scene time from the state its
+    /// simulations leave: its strokes, plates, labels, dots of current and bulbs' glows.
+    Circuit(crate::circuit::drawing::Circuit),
     NumberLine(NumberLine),
     /// Three axes with ticks and labels, z up, in a box centered on the object's position. Each
     /// label faces the camera at every frame.
@@ -572,6 +580,7 @@ impl Shape {
             Shape::BarPlot(bar_plot) => bar_plot.reach(),
             Shape::Table(table) => table.reach(),
             Shape::SkeletalFormula(formula) => formula.reach(),
+            Shape::Circuit(circuit) => circuit.reach(),
             Shape::Pattern(pattern) => pattern.reach(),
             Shape::Trail(trail) => {
                 trail
@@ -1326,6 +1335,17 @@ value_rule!(
     schema: { "type": "number", "description": "A number." },
     accepts: |v| v.is_finite());
 
+value_rule!(
+    /// A circuit component's value in SI units: an emf in volts, a resistance in ohms, a
+    /// capacitance in farads or an inductance in henries, more than 0 and at most 1e12.
+    CircuitValue(f64) from f64,
+    schema: { "type": "number", "exclusiveMinimum": 0, "maximum": 1e12, "description": "SI units, more than 0 and at most 1e12." },
+    accepts: |v| v > 0.0 && v <= 1e12);
+value_rule!(
+    /// A battery's internal resistance in ohms, from 0 to 1e12.
+    InternalResistance(f64) from f64,
+    schema: { "type": "number", "minimum": 0, "maximum": 1e12, "description": "Ohms, from 0 to 1e12." },
+    accepts: |v| (0.0..=1e12).contains(&v));
 value_rule!(
     /// A body's coefficient of restitution, from 0 to 1.
     Restitution(f64) from f64,

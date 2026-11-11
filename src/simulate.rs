@@ -15,7 +15,7 @@ use crate::follow::{LawKind, LawTimeStart};
 use crate::scene::ObjectId;
 
 /// How many integration steps each frame of the span is cut into.
-const STEPS_PER_FRAME: f64 = 8.0;
+pub const STEPS_PER_FRAME: f64 = 8.0;
 
 /// How many steps bodies take a frame: a collision closes no more than this share of a frame's
 /// travel before it is settled.
@@ -48,6 +48,8 @@ pub enum Motion {
         rates: Vec<Expression>,
     },
     Bodies(Bodies),
+    /// A circuit, stepped by `CircuitMotion::advance` from where its last simulation left it.
+    Circuit(crate::circuit::CircuitMotion),
 }
 
 impl Simulate {
@@ -56,6 +58,7 @@ impl Simulate {
         match &self.motion {
             Motion::Rates { .. } => 0,
             Motion::Bodies(bodies) => 2 * bodies.moving().count(),
+            Motion::Circuit(_) => 0,
         }
     }
 }
@@ -132,6 +135,7 @@ impl Simulation {
         law_start: f64,
         fps: f64,
         placed: &[Placed],
+        circuit_state: &[f64],
     ) -> Result<Simulation, NoValue> {
         let simulation = |step: f64, steps: Vec<f64>, collisions: Vec<Collision>| Simulation {
             simulate: std::sync::Arc::clone(simulate),
@@ -162,6 +166,26 @@ impl Simulation {
                     integrated.steps.extend(next);
                 }
                 Ok(integrated)
+            }
+            Motion::Circuit(motion) => {
+                let count = ((span.1 - span.0) * fps * STEPS_PER_FRAME).ceil().max(1.0) as usize;
+                let step = (span.1 - span.0) / count as f64;
+                let mut steps = motion.start(circuit_state);
+                let size = steps.len();
+                for k in 0..count {
+                    let values = steps[k * size..(k + 1) * size].to_vec();
+                    let next = motion.advance(&values, step * k as f64, step);
+                    if let Some(variable) = next.iter().position(|value| !value.is_finite()) {
+                        let scene_time = span.0 + step * (k + 1) as f64;
+                        return Err(NoValue {
+                            variable,
+                            scene_time,
+                            law_time: scene_time - law_start,
+                        });
+                    }
+                    steps.extend(next);
+                }
+                Ok(simulation(step, steps, Vec::new()))
             }
             Motion::Bodies(bodies) => {
                 let frames = ((span.1 - span.0) * fps).ceil().max(1.0) as usize;
@@ -221,6 +245,9 @@ impl Simulation {
             Motion::Rates { .. } => {
                 self.advance(values, self.span.0 + self.step * k as f64, rest * self.step)
             }
+            Motion::Circuit(motion) => {
+                motion.advance(values, self.step * k as f64, rest * self.step)
+            }
             Motion::Bodies(_) => {
                 let next = &self.steps[(k + 1) * size..(k + 2) * size];
                 values
@@ -231,6 +258,29 @@ impl Simulation {
             }
         }
     }
+    /// The span in scene time.
+    pub fn span(&self) -> (f64, f64) {
+        self.span
+    }
+
+    /// The variables' names.
+    pub fn names(&self) -> &[String] {
+        &self.simulate.variables
+    }
+
+    /// A circuit simulation's state at a scene time, held at the span's ends outside it.
+    pub fn circuit_state_at(&self, scene_time: f64) -> Option<Vec<f64>> {
+        match &self.simulate.motion {
+            Motion::Circuit(motion) => Some(motion.state(&self.variables_at(scene_time)).to_vec()),
+            _ => None,
+        }
+    }
+
+    /// The variables at every kept step.
+    pub fn kept(&self) -> impl Iterator<Item = &[f64]> {
+        self.steps.chunks(self.simulate.variables.len())
+    }
+
     /// The scene time law time counts from.
     pub fn law_start(&self) -> f64 {
         self.law_start
@@ -303,6 +353,7 @@ mod tests {
             2.0,
             30.0,
             &[],
+            &[],
         )
         .unwrap();
 
@@ -322,7 +373,8 @@ mod tests {
     #[test]
     fn a_scene_time_between_steps_is_integrated_from_the_step_before() {
         let simulation =
-            Simulation::integrate(&simulate(&["x"], &[1.0]), (0.0, 1.0), 0.0, 10.0, &[]).unwrap();
+            Simulation::integrate(&simulate(&["x"], &[1.0]), (0.0, 1.0), 0.0, 10.0, &[], &[])
+                .unwrap();
 
         let between = simulation.variables_at(0.123_456)[0];
 
@@ -336,8 +388,9 @@ mod tests {
 
     #[test]
     fn a_variable_that_runs_away_has_no_value_at_its_first_step() {
-        let found = Simulation::integrate(&simulate(&["x*x"], &[1.0]), (0.0, 2.0), 0.0, 60.0, &[])
-            .unwrap_err();
+        let found =
+            Simulation::integrate(&simulate(&["x*x"], &[1.0]), (0.0, 2.0), 0.0, 60.0, &[], &[])
+                .unwrap_err();
 
         assert_eq!(found.variable, 0);
         assert!(

@@ -375,6 +375,7 @@ impl Pattern {
             | Shape::Mix(_)
             | Shape::Molecule { .. }
             | Shape::Axes(_)
+            | Shape::Circuit(_)
             | Shape::BarPlot(_)
             | Shape::Table(_)
             | Shape::SkeletalFormula(_)

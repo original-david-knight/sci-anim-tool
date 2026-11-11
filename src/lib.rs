@@ -15,6 +15,7 @@ mod bar_plot;
 mod body;
 mod cartoon;
 mod check_layout;
+mod circuit;
 mod cli;
 mod data_point;
 mod element;
@@ -401,6 +402,7 @@ impl ColorsReport {
             | Shape::Molecule { .. }
             | Shape::SkeletalFormula(_)
             | Shape::Axes(_)
+            | Shape::Circuit(_)
             | Shape::NumberLine(_)
             | Shape::Axes3d(_) => ColorsReport::default(),
         }
@@ -441,6 +443,9 @@ enum ShapeDetail {
     },
     SkeletalFormula {
         skeletal_formula: skeletal_formula::SkeletalFormulaReport,
+    },
+    Circuit {
+        circuit: circuit::drawing::CircuitReport,
     },
     Dot {
         dot: DotReport,
@@ -984,6 +989,20 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                             },
                         })
                     }
+                    Shape::Circuit(circuit) => Some(ShapeDetail::Circuit {
+                        circuit: circuit.report(
+                            |p| object_to_world.transform_point3(p.extend(0.0)),
+                            to_pixels,
+                            |label| {
+                                mesh::with_meshes(
+                                    object,
+                                    mesh::circuit_label_meshes(circuit, label, to_world),
+                                )
+                                .bounding_box(&draw_list.camera, &scene.scene_config)
+                                .0
+                            },
+                        ),
+                    }),
                     Shape::Axes(axes) => Some(ShapeDetail::Axes {
                         axes: axes.report(object_to_world, to_pixels),
                     }),

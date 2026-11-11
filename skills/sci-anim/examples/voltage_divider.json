@@ -1,0 +1,36 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A voltage divider", "size": 0.5, "position": [0, 3.5, 0] },
+    "circuit": { "type": "circuit", "position": [-5.8, -2.6, 0], "spacing": 1.1, "current_dots": { "speed": 300 },
+      "components": [
+        { "id": "B", "kind": "battery", "emf": 9, "from": [0, 0], "to": [0, 4] },
+        { "kind": "wire", "from": [0, 4], "to": [2, 4] },
+        { "id": "R1", "kind": "resistor", "resistance": 1000, "from": [2, 4], "to": [2, 2], "label": "R_1 = 1\\,\\text{k}\\Omega" },
+        { "id": "R2", "kind": "resistor", "resistance": 2000, "from": [2, 2], "to": [2, 0], "label": "R_2 = 2\\,\\text{k}\\Omega" },
+        { "kind": "wire", "from": [2, 0], "to": [0, 0] },
+        { "kind": "wire", "from": [2, 2], "to": [4, 2] },
+        { "id": "V", "kind": "voltmeter", "from": [4, 2], "to": [4, 0] },
+        { "kind": "wire", "from": [4, 0], "to": [2, 0] }
+      ] },
+    "rule": { "type": "math", "tex": "V_\\text{out} = V\\,\\frac{R_2}{R_1 + R_2} = 9\\,\\text{V} \\cdot \\frac{2}{3}", "size": 0.48, "position": [3.6, 1.4, 0], "opacity": 0 },
+    "reading_symbol": { "type": "math", "tex": "V_\\text{out} =", "size": 0.48, "align": "right", "position": [3.2, -0.2, 0], "opacity": 0 },
+    "reading": { "type": "readout", "value": 6, "decimals": 2, "unit": "\\text{ V}", "size": 0.48, "position": [3.8, -0.2, 0], "opacity": 0 },
+    "current_symbol": { "type": "math", "tex": "I =", "size": 0.48, "align": "right", "position": [3.2, -1.3, 0], "opacity": 0 },
+    "current": { "type": "readout", "value": 3, "decimals": 2, "unit": "\\text{ mA}", "size": 0.48, "position": [3.8, -1.3, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "circuit" }] },
+    { "type": "play", "duration": 7, "animations": [
+      { "type": "simulate", "circuit": "circuit", "sets": [
+        { "object": "reading", "value": "circuit.V.voltage" },
+        { "object": "current", "value": "1000*circuit.R1.current" }
+      ] },
+      { "type": "fade", "object": "reading_symbol", "to": 1, "end": 0.5 },
+      { "type": "fade", "object": "reading", "to": 1, "end": 0.5 },
+      { "type": "fade", "object": "current_symbol", "to": 1, "start": 1, "end": 1.5 },
+      { "type": "fade", "object": "current", "to": 1, "start": 1, "end": 1.5 },
+      { "type": "fade", "object": "rule", "to": 1, "start": 2.5, "end": 3.5 }
+    ] }
+  ]
+}

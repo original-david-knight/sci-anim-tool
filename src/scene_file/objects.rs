@@ -518,6 +518,48 @@ pub(super) enum ShapeFile {
         #[serde(default)]
         stroke: Stroke,
     },
+    /// An electric circuit drawn as a schematic, whose currents and voltages sci_anim computes.
+    /// Each component lies on an edge of a grid in the object's own xy plane, from grid point
+    /// `from` to grid point `to`, with grid point `[0, 0]` at the object's position and `spacing`
+    /// world units between grid points. Ends that share a grid point are joined, and a dot marks
+    /// where three or more meet. Each component is drawn with its standard symbol, and labelled
+    /// with its value, or its `label`, on whichever side meets no other symbol, wire or label. A
+    /// `simulate` with `circuit` solves it by modified nodal analysis at every step, charges its
+    /// capacitors and builds its inductors' currents, closes and opens its switches, moves dots of
+    /// current along every wire and component by the charge that has passed, and lights each bulb
+    /// by the power it draws. Before its first simulation it stands as declared with no current,
+    /// and after one it holds where that simulation left it. `validate` refuses a battery shorted,
+    /// an end that joins nothing, a voltmeter in series and an ammeter across a component, and
+    /// lists each simulation's values at its start and end under `circuits`. `inspect` reports
+    /// every node's voltage and each component's `current`, `voltage`, `power` and `charge`.
+    /// `create` draws it. Needs sci_anim 0.27.0 or later.
+    Circuit {
+        /// The components, in any order. At least one.
+        #[schemars(length(min = 1))]
+        components: Vec<ComponentFile>,
+        /// The grid point held at 0 volts, drawn as a ground symbol below it, on a component's
+        /// end. With none, each separate part of the circuit is measured from its first battery's
+        /// negative end.
+        #[schemars(with = "Option<[i32; 2]>")]
+        ground: Option<[i32; 2]>,
+        /// World units between neighbouring grid points, more than 0. The symbols are drawn in
+        /// proportion. The default is 1.
+        #[serde(default = "ShapeFile::default_spacing")]
+        spacing: Positive,
+        /// The color of the symbols, wires and labels, written `#rrggbb`. The default is white.
+        #[serde(default = "ShapeFile::default_color")]
+        color: Color,
+        /// The width of the strokes in world units, more than 0. The default is 0.03.
+        #[serde(default = "ShapeFile::default_circuit_stroke_width")]
+        stroke_width: Positive,
+        /// The text size of the labels: the height of one em, in world units, more than 0. The
+        /// default is 0.3 of `spacing`.
+        size: Option<Positive>,
+        /// Dots of current: when given, dots spaced along every wire and component move in the
+        /// conventional direction, from the battery's positive end round to its negative end, at a
+        /// speed in proportion to the current there, and stand still where it is zero.
+        current_dots: Option<CurrentDotsFile>,
+    },
     /// A number typeset as math, with `unit` after it, such as a speed that counts as a ball
     /// falls. Its `value` changes as a track does: a `count` eases it to a `to`, a follow with
     /// `"sets": "value"` sets it from a law with one expression, `value`, and a simulation sets
@@ -1417,4 +1459,85 @@ pub(super) enum PrincipalFile {
     Parallel,
     Focal,
     Center,
+}
+
+/// One component of a circuit.
+#[derive(Clone, Deserialize, JsonSchema)]
+pub(super) struct ComponentFile {
+    /// The component's id, which names its quantities in a simulation as
+    /// `<circuit id>.<component id>.<quantity>`, such as `circuit.R1.current`: letters, digits
+    /// and `_`, starting with a letter, and no two alike. Every component but a wire and the
+    /// ground needs one.
+    pub(super) id: Option<String>,
+    /// What the component is, which sets its symbol and the values it takes.
+    pub(super) kind: ComponentKindFile,
+    /// The grid point of its first end, `[x, y]`, whole numbers. A battery's `from` is its
+    /// negative end, and a component's `current` counts from `from` to `to`.
+    #[schemars(with = "[i32; 2]")]
+    pub(super) from: [i32; 2],
+    /// The grid point of its other end, on the same grid line as `from`: the same x or the same
+    /// y. A battery's `to` is its positive end.
+    #[schemars(with = "[i32; 2]")]
+    pub(super) to: [i32; 2],
+    /// A battery's emf in volts.
+    pub(super) emf: Option<CircuitValue>,
+    /// A battery's internal resistance in ohms. The default is 0.
+    pub(super) internal_resistance: Option<InternalResistance>,
+    /// A resistor's or a bulb's resistance in ohms.
+    pub(super) resistance: Option<CircuitValue>,
+    /// A capacitor's capacitance in farads, such as 0.001 for 1 mF.
+    pub(super) capacitance: Option<CircuitValue>,
+    /// An inductor's inductance in henries.
+    pub(super) inductance: Option<CircuitValue>,
+    /// A capacitor's voltage before the circuit's first simulation, its `from` end above its
+    /// `to` end, in volts. The default is 0, uncharged.
+    pub(super) voltage: Option<FiniteNumber>,
+    /// An inductor's current before the circuit's first simulation, from `from` to `to`, in
+    /// amperes. The default is 0.
+    pub(super) current: Option<FiniteNumber>,
+    /// Whether a switch is closed before the circuit's first simulation. The default is `false`,
+    /// open.
+    pub(super) closed: Option<bool>,
+    /// The label beside the symbol, as LaTeX math, such as `R_1 = 4\,\Omega`, or `""` for none.
+    /// The default is the component's value with its unit, as `4\,\Omega` or `12\,\text{V}`,
+    /// and none for a switch, a meter or a wire.
+    pub(super) label: Option<String>,
+}
+
+/// What a component is: `battery`, a cell of `emf` volts with an `internal_resistance`, a long thin
+/// plate at its `to` (positive) end and a short thick one at its `from` (negative) end; `resistor`,
+/// a zigzag of `resistance` ohms; `bulb`, a circle with a cross of `resistance` ohms that glows by
+/// the power it draws; `capacitor`, two parallel plates of `capacitance` farads; `inductor`, a coil
+/// of `inductance` henries; `switch`, which a simulation's `switches` close and open; `ammeter`, a
+/// circle with an A that passes current with no voltage across it, put in series; `voltmeter`, a
+/// circle with a V that passes no current, put across what it measures; or `wire`, which joins its
+/// ends with no resistance. No variant doc comments, for the reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, Deserialize, serde::Serialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub(super) enum ComponentKindFile {
+    Battery,
+    Resistor,
+    Bulb,
+    Capacitor,
+    Inductor,
+    Switch,
+    Ammeter,
+    Voltmeter,
+    Wire,
+}
+
+/// Dots of current along a circuit's wires and components.
+#[derive(Clone, Deserialize, JsonSchema)]
+pub(super) struct CurrentDotsFile {
+    /// How far the dots move each second for each ampere, in world units, more than 0, so 1 A
+    /// moves them 1 unit a second at the default of 1. Raise it for a circuit of milliamperes.
+    #[serde(default = "ShapeFile::one")]
+    pub(super) speed: Positive,
+    /// How far apart the dots are along a wire, in world units, more than 0. The default is
+    /// 0.35.
+    #[serde(default = "ShapeFile::default_dot_spacing")]
+    pub(super) spacing: Positive,
+    /// The dots' color, written `#rrggbb`. The default is a yellow, `#ffcc33`.
+    #[serde(default = "ShapeFile::default_dot_color")]
+    pub(super) color: Color,
 }

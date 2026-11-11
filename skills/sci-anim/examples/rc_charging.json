@@ -1,0 +1,41 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A capacitor charging through a resistor", "size": 0.5, "position": [0, 3.5, 0] },
+    "circuit": { "type": "circuit", "position": [-5.8, -1.9, 0], "spacing": 1.1, "current_dots": { "speed": 150 },
+      "components": [
+        { "id": "B", "kind": "battery", "emf": 10, "from": [0, 0], "to": [0, 3] },
+        { "id": "S", "kind": "switch", "from": [0, 3], "to": [2, 3] },
+        { "id": "R", "kind": "resistor", "resistance": 2000, "from": [2, 3], "to": [4, 3] },
+        { "id": "C", "kind": "capacitor", "capacitance": 0.001, "from": [4, 3], "to": [4, 0] },
+        { "kind": "wire", "from": [4, 0], "to": [0, 0] }
+      ] },
+    "tau": { "type": "math", "tex": "\\tau = RC = 2\\,\\text{s}", "size": 0.45, "position": [-3.6, -2.9, 0], "opacity": 0 },
+    "plot": { "type": "axes", "x": { "range": [0, 10], "spacing": 2, "label": "t\\ (\\text{s})" }, "y": { "range": [0, 11], "spacing": 2, "label": "V_C\\ (\\text{V})" }, "width": 5.4, "height": 4.2, "position": [3.6, -0.3, 0] },
+    "level": { "type": "function-plot", "axes": "plot", "expression": "6.32", "stroke": { "color": "#888888", "width": 0.02, "dash": [0.1, 0.08] }, "opacity": 0 },
+    "level_label": { "type": "math", "tex": "63\\%", "size": 0.35, "color": "#aaaaaa", "position": [6.75, 0.3, 0], "opacity": 0 },
+    "charge": { "type": "dot", "radius": 0.08, "axes": "plot", "position": [0, 0, 0], "fill": { "color": "#58c4dd" } },
+    "curve": { "type": "trail", "object": "charge", "stroke": { "color": "#58c4dd", "width": 0.04 } },
+    "vc_symbol": { "type": "math", "tex": "V_C =", "size": 0.45, "align": "right", "position": [3.0, 2.55, 0] },
+    "vc": { "type": "readout", "value": 0, "decimals": 2, "unit": "\\text{ V}", "size": 0.45, "position": [3.6, 2.55, 0] }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2, "animations": [
+      { "type": "create", "object": "circuit" },
+      { "type": "create", "object": "plot", "start": 0.5 },
+      { "type": "write", "object": "vc_symbol", "start": 1 },
+      { "type": "write", "object": "vc", "start": 1 }
+    ] },
+    { "type": "play", "duration": 10, "animations": [
+      { "type": "simulate", "circuit": "circuit",
+        "switches": [{ "switch": "S", "closed": true }],
+        "sets": [
+          { "object": "charge", "position": ["t", "circuit.C.voltage", "0"] },
+          { "object": "vc", "value": "circuit.C.voltage" }
+        ] },
+      { "type": "fade", "object": "level", "to": 1, "start": 1.6, "end": 2 },
+      { "type": "fade", "object": "level_label", "to": 1, "start": 1.6, "end": 2 },
+      { "type": "fade", "object": "tau", "to": 1, "start": 2, "end": 2.5 }
+    ] }
+  ]
+}

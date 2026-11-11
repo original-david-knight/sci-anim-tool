@@ -800,6 +800,27 @@ pub(super) fn shape(
                 SkeletalFormula::new(structure, look, mirror).map_err(typeset_error("file"))?,
             )
         }
+        ShapeFile::Circuit {
+            components,
+            ground,
+            spacing,
+            color,
+            stroke_width,
+            size,
+            current_dots,
+        } => Shape::Circuit(read_circuit(
+            components,
+            ground,
+            circuit::drawing::Look {
+                color,
+                stroke_width,
+                size: size.unwrap_or_else(|| {
+                    Positive::try_from(f64::from(0.3 * spacing.get())).expect("positive")
+                }),
+                spacing: spacing.get(),
+            },
+            current_dots,
+        )?),
         ShapeFile::Pattern {
             shape: one,
             layout,
@@ -993,6 +1014,9 @@ fn not_one_shape(shape: &ShapeFile) -> Option<&'static str> {
         }
         ShapeFile::SkeletalFormula { .. } => {
             "a `skeletal-formula` is many bonds and atom symbols, not one shape; write a separate `skeletal-formula` object for each"
+        }
+        ShapeFile::Circuit { .. } => {
+            "a `circuit` is many components, not one shape; write a separate `circuit` object for each"
         }
         ShapeFile::Axes { .. } | ShapeFile::NumberLine { .. } | ShapeFile::Axes3d { .. } => {
             "axes and a number line are many lines and labels, not one shape; write a separate object for each"
@@ -1974,4 +1998,204 @@ fn structure_file_error<'a>(
             ("file", SceneErrorCode::BadStructureFile, message)
         }
     }
+}
+
+/// A circuit read from its components, or each fault at its component's field: an id missing,
+/// malformed or used twice; a value its kind needs missing, or one it does not take; each fault
+/// in how the components join; and a label that cannot be placed or typeset.
+fn read_circuit(
+    files: Vec<ComponentFile>,
+    ground: Option<[i32; 2]>,
+    look: circuit::drawing::Look,
+    dots: Option<CurrentDotsFile>,
+) -> Result<circuit::drawing::Circuit, Faults> {
+    use circuit::Kind;
+    use objects::ComponentKindFile as K;
+    let mut faults: Vec<(String, SceneErrorCode, String)> = Vec::new();
+    let mut components = Vec::new();
+    for (i, file) in files.into_iter().enumerate() {
+        let at = |field: &str| format!("components/{i}/{field}");
+        let kind_word = serde_json::to_value(file.kind)
+            .ok()
+            .and_then(|v| v.as_str().map(str::to_string))
+            .unwrap_or_default();
+        match &file.id {
+            None if !matches!(file.kind, K::Wire) => faults.push((
+                format!("components/{i}"),
+                SceneErrorCode::MissingField,
+                format!("a {kind_word} needs an `id`, which names its quantities, such as `R1` for `<circuit id>.R1.current`"),
+            )),
+            Some(id) if !expr::is_variable_name(id) => faults.push((
+                at("id"),
+                SceneErrorCode::Invalid,
+                format!("`{id}` cannot name a component: an id is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name"),
+            )),
+            Some(id) if components.iter().any(|c: &circuit::Component| c.id.as_deref() == Some(id.as_str())) => faults.push((
+                at("id"),
+                SceneErrorCode::DuplicateObject,
+                format!("two components of this circuit have the id `{id}`; give each its own"),
+            )),
+            _ => {}
+        }
+        let needs: &[&'static str] = match file.kind {
+            K::Battery => &["emf"],
+            K::Resistor | K::Bulb => &["resistance"],
+            K::Capacitor => &["capacitance"],
+            K::Inductor => &["inductance"],
+            K::Switch | K::Ammeter | K::Voltmeter | K::Wire => &[],
+        };
+        let takes: &[&'static str] = match file.kind {
+            K::Battery => &["emf", "internal_resistance"],
+            K::Resistor | K::Bulb => &["resistance"],
+            K::Capacitor => &["capacitance", "voltage"],
+            K::Inductor => &["inductance", "current"],
+            K::Switch => &["closed"],
+            K::Ammeter | K::Voltmeter | K::Wire => &[],
+        };
+        let written = [
+            ("emf", file.emf.is_some()),
+            ("internal_resistance", file.internal_resistance.is_some()),
+            ("resistance", file.resistance.is_some()),
+            ("capacitance", file.capacitance.is_some()),
+            ("inductance", file.inductance.is_some()),
+            ("voltage", file.voltage.is_some()),
+            ("current", file.current.is_some()),
+            ("closed", file.closed.is_some()),
+        ];
+        for field in needs {
+            if !written.iter().any(|(f, w)| f == field && *w) {
+                faults.push((
+                    format!("components/{i}"),
+                    SceneErrorCode::MissingField,
+                    format!("a {kind_word} needs `{field}`"),
+                ));
+            }
+        }
+        for (field, _) in written.iter().filter(|(f, w)| *w && !takes.contains(f)) {
+            let owner = match *field {
+                "emf" | "internal_resistance" => "a battery",
+                "resistance" => "a resistor or a bulb",
+                "capacitance" | "voltage" => "a capacitor",
+                "inductance" | "current" => "an inductor",
+                _ => "a switch",
+            };
+            faults.push((
+                at(field),
+                SceneErrorCode::Invalid,
+                format!("`{field}` belongs to {owner}, and this is a {kind_word}; leave it out"),
+            ));
+        }
+        let value = |v: Option<CircuitValue>| v.map_or(1.0, CircuitValue::get);
+        let kind = match file.kind {
+            K::Battery => Kind::Battery {
+                emf: value(file.emf),
+                internal_resistance: file
+                    .internal_resistance
+                    .map_or(0.0, InternalResistance::get),
+            },
+            K::Resistor => Kind::Resistor {
+                resistance: value(file.resistance),
+            },
+            K::Bulb => Kind::Bulb {
+                resistance: value(file.resistance),
+            },
+            K::Capacitor => Kind::Capacitor {
+                capacitance: value(file.capacitance),
+            },
+            K::Inductor => Kind::Inductor {
+                inductance: value(file.inductance),
+            },
+            K::Switch => Kind::Switch,
+            K::Ammeter => Kind::Ammeter,
+            K::Voltmeter => Kind::Voltmeter,
+            K::Wire => Kind::Wire,
+        };
+        let start = match file.kind {
+            K::Capacitor => file.voltage.map_or(0.0, FiniteNumber::get),
+            K::Inductor => file.current.map_or(0.0, FiniteNumber::get),
+            K::Switch => f64::from(u8::from(file.closed.unwrap_or(false))),
+            _ => 0.0,
+        };
+        let label = match file.label {
+            Some(label) if label.is_empty() => None,
+            Some(label) => Some(label),
+            None => default_label(&kind),
+        };
+        components.push(circuit::Component {
+            id: file.id,
+            kind,
+            from: glam::IVec2::from(file.from),
+            to: glam::IVec2::from(file.to),
+            start,
+            label,
+        });
+    }
+    if !faults.is_empty() {
+        return Err(Faults(faults));
+    }
+    let network =
+        circuit::Network::new(components, ground.map(glam::IVec2::from)).map_err(|found| {
+            Faults(
+                found
+                    .into_iter()
+                    .map(|fault| {
+                        let path = match (fault.component, fault.field) {
+                            (None, _) => "ground".to_string(),
+                            (Some(i), None) => format!("components/{i}"),
+                            (Some(i), Some(field)) => format!("components/{i}/{field}"),
+                        };
+                        (path, SceneErrorCode::Invalid, fault.message)
+                    })
+                    .collect(),
+            )
+        })?;
+    let dots = dots.map(|dots| circuit::drawing::CurrentDots {
+        speed: dots.speed.get(),
+        spacing: dots.spacing.get(),
+        color: dots.color,
+    });
+    circuit::drawing::Circuit::new(Arc::new(network), look, dots).map_err(|(i, message)| {
+        Faults(vec![(
+            format!("components/{i}/label"),
+            SceneErrorCode::Invalid,
+            message,
+        )])
+    })
+}
+
+/// A component's value with its unit, with an SI prefix, as LaTeX: `4\,\Omega`, `4.7\,\mu\text{F}`.
+fn default_label(kind: &circuit::Kind) -> Option<String> {
+    use circuit::Kind;
+    let (value, unit) = match *kind {
+        Kind::Battery { emf, .. } => (emf, "\\text{V}"),
+        Kind::Resistor { resistance } | Kind::Bulb { resistance } => (resistance, "\\Omega"),
+        Kind::Capacitor { capacitance } => (capacitance, "\\text{F}"),
+        Kind::Inductor { inductance } => (inductance, "\\text{H}"),
+        _ => return None,
+    };
+    let prefixes = [
+        (1e-12, "\\text{p}"),
+        (1e-9, "\\text{n}"),
+        (1e-6, "\\mu"),
+        (1e-3, "\\text{m}"),
+        (1.0, ""),
+        (1e3, "\\text{k}"),
+        (1e6, "\\text{M}"),
+        (1e9, "\\text{G}"),
+    ];
+    let (scale, prefix) = prefixes
+        .iter()
+        .rev()
+        .find(|(scale, _)| value >= *scale * 0.9995)
+        .copied()
+        .unwrap_or(prefixes[0]);
+    let scaled = value / scale;
+    let decimals = (2 - scaled.log10().floor() as i32).max(0) as usize;
+    let number = format!("{scaled:.decimals$}");
+    let number = if number.contains('.') {
+        number.trim_end_matches('0').trim_end_matches('.')
+    } else {
+        &number
+    };
+    Some(format!("{number}\\,{prefix}{unit}"))
 }

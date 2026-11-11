@@ -8,9 +8,9 @@ A scene file is the JSON file a scene is written in: its scene config, its camer
 - [Scene config](#scene-config)
 - [Camera](#camera)
 - [Steps](#steps): [`wait`](#wait), [`chapter`](#chapter), [`play`](#play)
-- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`lens`](#lens), [`mirror`](#mirror), [`ray`](#ray), [`image`](#image), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
+- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`lens`](#lens), [`mirror`](#mirror), [`ray`](#ray), [`image`](#image), [`circuit`](#circuit), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
 - [Animations](#animations): [`fade`](#fade), [`count`](#count), [`move`](#move), [`scale`](#scale), [`rotate`](#rotate), [`create`](#create), [`write`](#write), [`reaction`](#reaction), [`morph`](#morph), [`highlight`](#highlight), [`recolor`](#recolor), [`camera-move`](#camera-move), [`camera-look`](#camera-look), [`camera-zoom`](#camera-zoom), [`linear-map`](#linear-map), [`simulate`](#simulate), [`follow`](#follow)
-- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Body](#body), [Category axis](#category-axis), [Cell](#cell), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Principal](#principal), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [X axis](#x-axis)
+- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Body](#body), [Category axis](#category-axis), [Cell](#cell), [Component](#component), [Component kind](#component-kind), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Current dots](#current-dots), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Principal](#principal), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [Switching](#switching), [X axis](#x-axis)
 
 ## Top level
 
@@ -353,6 +353,26 @@ The image of the arrow from `from` to `to` through the lenses and mirrors of `op
 | `optics` | array of string | yes | The object ids of the lenses and mirrors that form the image, in the order the light meets them. |
 | `tip_length` | number |  | The length of the image's tip in world units, more than 0. The default is 0.25. |
 | `stroke` | [Stroke](#stroke) |  | The image's color and width. The default is white and 0.04 wide. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
+### `circuit`
+
+An electric circuit drawn as a schematic, whose currents and voltages sci_anim computes. Each component lies on an edge of a grid in the object's own xy plane, from grid point `from` to grid point `to`, with grid point `[0, 0]` at the object's position and `spacing` world units between grid points. Ends that share a grid point are joined, and a dot marks where three or more meet. Each component is drawn with its standard symbol, and labelled with its value, or its `label`, on whichever side meets no other symbol, wire or label. A `simulate` with `circuit` solves it by modified nodal analysis at every step, charges its capacitors and builds its inductors' currents, closes and opens its switches, moves dots of current along every wire and component by the charge that has passed, and lights each bulb by the power it draws. Before its first simulation it stands as declared with no current, and after one it holds where that simulation left it. `validate` refuses a battery shorted, an end that joins nothing, a voltmeter in series and an ammeter across a component, and lists each simulation's values at its start and end under `circuits`. `inspect` reports every node's voltage and each component's `current`, `voltage`, `power` and `charge`. `create` draws it. Needs sci_anim 0.27.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `circuit` | yes |  |
+| `components` | array of [Component](#component) | yes | The components, in any order. At least one. |
+| `ground` | [integer, integer] |  | The grid point held at 0 volts, drawn as a ground symbol below it, on a component's end. With none, each separate part of the circuit is measured from its first battery's negative end. |
+| `spacing` | number |  | World units between neighbouring grid points, more than 0. The symbols are drawn in proportion. The default is 1. |
+| `color` | string |  | The color of the symbols, wires and labels, written `#rrggbb`. The default is white. |
+| `stroke_width` | number |  | The width of the strokes in world units, more than 0. The default is 0.03. |
+| `size` | number |  | The text size of the labels: the height of one em, in world units, more than 0. The default is 0.3 of `spacing`. |
+| `current_dots` | [Current dots](#current-dots) |  | Dots of current: when given, dots spaced along every wire and component move in the conventional direction, from the battery's positive end round to its negative end, at a speed in proportion to the current there, and stand still where it is zero. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -881,6 +901,8 @@ With `bodies` instead of `variables` and `rates`, it moves objects as rigid bodi
 | `variables` | map of name to number |  | Each variable's name and its value at the span's start, such as `{ "angle": 1.2, "spin": 0 }`. A name is letters, digits and `_`, starts with a letter, and is not `t`, `pi`, `e`, `tau` or a function's name. At least one. Leave it out with `bodies`. |
 | `rates` | map of name to string |  | How fast each variable changes, per second of law time: one expression in the variables and `t` for every variable, by its name, such as `{ "angle": "spin", "spin": "-9.8*sin(angle) - 0.3*spin" }`. Leave it out with `bodies`. |
 | `bodies` | map of name to [Body](#body) |  | The objects the simulation moves as rigid bodies, keyed by object id: circles, dots, spheres and convex polygons, drawn at scale 1 and turned only about z, and, for a fixed body, lines. Each starts where its object stands when the span starts. At least one moves. Give `bodies` or `variables`, not both. |
+| `circuit` | string |  | The object id of a `circuit` to solve over the span, instead of `variables` or `bodies`: every component's current, voltage, power, charge and energy at every step, its capacitors charging and its inductors' currents building, from where its last simulation left it. Each component's quantities are variables the `sets` read as `<circuit id>.<component id>.<quantity>`: `current`, `voltage`, `power` and `charge`, `energy` of a battery, resistor, bulb, capacitor or inductor, and `closed` of a switch, so `circuit.C.voltage` is a readout of a capacitor charging. `sets` may be empty, since the circuit's dots of current and bulbs move with it. Needs sci_anim 0.27.0 or later. |
+| `switches` | array of [Switching](#switching) |  | Switches of the `circuit` to close or open, each `at` a time in the span. Only with `circuit`. |
 | `gravity` | number |  | How fast bodies fall, straight down the world's -y, in world units a second squared, from 0 to 1000. The default is 9.8, Earth's in meters; 0 for none, as for carts on a level track. Only with `bodies`. |
 | `sets` | array of [Set](#set) |  | The values the simulation sets, each value of an object once: at least one, or with `bodies` none or more, since each moving body's position and rotation are set already. |
 | `from` | string |  | The id of a chapter: law time counts from that chapter's start instead of from this simulation's span. The simulation's own chapter, or one before it. |
@@ -1019,6 +1041,32 @@ It is one of these.
 - string.
 - [Math cell](#math-cell).
 
+### Component
+
+One component of a circuit.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string |  | The component's id, which names its quantities in a simulation as `<circuit id>.<component id>.<quantity>`, such as `circuit.R1.current`: letters, digits and `_`, starting with a letter, and no two alike. Every component but a wire and the ground needs one. |
+| `kind` | [Component kind](#component-kind) | yes | What the component is, which sets its symbol and the values it takes. |
+| `from` | [integer, integer] | yes | The grid point of its first end, `[x, y]`, whole numbers. A battery's `from` is its negative end, and a component's `current` counts from `from` to `to`. |
+| `to` | [integer, integer] | yes | The grid point of its other end, on the same grid line as `from`: the same x or the same y. A battery's `to` is its positive end. |
+| `emf` | number |  | A battery's emf in volts. |
+| `internal_resistance` | number |  | A battery's internal resistance in ohms. The default is 0. |
+| `resistance` | number |  | A resistor's or a bulb's resistance in ohms. |
+| `capacitance` | number |  | A capacitor's capacitance in farads, such as 0.001 for 1 mF. |
+| `inductance` | number |  | An inductor's inductance in henries. |
+| `voltage` | number |  | A capacitor's voltage before the circuit's first simulation, its `from` end above its `to` end, in volts. The default is 0, uncharged. |
+| `current` | number |  | An inductor's current before the circuit's first simulation, from `from` to `to`, in amperes. The default is 0. |
+| `closed` | boolean |  | Whether a switch is closed before the circuit's first simulation. The default is `false`, open. |
+| `label` | string |  | The label beside the symbol, as LaTeX math, such as `R_1 = 4\,\Omega`, or `""` for none. The default is the component's value with its unit, as `4\,\Omega` or `12\,\text{V}`, and none for a switch, a meter or a wire. |
+
+### Component kind
+
+What a component is: `battery`, a cell of `emf` volts with an `internal_resistance`, a long thin plate at its `to` (positive) end and a short thick one at its `from` (negative) end; `resistor`, a zigzag of `resistance` ohms; `bulb`, a circle with a cross of `resistance` ohms that glows by the power it draws; `capacitor`, two parallel plates of `capacitance` farads; `inductor`, a coil of `inductance` henries; `switch`, which a simulation's `switches` close and open; `ammeter`, a circle with an A that passes current with no voltage across it, put in series; `voltmeter`, a circle with a V that passes no current, put across what it measures; or `wire`, which joins its ends with no resistance. No variant doc comments, for the reason `FillRule` gives.
+
+One of `battery`, `resistor`, `bulb`, `capacitor`, `inductor`, `switch`, `ammeter`, `voltmeter`, `wire`.
+
 ### Copy
 
 Each copy's own values, as expressions in its index and place: in a `grid`, `i`, `j` and `k` and `x`, `y` and `z`, and in a `ring` or `along`, `i` and `x`, `y` and `z`. Every expression is evaluated at every copy when the scene file is read.
@@ -1063,6 +1111,16 @@ A copy's scale, a factor at a time.
 | `x` | string |  | An expression in the copy's index and place, which gives the copy's factor along its own x axis, such as `1 + 0.1*i`. A copy's scale and the pattern's size a flat copy's stroke with the rest of it. The default is 1. In a `grid` it reads `i`, `j` and `k`, the copy's index along x, y and z from 0, and in a `ring` or `along` it reads `i`, the copy's index from 0. In every layout it reads `x`, `y` and `z`, the copy's place in the pattern's own space. It may also read `t`, law time in seconds, so the shape changes over time while a `follow` with `"sets": "shape"` runs it, and is evaluated again at every frame time of that follow's span when the scene file is read; before that follow it is drawn at `t` of 0. The operators are `+`, `-`, `*`, `/` and `^` for a power, with parentheses. `^` binds tightest and groups to the right, so `-a^2` is `-(a^2)`. A product needs its `*`: write `2*a`, not `2a`. The constants are `pi`, `e` and `tau`. The functions of one argument are `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`, `exp`, `ln`, `log2`, `log10`, `sqrt`, `cbrt`, `abs`, `floor`, `ceil`, `sign` and `step`, and `min`, `max`, `atan2` and `mod` take two, as in `max(a, 0)`. `ln` is the natural logarithm, and there is no `log`. `atan2(y, x)` is the angle of the point (x, y) from the +x axis, from -pi to pi. `mod(a, b)` is what is left of a after taking away whole b's, with the sign of b, so `mod(-1, 3)` is 2. `step(a)` is 1 where a is 0 or more and 0 below it. Angles are in radians. At most 500 characters. It is evaluated at every copy when the scene file is read, and must have a finite value at each: the first copy where it has none is a scene error, with its index and place. |
 | `y` | string |  | An expression in the copy's index and place, which gives the copy's factor along its own y axis, such as `1 + 0.1*i`. A copy's scale and the pattern's size a flat copy's stroke with the rest of it. The default is 1. In a `grid` it reads `i`, `j` and `k`, the copy's index along x, y and z from 0, and in a `ring` or `along` it reads `i`, the copy's index from 0. In every layout it reads `x`, `y` and `z`, the copy's place in the pattern's own space. It may also read `t`, law time in seconds, so the shape changes over time while a `follow` with `"sets": "shape"` runs it, and is evaluated again at every frame time of that follow's span when the scene file is read; before that follow it is drawn at `t` of 0. The operators are `+`, `-`, `*`, `/` and `^` for a power, with parentheses. `^` binds tightest and groups to the right, so `-a^2` is `-(a^2)`. A product needs its `*`: write `2*a`, not `2a`. The constants are `pi`, `e` and `tau`. The functions of one argument are `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`, `exp`, `ln`, `log2`, `log10`, `sqrt`, `cbrt`, `abs`, `floor`, `ceil`, `sign` and `step`, and `min`, `max`, `atan2` and `mod` take two, as in `max(a, 0)`. `ln` is the natural logarithm, and there is no `log`. `atan2(y, x)` is the angle of the point (x, y) from the +x axis, from -pi to pi. `mod(a, b)` is what is left of a after taking away whole b's, with the sign of b, so `mod(-1, 3)` is 2. `step(a)` is 1 where a is 0 or more and 0 below it. Angles are in radians. At most 500 characters. It is evaluated at every copy when the scene file is read, and must have a finite value at each: the first copy where it has none is a scene error, with its index and place. |
 | `z` | string |  | An expression in the copy's index and place, which gives the copy's factor along its own z axis, such as `1 + 0.1*i`. A copy's scale and the pattern's size a flat copy's stroke with the rest of it. The default is 1. In a `grid` it reads `i`, `j` and `k`, the copy's index along x, y and z from 0, and in a `ring` or `along` it reads `i`, the copy's index from 0. In every layout it reads `x`, `y` and `z`, the copy's place in the pattern's own space. It may also read `t`, law time in seconds, so the shape changes over time while a `follow` with `"sets": "shape"` runs it, and is evaluated again at every frame time of that follow's span when the scene file is read; before that follow it is drawn at `t` of 0. The operators are `+`, `-`, `*`, `/` and `^` for a power, with parentheses. `^` binds tightest and groups to the right, so `-a^2` is `-(a^2)`. A product needs its `*`: write `2*a`, not `2a`. The constants are `pi`, `e` and `tau`. The functions of one argument are `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `tanh`, `exp`, `ln`, `log2`, `log10`, `sqrt`, `cbrt`, `abs`, `floor`, `ceil`, `sign` and `step`, and `min`, `max`, `atan2` and `mod` take two, as in `max(a, 0)`. `ln` is the natural logarithm, and there is no `log`. `atan2(y, x)` is the angle of the point (x, y) from the +x axis, from -pi to pi. `mod(a, b)` is what is left of a after taking away whole b's, with the sign of b, so `mod(-1, 3)` is 2. `step(a)` is 1 where a is 0 or more and 0 below it. Angles are in radians. At most 500 characters. It is evaluated at every copy when the scene file is read, and must have a finite value at each: the first copy where it has none is a scene error, with its index and place. |
+
+### Current dots
+
+Dots of current along a circuit's wires and components.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `speed` | number |  | How far the dots move each second for each ampere, in world units, more than 0, so 1 A moves them 1 unit a second at the default of 1. Raise it for a circuit of milliamperes. |
+| `spacing` | number |  | How far apart the dots are along a wire, in world units, more than 0. The default is 0.35. |
+| `color` | string |  | The dots' color, written `#rrggbb`. The default is a yellow, `#ffcc33`. |
 
 ### Curve coordinate
 
@@ -1445,6 +1503,10 @@ The same as [`ray`](#ray), without the [fields every object takes](#fields-every
 
 The same as [`image`](#image), without the [fields every object takes](#fields-every-object-takes).
 
+#### `circuit` shape
+
+The same as [`circuit`](#circuit), without the [fields every object takes](#fields-every-object-takes).
+
 #### `readout` shape
 
 The same as [`readout`](#readout), without the [fields every object takes](#fields-every-object-takes).
@@ -1554,6 +1616,16 @@ The outline of a flat shape. Its corners are mitered, a corner sharper than abou
 | `color` | string | yes | The stroke's color, written `#rrggbb`. |
 | `width` | number |  | The stroke's width in world units, more than 0. The object's scale does not change it. The default is 0.04. |
 | `dash` | [Dash pattern](#dash-pattern) |  | A dash pattern, `[dash, gap]`: the stroke is drawn as dashes `dash` long with gaps `gap` long between them, in world units along the stroke, measured as its width is. The dashes start at the start of each part of the path, so a line placed by its ends keeps the length of its dashes as it stretches, and the last dash is cut where the stroke ends. An arrow's tip is drawn whole. A trail's and 3D axes' strokes are not dashed. Needs sci_anim 0.14.0 or later. The default is none: one unbroken stroke. |
+
+### Switching
+
+A switch of a circuit set closed or open at a time in a simulation's span.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `switch` | string | yes | The id of a `switch` component of the simulation's circuit. |
+| `closed` | boolean | yes | `true` to close it, `false` to open it. |
+| `at` | number |  | When, in seconds from the span's start, from 0 to the span's length. The default is 0. |
 
 ### X axis
 
