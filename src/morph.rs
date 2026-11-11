@@ -111,6 +111,7 @@ impl MorphEnd {
             | Shape::Axes3d(_)
             | Shape::Mix(_)
             | Shape::Pattern(_)
+            | Shape::VectorField(_)
             | Shape::Trail(_) => None,
         }
     }

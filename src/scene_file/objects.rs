@@ -518,6 +518,34 @@ pub(super) enum ShapeFile {
         #[serde(default)]
         stroke: Stroke,
     },
+    /// The electric field of charges, or the magnetic field of wires, loops and magnets, worked
+    /// out again at every scene time from where each field source's object stands, and drawn as
+    /// field lines or as arrows. Each field source names an object, which places it: move or turn
+    /// that object with any animation and the field follows. The field draws in its own space,
+    /// placed by its `position` and `rotation`; its `scale` stays 1. Field lines lie in its own
+    /// xy plane, so set the field sources in that plane, or symmetric about it, and turn a second
+    /// vector field about an axis for another plane. The units take Coulomb's constant and μ0/4π
+    /// as 1: a charge q gives q/r², a wire 2I/ρ, and a loop 2πIa²/(a² + z²)^(3/2) on its axis.
+    /// `create` draws each line from its start, or grows each arrow, `fade` fades it and
+    /// `recolor` recolors its stroke; it cannot be morphed, scaled or linearly mapped, and
+    /// nothing is carried along it.
+    /// `inspect` reports each line's ends and whether it closes, or each arrow's place, direction
+    /// and strength. Needs sci_anim 0.29.0 or later.
+    VectorField {
+        /// Which field: `electric`, whose field sources are `charge`s, or `magnetic`, whose
+        /// field sources are `wire`s, `loop`s and `magnet`s.
+        of: FieldOfFile,
+        /// The field sources, at least one, each of a type the field takes.
+        #[schemars(length(min = 1))]
+        sources: Vec<FieldSourceFile>,
+        /// What it draws: `lines`, field lines in its own plane, or `arrows` at the places of a
+        /// grid.
+        draw: FieldDrawFile,
+        /// The color and width of the lines or the arrows; tips are filled in the same color.
+        /// The default is white and 0.04 wide.
+        #[serde(default)]
+        stroke: Stroke,
+    },
     /// An electric circuit drawn as a schematic, whose currents and voltages sci_anim computes.
     /// Each component lies on an edge of a grid in the object's own xy plane, from grid point
     /// `from` to grid point `to`, with grid point `[0, 0]` at the object's position and `spacing`
@@ -1545,4 +1573,168 @@ pub(super) struct CurrentDotsFile {
     /// The dots' color, written `#rrggbb`. The default is a yellow, `#ffcc33`.
     #[serde(default = "ShapeFile::default_dot_color")]
     pub(super) color: Color,
+}
+
+/// Which field a vector field draws: `electric`, the field of `charge`s, or `magnetic`, the field
+/// of `wire`s, `loop`s and `magnet`s. No variant doc comments, for the reason `FillRule` gives.
+#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub(super) enum FieldOfFile {
+    Electric,
+    Magnetic,
+}
+
+/// A field source: what makes the field, placed by the object it names at every scene time.
+#[derive(Clone, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub(super) enum FieldSourceFile {
+    /// A point charge at its object's position, for an `electric` field. Its field is
+    /// q r̂/r². No arrow is drawn inside its object's drawing, and field lines start and end
+    /// on that drawing's edge.
+    Charge {
+        /// The object id of the object that places it: a dot, a circle or a sphere drawn as the
+        /// charge. It must be placed by its own transform.
+        object: String,
+        /// The charge, signed: positive charges send field lines out, negative ones take them
+        /// in.
+        charge: FiniteNumber,
+    },
+    /// An infinitely long straight wire through its object's position, for a `magnetic` field.
+    /// Its field circles it, 2I/ρ, counterclockwise seen from the end its current flows
+    /// toward. No arrow is drawn inside its object's drawing.
+    Wire {
+        /// The object id of the object that places it, drawn as the wire's end or a length of
+        /// it. It must be placed by its own transform.
+        object: String,
+        /// The current, signed: positive flows along `direction`.
+        current: FiniteNumber,
+        /// The wire's direction in its object's own space, `[x, y, z]`, not all 0. The default is
+        /// `[0, 0, 1]`, out of the object's own plane toward the camera: the wire seen end on.
+        #[schemars(with = "Option<[f64; 3]>")]
+        direction: Option<[f64; 3]>,
+    },
+    /// A circular loop of wire, for a `magnetic` field: a circle of `radius` in its object's own
+    /// xy plane about its position, carrying its current counterclockwise seen from its own +z,
+    /// so its field runs through it along +z. Turn its object 90 degrees about y to see it
+    /// side on, as two points its field lines circle. Its field is exact off its axis.
+    Loop {
+        /// The object id of the object that places it, such as a circle of the same radius. It
+        /// must be placed by its own transform.
+        object: String,
+        /// The loop's radius in world units, more than 0.
+        radius: Positive,
+        /// The current, signed: positive flows counterclockwise seen from the object's own +z.
+        current: FiniteNumber,
+    },
+    /// A bar magnet, or a solenoid or coil, for a `magnetic` field: `length` long along its
+    /// object's own x axis, centered on its position, of `radius`, with its north end toward
+    /// +x. Its field is an ideal solenoid's, so its field lines run through its body from south
+    /// to north and close outside it. No arrow is drawn inside it.
+    Magnet {
+        /// The object id of the object that places it, such as a polygon drawn as the bar. It
+        /// must be placed by its own transform.
+        object: String,
+        /// Its length along its object's own x, in world units, more than 0.
+        length: Positive,
+        /// Its radius, half its thickness, in world units, more than 0.
+        radius: Positive,
+        /// The current per unit of its length around it, signed, as a solenoid of n turns a unit
+        /// length carrying I has n·I; a negative strength puts north toward -x. The default is 1.
+        #[serde(default = "FiniteNumber::one")]
+        strength: FiniteNumber,
+    },
+}
+
+/// What a vector field draws.
+#[derive(Clone, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub(super) enum FieldDrawFile {
+    /// Field lines in the vector field's own xy plane, traced along the field's part in that
+    /// plane by fourth-order Runge-Kutta steps of a 500th of the rectangle's longer side, inside
+    /// the rectangle `width` by `height` centered on its position. Each has a tip halfway along
+    /// it, pointing the way the field does. An electric field line starts on a positive charge
+    /// and ends on a negative charge, on the rectangle's edge, or after three times round the
+    /// rectangle; a magnetic field line closes on itself, or runs from edge to edge.
+    Lines {
+        /// The rectangle's width along the vector field's own x, in world units, more than 0.
+        width: Positive,
+        /// The rectangle's height along its own y, in world units, more than 0.
+        height: Positive,
+        /// For an `electric` field: how many lines start on each unit of positive charge,
+        /// evenly around it from its own +x, rounded to a whole number for each charge. A
+        /// negative charge that fewer lines reach than its own share starts the rest itself,
+        /// in the widest gaps between them, traced back against the field. More than 0. The
+        /// default is 8.
+        per_charge: Option<Positive>,
+        /// For a `magnetic` field: how many lines start on each side of a loop or a magnet,
+        /// and out from a wire, from 1 to 100. A loop's or a magnet's start at even steps from
+        /// its rim out toward the rectangle's nearer edge, along the line through its middle
+        /// where its middle crosses the vector field's plane, so each passes through it and the
+        /// farther out it starts the wider it closes. A wire's start at even steps out along
+        /// the plane's +x toward the rectangle's nearest edge, and circle it. Each line is
+        /// traced both ways from its start, where its tip sits. The default is 4.
+        #[schemars(range(min = 1, max = 100))]
+        count: Option<u32>,
+        /// Points `[x, y]` in the vector field's own plane, from its position, to start the
+        /// lines at instead, each line traced both ways from its point. `inspect` reports the
+        /// field at each under `at_seeds`. At least one.
+        #[schemars(with = "Option<Vec<[f64; 2]>>", length(min = 1))]
+        seeds: Option<Vec<[f64; 2]>>,
+        /// The length of each line's tip in world units, more than 0. The tip is as wide as it
+        /// is long. The default is 0.25.
+        #[serde(default = "ShapeFile::default_image_tip")]
+        tip_length: Positive,
+    },
+    /// An arrow at every place of a grid, centered on its place and turned along the field there:
+    /// along the field's part in the vector field's own plane for a grid one place deep, and in
+    /// space for a deeper one, each arrow then turned about itself to face the camera. No arrow
+    /// is drawn inside a charge's, a wire's or a magnet's body, nor where the field is 0.
+    Arrows {
+        /// Where the arrows go, in the vector field's own space.
+        layout: FieldLayoutFile,
+        /// The length of the longest arrow in world units, more than 0. The default is 0.8 of
+        /// the grid's `spacing`.
+        length: Option<Positive>,
+        /// The length of each arrow's tip in world units, more than 0. The tip is as wide as it
+        /// is long, and a quarter of the arrow when the arrow is shorter than four tips. The
+        /// default is a quarter of `length`.
+        tip_length: Option<Positive>,
+        /// How the arrows show how strong the field is: `opacity` (the default), `length` or
+        /// `none`. Each arrow's strength share is ½ + log₁₀(strength / median) / 2, clamped to 0
+        /// to 1, with the median of every arrow's strength at that scene time, so arrows from a
+        /// tenth of the median to ten times it span the whole range. Under `opacity` an arrow
+        /// has opacity 0.15 + 0.85·share; under `length` it is 0.25 + 0.75·share of `length`
+        /// long; under `none` every arrow is whole.
+        #[serde(default)]
+        shows_strength: ShowsStrengthFile,
+    },
+}
+
+/// Where a vector field's arrows go, in its own space.
+#[derive(Clone, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub(super) enum FieldLayoutFile {
+    /// `nx` places along x by `ny` along y by `nz` along z, `spacing` apart and centered on the
+    /// vector field's position, as a pattern's grid places its copies. Place `i`, `j`, `k` is
+    /// `((i - (nx-1)/2)*spacing, (j - (ny-1)/2)*spacing, (k - (nz-1)/2)*spacing)`.
+    Grid {
+        /// How many places along x, y and z, as `[nx, ny, nz]`, each 1 or more. Their product is
+        /// at most 4000. `[15, 9, 1]` is a flat grid in the vector field's plane, and
+        /// `[5, 5, 5]` a cube.
+        counts: [CopyCount; 3],
+        /// The distance between neighboring places along each axis, in world units, more than 0.
+        spacing: Positive,
+    },
+}
+
+/// How a vector field's arrows show how strong the field is: `opacity`, fainter where weaker;
+/// `length`, shorter where weaker; or `none`. No variant doc comments, for the reason `FillRule`
+/// gives.
+#[derive(Clone, Copy, Debug, Default, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub(super) enum ShowsStrengthFile {
+    #[default]
+    Opacity,
+    Length,
+    None,
 }

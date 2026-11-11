@@ -222,6 +222,26 @@ impl Timeline {
                 _ => object.opacity = UnitInterval::clamped(0.0),
             }
         }
+        // Vector fields next: each reads its field sources' objects where the passes above left
+        // them, and is drawn from where they stand.
+        let fields: Vec<(ObjectId, Arc<crate::vector_field::Drawing>)> = stage
+            .objects
+            .iter()
+            .filter_map(|(id, o)| match &o.shape {
+                Shape::VectorField(field) => Some((
+                    id.clone(),
+                    Arc::new(field.drawing_at(&o.transform, &stage.objects)),
+                )),
+                _ => None,
+            })
+            .collect();
+        for (id, drawing) in fields {
+            if let Shape::VectorField(field) =
+                &mut stage.objects.get_mut(&id).expect("listed above").shape
+            {
+                field.drawing = drawing;
+            }
+        }
         // Placed objects last: they read the transforms, plane maps and the camera this scene
         // time ended at, so a plot of carried axes and an object attached to a carried object go
         // with it. A plot has its axes' plane map, and an attached object has none.

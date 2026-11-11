@@ -32,6 +32,7 @@ use crate::skeletal_formula::{AtomSymbol, SkeletalFormula};
 use crate::space_curve::{CrossSection, CurveFrame, SpaceCurve};
 use crate::surface::Surface;
 use crate::table::{Cell, FLAT_GLOW_OPACITY, Table};
+use crate::vector_field::{Draw, VectorField};
 
 pub struct DrawList {
     pub camera: Camera,
@@ -253,6 +254,15 @@ pub fn draw_list(stage: &Stage, scene_config: &SceneConfig) -> DrawList {
                         .collect(),
                     Mat4::IDENTITY,
                 ),
+                Shape::VectorField(field) => (
+                    vector_field_meshes(
+                        field,
+                        &object.transform,
+                        &stage.camera,
+                        object.created.get(),
+                    ),
+                    object.transform.unscaled(),
+                ),
                 shape => shape.meshes(&object.transform, object.flat_to_world(), object.created),
             };
             StagedObject {
@@ -390,6 +400,11 @@ impl Shape {
                 unreachable!("`draw_list` stages 3D axes, whose labels face its camera")
             }
             Shape::Trail(_) => unreachable!("`draw_list` stages a trail, which faces its camera"),
+            Shape::VectorField(_) => {
+                unreachable!(
+                    "`draw_list` stages a vector field, whose arrows in space face its camera"
+                )
+            }
             Shape::Sphere { radius, material } if created.get() >= 1.0 => (
                 vec![sphere(
                     radius.get(),
@@ -2413,6 +2428,145 @@ pub fn circuit_label_meshes(
             )
         })
         .collect()
+}
+
+/// A vector field at a create's created share, in its own space. Each field line is drawn from
+/// its start along its own length, its tip showing once the line reaches past it. Each arrow
+/// grows as an arrow does: its shaft, then its tip. An arrow lies in the vector field's plane in a
+/// grid one place deep, and otherwise turns about itself to face `camera`.
+fn vector_field_meshes(
+    field: &VectorField,
+    transform: &Transform,
+    camera: &Camera,
+    created: f32,
+) -> Vec<Mesh> {
+    let stroke = field.stroke;
+    let tip_fill = Fill::solid(stroke.color);
+    match field.draw {
+        Draw::Lines { tip_length, .. } => {
+            let mut lines = kurbo::BezPath::new();
+            let mut tips = kurbo::BezPath::new();
+            let at = |p: glam::DVec2| kurbo::Point::new(p.x, p.y);
+            for line in &field.drawing.lines {
+                let length = line.length();
+                let drawn = length * f64::from(created.min(1.0));
+                lines.move_to(at(line.points[0]));
+                let mut walked = 0.0;
+                for pair in line.points.windows(2) {
+                    let step = pair[0].distance(pair[1]);
+                    if walked + step > drawn {
+                        if step > 0.0 {
+                            lines.line_to(at(
+                                pair[0] + (pair[1] - pair[0]) * ((drawn - walked) / step)
+                            ));
+                        }
+                        break;
+                    }
+                    lines.line_to(at(pair[1]));
+                    walked += step;
+                }
+                if line.closed && created >= 1.0 {
+                    lines.close_path();
+                }
+                if length > 3.0 * tip_length && drawn >= line.tip + tip_length / 2.0 {
+                    let (p, along) = line.at(line.tip);
+                    let (apex, base) = (
+                        p + along * (tip_length / 2.0),
+                        p - along * (tip_length / 2.0),
+                    );
+                    let side = along.perp() * (tip_length / 2.0);
+                    tips.move_to(at(apex));
+                    tips.line_to(at(base + side));
+                    tips.line_to(at(base - side));
+                    tips.close_path();
+                }
+            }
+            let mut meshes = Path::from_bez(lines)
+                .map(|path| {
+                    path_meshes(&path, Bake::Scaled(Vec2::ONE), Some(stroke), 1.0, None, 0.0)
+                })
+                .unwrap_or_default();
+            meshes.extend(
+                Path::from_bez(tips)
+                    .map(|path| {
+                        path_meshes(
+                            &path,
+                            Bake::Scaled(Vec2::ONE),
+                            None,
+                            0.0,
+                            Some(tip_fill),
+                            1.0,
+                        )
+                    })
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|mesh| Mesh {
+                        overlay: true,
+                        ..mesh
+                    }),
+            );
+            meshes
+        }
+        Draw::Arrows {
+            counts,
+            length,
+            tip_length,
+            shows_strength,
+            ..
+        } => {
+            let flat = counts[2] == 1;
+            let own = Mat3::from_mat4(transform.unscaled()).transpose();
+            let toward_camera = (own * camera.direction()).as_dvec3();
+            let arrows = field.drawing.arrows.iter().filter_map(|arrow| {
+                let (share, opacity) = arrow.look(shows_strength);
+                let half = (length * share / 2.0) as f32;
+                let path = Path::arrow(
+                    Vec2::new(-half, 0.0),
+                    Vec2::new(half, 0.0),
+                    tip_length as f32,
+                )
+                .ok()?;
+                let x = arrow.toward;
+                let y = if flat {
+                    glam::DVec3::Z.cross(x)
+                } else {
+                    let side = x.cross(toward_camera);
+                    if side.length() > 1e-9 {
+                        side
+                    } else {
+                        x.any_orthonormal_vector()
+                    }
+                }
+                .normalize();
+                let to_own = Mat4::from_cols(
+                    x.as_vec3().extend(0.0),
+                    y.as_vec3().extend(0.0),
+                    x.cross(y).as_vec3().extend(0.0),
+                    arrow.place.as_vec3().extend(1.0),
+                );
+                // Opacities a 32nd apart draw alike, so arrows of one look share one mesh.
+                let opacity = ((opacity * 32.0).round() / 32.0) as f32;
+                Some(
+                    flat_meshes(&path, Vec2::ONE, Some(stroke), Some(tip_fill), created)
+                        .into_iter()
+                        .map(move |mut mesh| {
+                            for point in &mut mesh.points {
+                                point.position = to_own
+                                    .transform_point3(Vec3::from(point.position))
+                                    .to_array();
+                                point.normal = to_own
+                                    .transform_vector3(Vec3::from(point.normal))
+                                    .to_array();
+                            }
+                            let Material::Standard { opacity: o, .. } = &mut mesh.material;
+                            *o = UnitInterval::clamped(o.get() * opacity);
+                            mesh
+                        }),
+                )
+            });
+            merged(arrows.flatten())
+        }
+    }
 }
 
 #[cfg(test)]

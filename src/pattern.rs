@@ -382,6 +382,7 @@ impl Pattern {
             | Shape::NumberLine(_)
             | Shape::Axes3d(_)
             | Shape::Pattern(_)
+            | Shape::VectorField(_)
             | Shape::Trail(_) => {
                 unreachable!("`scene_file` reads a pattern's shape as a flat shape or a solid")
             }

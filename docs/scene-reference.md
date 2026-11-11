@@ -8,9 +8,9 @@ A scene file is the JSON file a scene is written in: its scene config, its camer
 - [Scene config](#scene-config)
 - [Camera](#camera)
 - [Steps](#steps): [`wait`](#wait), [`chapter`](#chapter), [`play`](#play)
-- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`lens`](#lens), [`mirror`](#mirror), [`ray`](#ray), [`image`](#image), [`circuit`](#circuit), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
+- [Objects](#objects): [`circle`](#circle), [`dot`](#dot), [`sphere`](#sphere), [`prism`](#prism), [`revolution`](#revolution), [`tube`](#tube), [`surface`](#surface), [`line`](#line), [`arrow`](#arrow), [`spring`](#spring), [`trail`](#trail), [`lens`](#lens), [`mirror`](#mirror), [`ray`](#ray), [`image`](#image), [`vector-field`](#vector-field), [`circuit`](#circuit), [`readout`](#readout), [`polygon`](#polygon), [`arc`](#arc), [`path`](#path), [`text`](#text), [`math`](#math), [`table`](#table), [`axes`](#axes), [`3d-axes`](#3d-axes), [`number-line`](#number-line), [`function-plot`](#function-plot), [`point-plot`](#point-plot), [`bar-plot`](#bar-plot), [`molecule`](#molecule), [`skeletal-formula`](#skeletal-formula), [`pattern`](#pattern)
 - [Animations](#animations): [`fade`](#fade), [`count`](#count), [`move`](#move), [`scale`](#scale), [`rotate`](#rotate), [`create`](#create), [`write`](#write), [`reaction`](#reaction), [`morph`](#morph), [`highlight`](#highlight), [`recolor`](#recolor), [`camera-move`](#camera-move), [`camera-look`](#camera-look), [`camera-zoom`](#camera-zoom), [`linear-map`](#linear-map), [`simulate`](#simulate), [`follow`](#follow)
-- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Body](#body), [Category axis](#category-axis), [Cell](#cell), [Component](#component), [Component kind](#component-kind), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Current dots](#current-dots), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Principal](#principal), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [Switching](#switching), [X axis](#x-axis)
+- [Shared types](#shared-types): [Align](#align), [Atom pair](#atom-pair), [Atom ref](#atom-ref), [Atom trace](#atom-trace), [Attach](#attach), [Axis](#axis), [Axis 3d](#axis-3d), [Axis scale](#axis-scale), [Body](#body), [Category axis](#category-axis), [Cell](#cell), [Component](#component), [Component kind](#component-kind), [Copy](#copy), [Copy position](#copy-position), [Copy rotation](#copy-rotation), [Copy scale](#copy-scale), [Current dots](#current-dots), [Curve coordinate](#curve-coordinate), [Curve point](#curve-point), [Dash pattern](#dash-pattern), [Easing curve](#easing-curve), [Edge shade](#edge-shade), [End](#end), [Faces](#faces), [Field draw](#field-draw), [Field layout](#field-layout), [Field of](#field-of), [Field source](#field-source), [Fill](#fill), [Fill rule](#fill-rule), [Followed](#followed), [Font](#font), [Group](#group), [Law](#law), [Layout](#layout), [Material](#material), [Math cell](#math-cell), [Matrix route](#matrix-route), [Mirror plane](#mirror-plane), [On atom](#on-atom), [On curve](#on-curve), [On object](#on-object), [On plot](#on-plot), [Palette index](#palette-index), [Principal](#principal), [Region](#region), [Representation](#representation), [Residue part](#residue-part), [Residue pick](#residue-pick), [Residues](#residues), [Rulings](#rulings), [Set](#set), [Shape](#shape), [Shows strength](#shows-strength), [Sound](#sound), [Space curve](#space-curve), [Stroke](#stroke), [Switching](#switching), [X axis](#x-axis)
 
 ## Top level
 
@@ -353,6 +353,23 @@ The image of the arrow from `from` to `to` through the lenses and mirrors of `op
 | `optics` | array of string | yes | The object ids of the lenses and mirrors that form the image, in the order the light meets them. |
 | `tip_length` | number |  | The length of the image's tip in world units, more than 0. The default is 0.25. |
 | `stroke` | [Stroke](#stroke) |  | The image's color and width. The default is white and 0.04 wide. |
+| `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
+| `opacity` | number |  | See [Fields every object takes](#fields-every-object-takes). |
+| `attach` | [Attach](#attach) |  | See [Fields every object takes](#fields-every-object-takes). |
+
+### `vector-field`
+
+The electric field of charges, or the magnetic field of wires, loops and magnets, worked out again at every scene time from where each field source's object stands, and drawn as field lines or as arrows. Each field source names an object, which places it: move or turn that object with any animation and the field follows. The field draws in its own space, placed by its `position` and `rotation`; its `scale` stays 1. Field lines lie in its own xy plane, so set the field sources in that plane, or symmetric about it, and turn a second vector field about an axis for another plane. The units take Coulomb's constant and μ0/4π as 1: a charge q gives q/r², a wire 2I/ρ, and a loop 2πIa²/(a² + z²)^(3/2) on its axis. `create` draws each line from its start, or grows each arrow, `fade` fades it and `recolor` recolors its stroke; it cannot be morphed, scaled or linearly mapped, and nothing is carried along it. `inspect` reports each line's ends and whether it closes, or each arrow's place, direction and strength. Needs sci_anim 0.29.0 or later.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `vector-field` | yes |  |
+| `of` | [Field of](#field-of) | yes | Which field: `electric`, whose field sources are `charge`s, or `magnetic`, whose field sources are `wire`s, `loop`s and `magnet`s. |
+| `sources` | array of [Field source](#field-source) | yes | The field sources, at least one, each of a type the field takes. |
+| `draw` | [Field draw](#field-draw) | yes | What it draws: `lines`, field lines in its own plane, or `arrows` at the places of a grid. |
+| `stroke` | [Stroke](#stroke) |  | The color and width of the lines or the arrows; tips are filled in the same color. The default is white and 0.04 wide. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `rotation` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
 | `scale` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -1170,6 +1187,104 @@ How a carried object turns as it goes, or each copy of an `along` layout turns a
 
 One of `tangent`.
 
+### Field draw
+
+What a vector field draws.
+
+#### `lines` field draw
+
+Field lines in the vector field's own xy plane, traced along the field's part in that plane by fourth-order Runge-Kutta steps of a 500th of the rectangle's longer side, inside the rectangle `width` by `height` centered on its position. Each has a tip halfway along it, pointing the way the field does. An electric field line starts on a positive charge and ends on a negative charge, on the rectangle's edge, or after three times round the rectangle; a magnetic field line closes on itself, or runs from edge to edge.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `lines` | yes |  |
+| `width` | number | yes | The rectangle's width along the vector field's own x, in world units, more than 0. |
+| `height` | number | yes | The rectangle's height along its own y, in world units, more than 0. |
+| `per_charge` | number |  | For an `electric` field: how many lines start on each unit of positive charge, evenly around it from its own +x, rounded to a whole number for each charge. A negative charge that fewer lines reach than its own share starts the rest itself, in the widest gaps between them, traced back against the field. More than 0. The default is 8. |
+| `count` | integer |  | For a `magnetic` field: how many lines start on each side of a loop or a magnet, and out from a wire, from 1 to 100. A loop's or a magnet's start at even steps from its rim out toward the rectangle's nearer edge, along the line through its middle where its middle crosses the vector field's plane, so each passes through it and the farther out it starts the wider it closes. A wire's start at even steps out along the plane's +x toward the rectangle's nearest edge, and circle it. Each line is traced both ways from its start, where its tip sits. The default is 4. |
+| `seeds` | array of [number, number] |  | Points `[x, y]` in the vector field's own plane, from its position, to start the lines at instead, each line traced both ways from its point. `inspect` reports the field at each under `at_seeds`. At least one. |
+| `tip_length` | number |  | The length of each line's tip in world units, more than 0. The tip is as wide as it is long. The default is 0.25. |
+
+#### `arrows` field draw
+
+An arrow at every place of a grid, centered on its place and turned along the field there: along the field's part in the vector field's own plane for a grid one place deep, and in space for a deeper one, each arrow then turned about itself to face the camera. No arrow is drawn inside a charge's, a wire's or a magnet's body, nor where the field is 0.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `arrows` | yes |  |
+| `layout` | [Field layout](#field-layout) | yes | Where the arrows go, in the vector field's own space. |
+| `length` | number |  | The length of the longest arrow in world units, more than 0. The default is 0.8 of the grid's `spacing`. |
+| `tip_length` | number |  | The length of each arrow's tip in world units, more than 0. The tip is as wide as it is long, and a quarter of the arrow when the arrow is shorter than four tips. The default is a quarter of `length`. |
+| `shows_strength` | [Shows strength](#shows-strength) |  | How the arrows show how strong the field is: `opacity` (the default), `length` or `none`. Each arrow's strength share is ½ + log₁₀(strength / median) / 2, clamped to 0 to 1, with the median of every arrow's strength at that scene time, so arrows from a tenth of the median to ten times it span the whole range. Under `opacity` an arrow has opacity 0.15 + 0.85·share; under `length` it is 0.25 + 0.75·share of `length` long; under `none` every arrow is whole. |
+
+### Field layout
+
+Where a vector field's arrows go, in its own space.
+
+#### `grid` field layout
+
+`nx` places along x by `ny` along y by `nz` along z, `spacing` apart and centered on the vector field's position, as a pattern's grid places its copies. Place `i`, `j`, `k` is `((i - (nx-1)/2)*spacing, (j - (ny-1)/2)*spacing, (k - (nz-1)/2)*spacing)`.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `grid` | yes |  |
+| `counts` | [integer, integer, integer] | yes | How many places along x, y and z, as `[nx, ny, nz]`, each 1 or more. Their product is at most 4000. `[15, 9, 1]` is a flat grid in the vector field's plane, and `[5, 5, 5]` a cube. |
+| `spacing` | number | yes | The distance between neighboring places along each axis, in world units, more than 0. |
+
+### Field of
+
+Which field a vector field draws: `electric`, the field of `charge`s, or `magnetic`, the field of `wire`s, `loop`s and `magnet`s. No variant doc comments, for the reason `FillRule` gives.
+
+One of `electric`, `magnetic`.
+
+### Field source
+
+A field source: what makes the field, placed by the object it names at every scene time.
+
+#### `charge` field source
+
+A point charge at its object's position, for an `electric` field. Its field is q r̂/r². No arrow is drawn inside its object's drawing, and field lines start and end on that drawing's edge.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `charge` | yes |  |
+| `object` | string | yes | The object id of the object that places it: a dot, a circle or a sphere drawn as the charge. It must be placed by its own transform. |
+| `charge` | number | yes | The charge, signed: positive charges send field lines out, negative ones take them in. |
+
+#### `wire` field source
+
+An infinitely long straight wire through its object's position, for a `magnetic` field. Its field circles it, 2I/ρ, counterclockwise seen from the end its current flows toward. No arrow is drawn inside its object's drawing.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `wire` | yes |  |
+| `object` | string | yes | The object id of the object that places it, drawn as the wire's end or a length of it. It must be placed by its own transform. |
+| `current` | number | yes | The current, signed: positive flows along `direction`. |
+| `direction` | [number, number, number] |  | The wire's direction in its object's own space, `[x, y, z]`, not all 0. The default is `[0, 0, 1]`, out of the object's own plane toward the camera: the wire seen end on. |
+
+#### `loop` field source
+
+A circular loop of wire, for a `magnetic` field: a circle of `radius` in its object's own xy plane about its position, carrying its current counterclockwise seen from its own +z, so its field runs through it along +z. Turn its object 90 degrees about y to see it side on, as two points its field lines circle. Its field is exact off its axis.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `loop` | yes |  |
+| `object` | string | yes | The object id of the object that places it, such as a circle of the same radius. It must be placed by its own transform. |
+| `radius` | number | yes | The loop's radius in world units, more than 0. |
+| `current` | number | yes | The current, signed: positive flows counterclockwise seen from the object's own +z. |
+
+#### `magnet` field source
+
+A bar magnet, or a solenoid or coil, for a `magnetic` field: `length` long along its object's own x axis, centered on its position, of `radius`, with its north end toward +x. Its field is an ideal solenoid's, so its field lines run through its body from south to north and close outside it. No arrow is drawn inside it.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `magnet` | yes |  |
+| `object` | string | yes | The object id of the object that places it, such as a polygon drawn as the bar. It must be placed by its own transform. |
+| `length` | number | yes | Its length along its object's own x, in world units, more than 0. |
+| `radius` | number | yes | Its radius, half its thickness, in world units, more than 0. |
+| `strength` | number |  | The current per unit of its length around it, signed, as a solenoid of n turns a unit length carrying I has n·I; a negative strength puts north toward -x. The default is 1. |
+
 ### Fill
 
 The inside of a flat shape.
@@ -1503,6 +1618,10 @@ The same as [`ray`](#ray), without the [fields every object takes](#fields-every
 
 The same as [`image`](#image), without the [fields every object takes](#fields-every-object-takes).
 
+#### `vector-field` shape
+
+The same as [`vector-field`](#vector-field), without the [fields every object takes](#fields-every-object-takes).
+
 #### `circuit` shape
 
 The same as [`circuit`](#circuit), without the [fields every object takes](#fields-every-object-takes).
@@ -1570,6 +1689,12 @@ The same as [`skeletal-formula`](#skeletal-formula), without the [fields every o
 #### `pattern` shape
 
 The same as [`pattern`](#pattern), without the [fields every object takes](#fields-every-object-takes).
+
+### Shows strength
+
+How a vector field's arrows show how strong the field is: `opacity`, fainter where weaker; `length`, shorter where weaker; or `none`. No variant doc comments, for the reason `FillRule` gives.
+
+One of `opacity`, `length`, `none`.
 
 ### Sound
 

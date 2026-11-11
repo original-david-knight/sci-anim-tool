@@ -1,0 +1,84 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "A moving magnet drives a current round a loop", "size": 0.45, "position": [0, 3.6, 0] },
+    "loop": { "type": "circle", "radius": 1.3, "scale": [0.22, 1, 1], "stroke": { "color": "#ff862f", "width": 0.05 } },
+
+    "top_current": { "type": "circle", "radius": 0.17, "position": [0, 1.75, 0.02], "fill": { "color": "#1e1e1e" }, "stroke": { "color": "#ff862f", "width": 0.03 }, "opacity": 0 },
+    "bottom_current": { "type": "circle", "radius": 0.17, "position": [0, -1.75, 0.02], "fill": { "color": "#1e1e1e" }, "stroke": { "color": "#ff862f", "width": 0.03 }, "opacity": 0 },
+    "top_in_a": { "type": "line", "from": [-0.09, -0.09], "to": [0.09, 0.09], "stroke": { "color": "#ff862f", "width": 0.03 }, "attach": { "object": "top_current" }, "opacity": 0 },
+    "top_in_b": { "type": "line", "from": [-0.09, 0.09], "to": [0.09, -0.09], "stroke": { "color": "#ff862f", "width": 0.03 }, "attach": { "object": "top_current" }, "opacity": 0 },
+    "bottom_out": { "type": "dot", "radius": 0.05, "fill": { "color": "#ff862f" }, "attach": { "object": "bottom_current" }, "opacity": 0 },
+    "top_out": { "type": "dot", "radius": 0.05, "fill": { "color": "#ff862f" }, "attach": { "object": "top_current" }, "opacity": 0 },
+    "bottom_in_a": { "type": "line", "from": [-0.09, -0.09], "to": [0.09, 0.09], "stroke": { "color": "#ff862f", "width": 0.03 }, "attach": { "object": "bottom_current" }, "opacity": 0 },
+    "bottom_in_b": { "type": "line", "from": [-0.09, 0.09], "to": [0.09, -0.09], "stroke": { "color": "#ff862f", "width": 0.03 }, "attach": { "object": "bottom_current" }, "opacity": 0 },
+
+    "bar": { "type": "polygon", "points": [[-1, -0.3], [1, -0.3], [1, 0.3], [-1, 0.3]], "position": [-4.6, 0, 0], "stroke": { "color": "#dddddd", "width": 0.03 } },
+    "north": { "type": "polygon", "points": [[0, -0.3], [1, -0.3], [1, 0.3], [0, 0.3]], "position": [-4.6, 0, 0], "fill": { "color": "#c0392b" }, "opacity": 0 },
+    "south": { "type": "polygon", "points": [[-1, -0.3], [0, -0.3], [0, 0.3], [-1, 0.3]], "position": [-4.6, 0, 0], "fill": { "color": "#2e6db4" }, "opacity": 0 },
+    "field": { "type": "vector-field", "of": "magnetic",
+      "sources": [ { "type": "magnet", "object": "bar", "length": 2, "radius": 0.3 } ],
+      "draw": { "type": "lines", "width": 14, "height": 6.4, "count": 3, "tip_length": 0.2 },
+      "position": [0, 0, 0.01],
+      "stroke": { "color": "#ffff00", "width": 0.025 } },
+
+    "approaching": { "type": "text", "text": "More field through the loop: the current opposes it", "size": 0.3, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 },
+    "leaving": { "type": "text", "text": "Less field through the loop: the current turns round", "size": 0.3, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 },
+    "law": { "type": "math", "tex": "\\mathcal{E} = -\\frac{d\\Phi_B}{dt}", "size": 0.5, "position": [0, -3.55, 0] }
+  },
+  "timeline": [
+    { "type": "chapter", "id": "setup", "steps": [
+      { "type": "play", "duration": 1, "animations": [
+        { "type": "write", "object": "heading" },
+        { "type": "create", "object": "loop" },
+        { "type": "create", "object": "bar" },
+        { "type": "fade", "object": "north", "to": 1 },
+        { "type": "fade", "object": "south", "to": 1 }
+      ] },
+      { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "field" }] }
+    ] },
+    { "type": "chapter", "id": "in", "steps": [
+      { "type": "play", "duration": 0.5, "animations": [
+        { "type": "fade", "object": "approaching", "to": 1 },
+        { "type": "fade", "object": "top_current", "to": 1 },
+        { "type": "fade", "object": "bottom_current", "to": 1 },
+        { "type": "fade", "object": "top_in_a", "to": 1 },
+        { "type": "fade", "object": "top_in_b", "to": 1 },
+        { "type": "fade", "object": "bottom_out", "to": 1 }
+      ] },
+      { "type": "play", "duration": 3, "animations": [
+        { "type": "move", "object": "bar", "to": [0, 0, 0], "easing_curve": "linear" },
+        { "type": "move", "object": "north", "to": [0, 0, 0], "easing_curve": "linear" },
+        { "type": "move", "object": "south", "to": [0, 0, 0], "easing_curve": "linear" }
+      ] }
+    ] },
+    { "type": "chapter", "id": "out", "steps": [
+      { "type": "play", "duration": 0.4, "animations": [
+        { "type": "fade", "object": "approaching", "to": 0 },
+        { "type": "fade", "object": "top_in_a", "to": 0 },
+        { "type": "fade", "object": "top_in_b", "to": 0 },
+        { "type": "fade", "object": "bottom_out", "to": 0 }
+      ] },
+      { "type": "play", "duration": 0.4, "animations": [
+        { "type": "fade", "object": "leaving", "to": 1 },
+        { "type": "fade", "object": "top_out", "to": 1 },
+        { "type": "fade", "object": "bottom_in_a", "to": 1 },
+        { "type": "fade", "object": "bottom_in_b", "to": 1 }
+      ] },
+      { "type": "play", "duration": 3, "animations": [
+        { "type": "move", "object": "bar", "to": [4.6, 0, 0], "easing_curve": "linear" },
+        { "type": "move", "object": "north", "to": [4.6, 0, 0], "easing_curve": "linear" },
+        { "type": "move", "object": "south", "to": [4.6, 0, 0], "easing_curve": "linear" }
+      ] },
+      { "type": "play", "duration": 0.5, "animations": [
+        { "type": "fade", "object": "leaving", "to": 0 },
+        { "type": "fade", "object": "top_current", "to": 0 },
+        { "type": "fade", "object": "bottom_current", "to": 0 },
+        { "type": "fade", "object": "top_out", "to": 0 },
+        { "type": "fade", "object": "bottom_in_a", "to": 0 },
+        { "type": "fade", "object": "bottom_in_b", "to": 0 }
+      ] },
+      { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "law" }] },
+      { "type": "wait", "duration": 1.5 }
+    ] }
+  ]
+}
