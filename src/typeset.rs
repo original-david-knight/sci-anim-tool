@@ -28,11 +28,13 @@ use typst_layout::PagedDocument;
 use crate::path::{Path, PathError};
 use crate::scene::{Align, Color, Font, Glyph};
 
-/// Libertinus Sans and Libertinus Serif for text, New Computer Modern Math for math.
-static FONTS: [&[u8]; 3] = [
+/// Libertinus Sans, Libertinus Serif and JetBrains Mono for text, New Computer Modern Math for
+/// math. JetBrains Mono is last, since only a mono text's font book holds it.
+static FONTS: [&[u8]; 4] = [
     include_bytes!("../assets/fonts/LibertinusSans-Regular.otf"),
     include_bytes!("../assets/fonts/LibertinusSerif-Regular.otf"),
     include_bytes!("../assets/fonts/NewCMMath-Regular.otf"),
+    include_bytes!("../assets/fonts/JetBrainsMono-Regular.ttf"),
 ];
 
 /// mitex 0.2.4's Typst definitions of the LaTeX commands it rewrites. `assets/mitex/NOTICE` says
@@ -209,17 +211,23 @@ pub fn text_box(
     layout: Layout,
 ) -> Result<Typeset, TypesetError> {
     let lines = format!("{}.split(\"\\n\").join(linebreak())", typst_string(text));
-    let font = match font {
-        Font::Sans => "Libertinus Sans",
-        Font::Serif => "Libertinus Serif",
+    // A mono text keeps every character to one cell: no glyph from another font, and none of
+    // JetBrains Mono's ligatures, which draw `!=` as one sign.
+    let face = match font {
+        Font::Sans => "font: \"Libertinus Sans\"",
+        Font::Serif => "font: \"Libertinus Serif\"",
+        Font::Mono => {
+            "font: \"JetBrains Mono\", fallback: false, ligatures: false, features: (calt: 0)"
+        }
     };
     typeset(
         &format!(
-            "#set text(font: \"{font}\")\n#set align({})\n#{lines}\n",
+            "#set text({face})\n#set align({})\n#{lines}\n",
             typst_alignment(layout.align)
         ),
         color,
         layout,
+        font,
     )
 }
 
@@ -236,7 +244,7 @@ pub fn math_box(tex: &str, color: Color, layout: Layout) -> Result<Typeset, Type
         typst_alignment(layout.align),
         typst_string(&typst_math),
     );
-    typeset(&body, color, layout).map_err(|error| match error {
+    typeset(&body, color, layout, Font::Sans).map_err(|error| match error {
         TypesetError::Typst { message, .. } => TypesetError::Typst {
             message,
             typst_form: Some(typst_math),
@@ -268,13 +276,20 @@ fn bracketed_color(tex: &str) -> Option<&str> {
         })
 }
 
-fn typeset(body: &str, color: Color, layout: Layout) -> Result<Typeset, TypesetError> {
+/// `font` picks the font book Typst falls back through: a sans or serif text, or math, never
+/// reaches JetBrains Mono, so it is set as it was before the mono font was bundled.
+fn typeset(body: &str, color: Color, layout: Layout, font: Font) -> Result<Typeset, TypesetError> {
     let fill = format!(
         "#set text(fill: rgb({}, {}, {}))\n",
         color.r, color.g, color.b
     );
+    let fonts = fonts();
     let world = Job {
-        fonts: fonts(),
+        fonts,
+        book: match font {
+            Font::Mono => &fonts.book_with_mono,
+            Font::Sans | Font::Serif => &fonts.book,
+        },
         main: Source::new(file_id("/main.typ"), format!("{PAGE}{fill}{body}")),
     };
     let document = typst::compile::<PagedDocument>(&world)
@@ -554,6 +569,7 @@ fn messages(errors: &[SourceDiagnostic]) -> String {
 struct Fonts {
     library: LazyHash<Library>,
     book: LazyHash<FontBook>,
+    book_with_mono: LazyHash<FontBook>,
     fonts: Vec<TypstFont>,
 }
 
@@ -564,9 +580,11 @@ fn fonts() -> &'static Fonts {
             .iter()
             .flat_map(|data| TypstFont::iter(Bytes::new(*data)))
             .collect();
+        let mono = fonts.len() - 1;
         Fonts {
             library: LazyHash::new(Library::builder().build()),
-            book: LazyHash::new(FontBook::from_fonts(&fonts)),
+            book: LazyHash::new(FontBook::from_fonts(&fonts[..mono])),
+            book_with_mono: LazyHash::new(FontBook::from_fonts(&fonts)),
             fonts,
         }
     })
@@ -583,6 +601,7 @@ fn file_id(path: &str) -> FileId {
 /// scene cannot reach the disk through `#read` or `#import`.
 struct Job {
     fonts: &'static Fonts,
+    book: &'static LazyHash<FontBook>,
     main: Source,
 }
 
@@ -592,7 +611,7 @@ impl World for Job {
     }
 
     fn book(&self) -> &LazyHash<FontBook> {
-        &self.fonts.book
+        self.book
     }
 
     fn main(&self) -> FileId {
@@ -706,6 +725,37 @@ mod tests {
                 "nothing in text is markup in {font:?}"
             );
         }
+    }
+
+    #[test]
+    fn mono_text_gives_every_character_one_cell_and_draws_no_ligatures() {
+        let width = |line: &str| text_box(line, Font::Mono, WHITE, CENTER).unwrap().width;
+        for line in ["iiiiii", "mmmmmm", "->!=:=", "  ab  ", "├──│✓●"] {
+            assert!(
+                (width(line) - 3.6).abs() < 1e-3,
+                "{line:?} is {} wide, want six cells of 0.6",
+                width(line)
+            );
+        }
+        let drawn_length = |line: &str| -> f64 {
+            text(line, Font::Mono, WHITE, CENTER)
+                .unwrap()
+                .iter()
+                .map(|glyph| glyph.path.length())
+                .sum()
+        };
+        for pair in ["!=", "->", "=="] {
+            let apart: f64 = pair.chars().map(|c| drawn_length(&c.to_string())).sum();
+            assert!(
+                (drawn_length(pair) - apart).abs() < 1e-3,
+                "{pair} is drawn as its two signs, not a ligature"
+            );
+        }
+        assert_eq!(
+            text("x日", Font::Mono, WHITE, CENTER).unwrap_err(),
+            TypesetError::MissingGlyph('日'),
+            "no glyph from another font"
+        );
     }
 
     #[test]

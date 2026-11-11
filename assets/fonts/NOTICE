@@ -1,4 +1,4 @@
-The three fonts here are bundled into sci_anim unchanged, and Typst sees no others.
+The four fonts here are bundled into sci_anim unchanged, and Typst sees no others.
 
 - LibertinusSans-Regular.otf is from the Libertinus 7.051 release,
   https://github.com/alerque/libertinus/releases/download/v7.051/Libertinus-7.051.zip
@@ -7,9 +7,15 @@ The three fonts here are bundled into sci_anim unchanged, and Typst sees no othe
   (https://github.com/typst/typst-assets), files/fonts/. It is byte for byte the file of the
   same name in the Libertinus 7.051 release.
 - NewCMMath-Regular.otf is from the typst-assets 0.15.1 crate, files/fonts/.
+- JetBrainsMono-Regular.ttf is from the JetBrains Mono 2.304 release,
+  https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip
+  (sha256 6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf), fonts/ttf/.
+  Libertinus Mono is not used: it lacks │ (U+2502), which tree and box-drawn tables print, and
+  ✓, ✗ and ❯, which terminal tools print.
 
 Libertinus Sans and Libertinus Serif are licensed under the SIL Open Font License 1.1, in
-LICENSE-OFL.txt, which is the release's OFL.txt.
+LICENSE-OFL.txt, which is the release's OFL.txt. JetBrains Mono is licensed under the SIL Open
+Font License 1.1, in LICENSE-OFL-JetBrainsMono.txt, which is the release's OFL.txt.
 
 New Computer Modern Math is licensed under the GUST Font License 1.0, in LICENSE-GUST.txt,
 which is the GUST section of typst-assets' NOTICE. NewCM10-Regular, the one New Computer Modern

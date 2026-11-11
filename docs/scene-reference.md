@@ -450,13 +450,13 @@ Any path, written in SVG path syntax in `d`, such as `M -1 -1 L 1 -1 L 1 1 Z M 0
 
 ### `text`
 
-Plain text in the `font` it names, Libertinus Sans unless it is `serif`, filled in `color`. A `\n` breaks a line. Nothing else in it is markup. `size` is the em in world units. `align` lines up the lines and picks the point of the text's box at the object's position: the middle of its left edge, its center, or the middle of its right edge. The box runs from the first line's cap height to the last line's baseline. A write draws it glyph by glyph.
+Plain text in the `font` it names, Libertinus Sans unless it is `serif` or `mono`, filled in `color`. A `\n` breaks a line. Nothing else in it is markup. `size` is the em in world units. `align` lines up the lines and picks the point of the text's box at the object's position: the middle of its left edge, its center, or the middle of its right edge. The box runs from the first line's cap height to the last line's baseline. A write draws it glyph by glyph.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | `text` | yes |  |
-| `text` | string | yes | The characters to set, as plain text. `\n` starts a new line, and nothing else is markup. The bundled fonts cover Latin, Greek and Cyrillic, and a character with no glyph in them is a scene error. |
-| `font` | [Font](#font) |  | `sans` for Libertinus Sans or `serif` for Libertinus Serif. The default is `sans`. |
+| `text` | string | yes | The characters to set, as plain text. `\n` starts a new line, and nothing else is markup. The bundled fonts cover Latin, Greek and Cyrillic, and JetBrains Mono the box drawing characters and common symbols of a terminal too. A character with no glyph in them is a scene error. |
+| `font` | [Font](#font) |  | `sans` for Libertinus Sans, `serif` for Libertinus Serif, or `mono` for JetBrains Mono, whose characters are each 0.6 of `size` wide, spaces included, so columns line up as in code or a terminal. A mono text draws no ligatures, and a character JetBrains Mono lacks is a scene error. The default is `sans`. |
 | `size` | number |  | The text size: the height of one em, in world units, more than 0. The default is 0.6. |
 | `color` | string |  | The color every glyph is filled in, written `#rrggbb`. The default is white. |
 | `align` | [Align](#align) |  | `left`, `center` or `right`: how the lines line up, and which point of the text's box sits at the object's position. The default is `center`. |
@@ -493,7 +493,7 @@ Text and math in cells, in `rows` of cells from the top, each row's cells from t
 | `rows` | array of array of [Cell](#cell) | yes | The rows from the top, each a list of its cells from the left, every row as long as the first. A cell is a string of plain text, set as a `text` object's `text` is, an object `{ "tex": "..." }` of LaTeX math, set as a `math` object's `tex` is, or `""` for an empty cell. Such as `[["Codon", "Amino acid"], ["AUG", "Met"]]`. |
 | `size` | number |  | The text size of every cell: the height of one em, in world units, more than 0. The default is 0.6. |
 | `color` | string |  | The color of every glyph that a cell's `tex` does not color, written `#rrggbb`. The default is white. |
-| `font` | [Font](#font) |  | The font of the text cells: `sans` for Libertinus Sans or `serif` for Libertinus Serif. Math is set in New Computer Modern Math. The default is `sans`. |
+| `font` | [Font](#font) |  | The font of the text cells: `sans` for Libertinus Sans, `serif` for Libertinus Serif, or `mono` for JetBrains Mono. Math is set in New Computer Modern Math. The default is `sans`. |
 | `align` | [Align](#align) |  | `left`, `center` or `right`: where each cell's text or math sits across its cell, `padding` from its left edge, in its middle, or `padding` from its right edge. It sits in the middle of its row's height. The default is `center`. |
 | `padding` | number |  | The cell padding: the space between each cell's edges and its text or math, on every side, in world units, 0 or more. The default is 0.4 of `size`. |
 | `rulings` | [Rulings](#rulings) |  | Which rulings to draw: `all` between every row and column and around the table, `header` one under the first row, or `none`. The default is `all`. |
@@ -645,7 +645,7 @@ The middle of the box around its shown atoms sits at the object's position, and 
 | `size` | number |  | The text size of the atom symbols: the height of one em, in world units, more than 0. The default is 0.6 of `bond_length`. |
 | `stroke_width` | number |  | The width of every bond's strokes, and of a wedge's outline, in world units, more than 0. The default is 0.04 of `bond_length`. |
 | `color` | string |  | The color of the bonds and the atom symbols, written `#rrggbb`. The default is white. |
-| `font` | [Font](#font) |  | The font of the atom symbols: `sans` for Libertinus Sans or `serif` for Libertinus Serif. The default is `sans`. |
+| `font` | [Font](#font) |  | The font of the atom symbols: `sans` for Libertinus Sans, `serif` for Libertinus Serif, or `mono` for JetBrains Mono. The default is `sans`. |
 | `mirror` | [Mirror plane](#mirror-plane) |  | Draws the formula's mirror image. `x` flips the drawing left to right across its middle and `y` flips it top to bottom, each the other enantiomer of a molecule with one stereocenter, drawn as a mirror stood beside or below the page shows it. `z` reflects it through the page: every atom stays where it is, and every wedge becomes a hash and every hash a wedge. The atom symbols are never written backward. The default is none. |
 | `groups` | map of name to [Group](#group) |  | Named sets of atoms, by the atoms' numbers in the structure file, such as `{ "carboxyl": [1, 2, 6] }`, as a molecule's are. A group can be highlighted. A group may hold hydrogens the formula leaves out, and must hold at least one atom it shows. |
 | `position` | [number, number, number] |  | See [Fields every object takes](#fields-every-object-takes). |
@@ -1194,9 +1194,9 @@ One of `position`, `rotation`, `camera-position`, `camera-target`, `shape`, `val
 
 ### Font
 
-The typeface a text object is set in: Libertinus Sans or Libertinus Serif. Math is always set in New Computer Modern Math. No variant doc comments, for the reason `FillRule` gives.
+The typeface a text object is set in: Libertinus Sans, Libertinus Serif, or JetBrains Mono, whose characters all take the same width. Math is always set in New Computer Modern Math. No variant doc comments, for the reason `FillRule` gives.
 
-One of `sans`, `serif`.
+One of `sans`, `serif`, `mono`.
 
 ### Group
 

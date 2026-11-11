@@ -633,17 +633,21 @@ pub(super) enum ShapeFile {
         /// The path's inside. With none, it has no fill.
         fill: Option<Fill>,
     },
-    /// Plain text in the `font` it names, Libertinus Sans unless it is `serif`, filled in `color`. A `\n` breaks a line. Nothing else in
+    /// Plain text in the `font` it names, Libertinus Sans unless it is `serif` or `mono`, filled in `color`. A `\n` breaks a line. Nothing else in
     /// it is markup. `size` is the em in world units. `align` lines up the lines and picks the
     /// point of the text's box at the object's position: the middle of its left edge, its
     /// center, or the middle of its right edge. The box runs from the first line's cap height
     /// to the last line's baseline. A write draws it glyph by glyph.
     Text {
         /// The characters to set, as plain text. `\n` starts a new line, and nothing else is
-        /// markup. The bundled fonts cover Latin, Greek and Cyrillic, and a character with no
-        /// glyph in them is a scene error.
+        /// markup. The bundled fonts cover Latin, Greek and Cyrillic, and JetBrains Mono the box
+        /// drawing characters and common symbols of a terminal too. A character with no glyph in
+        /// them is a scene error.
         text: String,
-        /// `sans` for Libertinus Sans or `serif` for Libertinus Serif. The default is `sans`.
+        /// `sans` for Libertinus Sans, `serif` for Libertinus Serif, or `mono` for JetBrains Mono,
+        /// whose characters are each 0.6 of `size` wide, spaces included, so columns line up as
+        /// in code or a terminal. A mono text draws no ligatures, and a character JetBrains Mono
+        /// lacks is a scene error. The default is `sans`.
         #[serde(default)]
         font: Font,
         /// The text size: the height of one em, in world units, more than 0. The default is 0.6.
@@ -714,8 +718,9 @@ pub(super) enum ShapeFile {
         /// default is white.
         #[serde(default = "ShapeFile::default_color")]
         color: Color,
-        /// The font of the text cells: `sans` for Libertinus Sans or `serif` for Libertinus
-        /// Serif. Math is set in New Computer Modern Math. The default is `sans`.
+        /// The font of the text cells: `sans` for Libertinus Sans, `serif` for Libertinus Serif, or
+        /// `mono` for JetBrains Mono. Math is set in New Computer Modern Math. The default is
+        /// `sans`.
         #[serde(default)]
         font: Font,
         /// `left`, `center` or `right`: where each cell's text or math sits across its cell, `padding` from its left
@@ -991,8 +996,8 @@ pub(super) enum ShapeFile {
         /// The color of the bonds and the atom symbols, written `#rrggbb`. The default is white.
         #[serde(default = "ShapeFile::default_color")]
         color: Color,
-        /// The font of the atom symbols: `sans` for Libertinus Sans or `serif` for Libertinus
-        /// Serif. The default is `sans`.
+        /// The font of the atom symbols: `sans` for Libertinus Sans, `serif` for Libertinus Serif,
+        /// or `mono` for JetBrains Mono. The default is `sans`.
         #[serde(default)]
         font: Font,
         /// Draws the formula's mirror image. `x` flips the drawing left to right across its
