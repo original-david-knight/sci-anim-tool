@@ -36,10 +36,10 @@ Read `instructional-videos.md`, `motion.md` and `math.md` first. From sci_anim 0
 
 - Lines follow the field's part in the vector field's plane. Set the field sources in that plane, or symmetric about it: charges in it, a wire square to it, a loop's or a magnet's axis in it. The field of anything out of the plane is drawn as its shadow in the plane, which is not a true field line. For another plane, add a second vector field turned about an axis, such as `"rotation": [90, 0, 0]` for the xz plane.
 - An electric field starts `per_charge` lines (default 8) on each unit of positive charge, evenly around it from its own +x, so a charge of 2 starts twice as many. Each ends on a negative charge, on the rectangle's edge, or after running three times round the rectangle. A negative charge that fewer lines reach than its own share starts the rest itself, at its even angles farthest from those that reach it, so a dipole of +1 and -1 shows as many lines on each charge, symmetric above and below, and a lone negative charge shows lines coming in from the edge.
-- A magnetic field starts `count` lines (default 4) on each side of a loop or a magnet, at even steps from its rim out toward the rectangle's nearer edge along the line through its middle, and `count` out from a wire along the plane's +x. Each is traced both ways and closes on itself, so every line of a magnet runs out of its north end, round, and back through its body. A line seeded near the rectangle's edge may leave it and run edge to edge.
-- `seeds`, a list of points `[x, y]` in the plane, starts the lines there instead, each traced both ways. Use them for a line through the middle of a magnet (`[0, 0.1]`), or to pick exactly which circles around a wire to draw. `inspect` gives the field at each seed under `at_seeds`.
-- The tip sits halfway along a line that starts on a charge, and at the start of every other line. `tip_length` sets its size (default 0.25).
-- A long thin magnet's lines run close to its walls inside it: lines that pass near its axis close far outside it, beyond most rectangles. Make the magnet thicker, or add `seeds` inside it, to show lines through its core.
+- A magnetic field starts `count` lines (default 6) on each loop or magnet, evenly across its middle along the line where its middle crosses the plane, and `count` out from each wire along the plane's +x. Each is traced both ways. Inside a magnet the lines run as evenly as its field there is strong; out of its north end they fan out, and the lines seeded near its wall close tightly round it while those near its axis close far outside it, so they often run off the rectangle edge to edge, as in a textbook drawing. A wire's lines are circles.
+- `seeds`, a list of points `[x, y]` in the plane, starts the lines there instead, each traced both ways. Use them to pick exactly which loops of a magnet or circles around a wire to draw. `inspect` gives the field at each seed under `at_seeds`.
+- A line's tip sits halfway along it when it starts on a charge or closes, and halfway along its forward half otherwise, so it never hides inside a magnet. `tip_length` sets its size (default 0.25).
+- A magnet's lines are only as far apart inside it as its radius over `count`, so give a thin magnet few lines, or draw it thicker.
 - `create` draws each line from its start along its length, all at once: out from a positive charge, in from the edge toward a lone negative charge, and round from its start for a magnetic line.
 
 ## Arrows
@@ -68,7 +68,7 @@ Read `instructional-videos.md`, `motion.md` and `math.md` first. From sci_anim 0
 | Field of a point charge | one `charge` and `per_charge` lines: they run straight out at even angles |
 | Electric dipole | +1 and -1, `per_charge` 12, then `move` one charge and watch the lines bend |
 | Two like charges | two +1 charges: every line runs to the edge, and none crosses the middle |
-| Bar magnet | a `magnet` whose object is the bar's outline, `count` 4, the vector field at z 0.01 |
+| Bar magnet | a `magnet` whose object is the bar's outline, `count` 8, the vector field at z 0.01 |
 | Solenoid | a `magnet` as long and as wide as the coil drawn; its field is uniform inside |
 | A current loop seen side on | a `loop` whose object is turned `[0, 90, 0]`, with dots where its wire crosses the plane |
 | Wire seen end on | a `wire` and `arrows` in a flat grid; a second wire of opposite current in a second vector field faded in |

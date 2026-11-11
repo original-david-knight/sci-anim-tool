@@ -1651,8 +1651,9 @@ pub(super) enum FieldSourceFile {
 pub(super) enum FieldDrawFile {
     /// Field lines in the vector field's own xy plane, traced along the field's part in that
     /// plane by fourth-order Runge-Kutta steps of a 500th of the rectangle's longer side, inside
-    /// the rectangle `width` by `height` centered on its position. Each has a tip halfway along
-    /// it, pointing the way the field does. An electric field line starts on a positive charge
+    /// the rectangle `width` by `height` centered on its position. Each has a tip pointing the
+    /// way the field does: halfway along a line that starts on a charge or closes, and halfway
+    /// along the forward half of any other. An electric field line starts on a positive charge
     /// and ends on a negative charge, on the rectangle's edge, or after three times round the
     /// rectangle; a magnetic field line closes on itself, or runs from edge to edge.
     Lines {
@@ -1662,17 +1663,17 @@ pub(super) enum FieldDrawFile {
         height: Positive,
         /// For an `electric` field: how many lines start on each unit of positive charge,
         /// evenly around it from its own +x, rounded to a whole number for each charge. A
-        /// negative charge that fewer lines reach than its own share starts the rest itself,
-        /// in the widest gaps between them, traced back against the field. More than 0. The
-        /// default is 8.
+        /// negative charge that fewer lines reach than its own share starts the rest itself, at
+        /// its even angles farthest from those that reach it, traced back against the field.
+        /// More than 0. The default is 8.
         per_charge: Option<Positive>,
-        /// For a `magnetic` field: how many lines start on each side of a loop or a magnet,
-        /// and out from a wire, from 1 to 100. A loop's or a magnet's start at even steps from
-        /// its rim out toward the rectangle's nearer edge, along the line through its middle
-        /// where its middle crosses the vector field's plane, so each passes through it and the
-        /// farther out it starts the wider it closes. A wire's start at even steps out along
-        /// the plane's +x toward the rectangle's nearest edge, and circle it. Each line is
-        /// traced both ways from its start, where its tip sits. The default is 4.
+        /// For a `magnetic` field: how many lines start on each field source, from 1 to 100. A
+        /// loop's or a magnet's start evenly across its middle, along the line where its middle
+        /// crosses the vector field's plane, each the middle of its share of the diameter, so
+        /// they run through it as evenly as its field inside is strong; those near its axis
+        /// close far outside it and may run off the rectangle. A wire's start at even steps out
+        /// along the plane's +x toward the rectangle's nearest edge, and circle it. Each line is
+        /// traced both ways from its start. The default is 6.
         #[schemars(range(min = 1, max = 100))]
         count: Option<u32>,
         /// Points `[x, y]` in the vector field's own plane, from its position, to start the

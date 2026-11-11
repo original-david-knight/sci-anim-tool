@@ -2253,7 +2253,7 @@ fn read_vector_field(
                 (None, FieldOfFile::Electric) => {
                     Starts::Automatic(per_charge.map_or(8.0, |p| f64::from(p.get())))
                 }
-                (None, FieldOfFile::Magnetic) => Starts::Automatic(f64::from(count.unwrap_or(4))),
+                (None, FieldOfFile::Magnetic) => Starts::Automatic(f64::from(count.unwrap_or(6))),
             };
             Draw::Lines {
                 width: f64::from(width.get()),

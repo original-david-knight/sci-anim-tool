@@ -204,25 +204,35 @@ fn arrows_in_a_grid_in_space_point_along_the_field_in_space() {
 }
 
 #[test]
-fn a_magnet_s_lines_run_through_it_and_close() {
+fn a_magnet_s_lines_run_through_it_and_close_or_leave_the_rectangle() {
     let objects = r#"
         "bar": { "type": "polygon", "points": [[-1, -0.3], [1, -0.3], [1, 0.3], [-1, 0.3]] },
         "B": { "type": "vector-field", "of": "magnetic",
           "sources": [ { "type": "magnet", "object": "bar", "length": 2, "radius": 0.3 } ],
-          "draw": { "type": "lines", "width": 12, "height": 8, "count": 3 } }"#;
+          "draw": { "type": "lines", "width": 12, "height": 8, "count": 6 } }"#;
 
     let stage = inspect_at(&scene(objects, ""), "0");
     let lines = lines(&stage, "B");
 
     assert_eq!(lines.len(), 6);
+    let mut closed = 0;
     for line in &lines {
-        assert_eq!(line["closed"], true, "{line}");
-        assert_eq!(line["from"], line["to"]);
-        // Each starts on the line through the magnet's middle, outside it, above or below.
-        let [x, y, _] = point(&line["from"]);
-        assert!(x.abs() < 1e-9 && y.abs() > 0.3, "{line}");
+        let (from, to) = (point(&line["from"]), point(&line["to"]));
+        if line["closed"] == true {
+            closed += 1;
+            // A closed line starts where it was seeded, across the magnet's middle, inside it.
+            assert_eq!(from, to);
+            assert!(from[0].abs() < 1e-9 && from[1].abs() < 0.3, "{line}");
+        } else {
+            assert!(
+                on_edge(from, [6.0, 4.0]) && on_edge(to, [6.0, 4.0]),
+                "{line}"
+            );
+        }
     }
-    // Inside a magnet its field runs south to north, toward +x.
+    // The lines seeded nearest its wall close tightly round it; those near its axis run wide.
+    assert!(closed >= 2, "{lines:?}");
+    // Inside a magnet its field runs south to north, toward +x, and beside it back.
     let seeded = r#"
         "bar": { "type": "polygon", "points": [[-1, -0.3], [1, -0.3], [1, 0.3], [-1, 0.3]] },
         "B": { "type": "vector-field", "of": "magnetic",

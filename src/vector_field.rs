@@ -105,7 +105,7 @@ pub enum Starts {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Draw {
     /// Field lines in the vector field's own xy plane, inside the rectangle `width` by `height`
-    /// centered on its position, each with a tip `tip_length` long halfway along it.
+    /// centered on its position, each with a tip `tip_length` long partway along it.
     Lines {
         width: f64,
         height: f64,
@@ -150,8 +150,8 @@ pub struct FieldLine {
     pub closed: bool,
     /// The object of the charge it ends on, if it ends on one.
     pub ends_on: Option<ObjectId>,
-    /// How far along it its tip sits: at the point it was traced both ways from, or halfway
-    /// along a line that starts on a charge.
+    /// How far along it its tip sits: halfway along a line that starts on a charge or closes,
+    /// and halfway along the forward half of a line traced both ways that does not.
     pub tip: f64,
 }
 
@@ -697,8 +697,9 @@ pub fn strength_share(strength: f64, median: f64) -> f64 {
     (0.5 + (strength / median).log10() / STRENGTH_DECADES).clamp(0.0, 1.0)
 }
 
-/// Traces field lines in the vector field's own plane, by fourth-order Runge-Kutta steps of a
-/// fixed length along the unit direction of the field's part in that plane.
+/// Traces field lines in the vector field's own plane along the unit direction of the field's
+/// part in that plane, by fourth-order Runge-Kutta steps of a 500th of the rectangle's longer
+/// side, each halved where the field turns too sharply for it.
 struct Tracer<'a> {
     placed: &'a [Placed],
     plane: Plane,
@@ -829,21 +830,23 @@ impl Tracer<'_> {
     }
 
     /// The line through `seed`, traced both ways, its points in the field's direction: closed if
-    /// it comes back to the seed, or else from wherever its backward half stopped to wherever its
-    /// forward half did. `None` where the plane has no field.
+    /// it comes back to the seed, with its tip halfway round, or else from wherever its backward
+    /// half stopped to wherever its forward half did, with its tip halfway along its forward half,
+    /// clear of the body of a magnet it was seeded in. `None` where the plane has no field.
     fn both_ways(&self, seed: DVec2, sources: &[&ObjectId]) -> Option<FieldLine> {
         self.direction(seed, 1.0)?;
         let (forward, stop) = self.trace(seed, 1.0, None, true);
+        let length = |points: &[DVec2]| points.windows(2).map(|p| p[0].distance(p[1])).sum::<f64>();
         if matches!(stop, Stop::Closed) {
-            return Some(FieldLine {
+            return Some(halfway(FieldLine {
                 points: forward,
                 closed: true,
                 ends_on: None,
                 tip: 0.0,
-            });
+            }));
         }
         let (mut backward, _) = self.trace(seed, -1.0, None, false);
-        let tip = backward.windows(2).map(|p| p[0].distance(p[1])).sum();
+        let tip = length(&backward) + length(&forward) / 2.0;
         backward.reverse();
         backward.pop();
         backward.extend(forward);
@@ -929,8 +932,8 @@ impl Tracer<'_> {
         lines
     }
 
-    /// Magnetic field lines: `count` lines on each side of a loop or a magnet, and `count` out
-    /// from a wire, each traced both ways from its seed.
+    /// Magnetic field lines: `count` lines evenly across the middle of each loop or magnet, and
+    /// `count` out from each wire, each traced both ways from its seed.
     fn magnetic(&self, count: usize, sources: &[&ObjectId]) -> Vec<FieldLine> {
         let mut seeds = Vec::new();
         for placed in self.placed {
@@ -975,7 +978,7 @@ impl Tracer<'_> {
                     radius,
                     ..
                 } => {
-                    seeds.extend(self.outward(center, axis, x_axis, radius, count));
+                    seeds.extend(self.across(center, axis, x_axis, radius, count));
                 }
                 Placed::Magnet {
                     center,
@@ -984,7 +987,7 @@ impl Tracer<'_> {
                     radius,
                     ..
                 } => {
-                    seeds.extend(self.outward(center, axis, y_axis, radius, count));
+                    seeds.extend(self.across(center, axis, y_axis, radius, count));
                 }
                 Placed::Charge { .. } => unreachable!("a magnetic field has no charges"),
             }
@@ -996,12 +999,11 @@ impl Tracer<'_> {
             .collect()
     }
 
-    /// `count` points on each side of the disc of `radius` about `center`, square to `axis`,
-    /// along the line where its plane meets the vector field's, or along `fallback` when the two
-    /// planes are parallel: at even steps from its rim out toward the rectangle's nearer edge along
-    /// that line, each the middle of its share. Every field line of a loop or a magnet passes
-    /// through it and crosses this line outside it, so a line seeded farther out closes wider.
-    fn outward(
+    /// `count` points evenly across the disc of `radius` about `center`, square to `axis`, along
+    /// the line where its plane meets the vector field's, or along `fallback` when the two planes
+    /// are parallel. Each point is the middle of its share of the diameter, so the lines through a
+    /// magnet are as far apart inside it as its uniform field is strong.
+    fn across(
         &self,
         center: DVec3,
         axis: DVec3,
@@ -1013,22 +1015,8 @@ impl Tracer<'_> {
         let along = if meet.length() > 1e-6 { meet } else { fallback };
         let along = self.plane.own_direction(along).normalize_or_zero();
         let middle = self.plane.own(center);
-        let room = [along, -along]
-            .into_iter()
-            .map(|way| {
-                [0, 1]
-                    .into_iter()
-                    .filter(|&a| way[a] != 0.0)
-                    .map(|a| (self.half[a] * way[a].signum() - middle[a]) / way[a])
-                    .fold(f64::INFINITY, f64::min)
-            })
-            .fold(f64::INFINITY, f64::min);
-        let room = if room > radius { room } else { 2.0 * radius };
-        (1..=count)
-            .flat_map(|k| {
-                let out = radius + (room - radius) * (k as f64 - 0.5) / count as f64;
-                [middle + along * out, middle - along * out]
-            })
+        (0..count)
+            .map(|k| middle + along * (radius * (2.0 * (k as f64 + 0.5) / count as f64 - 1.0)))
             .collect()
     }
 }

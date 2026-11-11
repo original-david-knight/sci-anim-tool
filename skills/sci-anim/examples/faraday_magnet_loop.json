@@ -17,7 +17,7 @@
     "south": { "type": "polygon", "points": [[-1, -0.3], [0, -0.3], [0, 0.3], [-1, 0.3]], "position": [-4.6, 0, 0], "fill": { "color": "#2e6db4" }, "opacity": 0 },
     "field": { "type": "vector-field", "of": "magnetic",
       "sources": [ { "type": "magnet", "object": "bar", "length": 2, "radius": 0.3 } ],
-      "draw": { "type": "lines", "width": 14, "height": 6.4, "count": 3, "tip_length": 0.2 },
+      "draw": { "type": "lines", "width": 14, "height": 6.4, "count": 6, "tip_length": 0.2 },
       "position": [0, 0, 0.01],
       "stroke": { "color": "#ffff00", "width": 0.025 } },
 

@@ -43,7 +43,7 @@ Add work here as videos need it.
 - A scene rendered on two GPUs may not give byte-identical video. Nothing in sci_anim relies on it, and the reports of `frame`, `frames` and `render` name the GPU that drew the picture in `gpu`, so a difference can be explained.
 - `frames` turns each 16-bit frame of a transparent scene into 8-bit straight alpha on the processor, about 55 ms of processor time a frame at 3840 by 2160, spread over 8 threads. On a machine with few cores that bounds a 4K frame sequence, so converting on the GPU would speed it there.
 - A vector field draws the field of its field sources where they stand at each scene time, with no field a change induces and no field inside matter, and its field lines lie in its own plane, following the field's part there. A field source's charge, current or strength is a fixed number, so a current that changes is a cross-fade of two vector fields; a strength that a follow or simulation sets would lift that.
-- A vector field seeds a loop's or a magnet's field lines at even steps out from its rim, so inside a long thin magnet they run close to its wall: the lines through its core close beyond the rectangle. Seeds spaced by equal flux, found along the line through the magnet's middle, would spread them through the body. A field line's spacing shows the field's strength only around charges.
+- A vector field seeds a loop's or a magnet's field lines evenly across its middle, so the lines near its axis close far outside it and run off the rectangle, as a textbook draws them, and only lines seeded with `seeds` can be chosen to close inside it. A field line's spacing shows the field's strength only around charges and inside a magnet.
 
 ## Later
 

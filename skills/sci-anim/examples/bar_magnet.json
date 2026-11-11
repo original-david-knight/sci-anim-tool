@@ -1,24 +1,20 @@
 {
   "objects": {
-    "heading": { "type": "text", "text": "A bar magnet's field lines close on themselves", "size": 0.45, "position": [0, 3.6, 0] },
+    "heading": { "type": "text", "text": "Every field line of a bar magnet runs through it", "size": 0.45, "position": [0, 3.6, 0] },
     "bar": { "type": "polygon", "points": [[-1.2, -0.4], [1.2, -0.4], [1.2, 0.4], [-1.2, 0.4]], "stroke": { "color": "#dddddd", "width": 0.03 } },
     "north": { "type": "polygon", "points": [[0, -0.4], [1.2, -0.4], [1.2, 0.4], [0, 0.4]], "fill": { "color": "#c0392b" } },
     "south": { "type": "polygon", "points": [[-1.2, -0.4], [0, -0.4], [0, 0.4], [-1.2, 0.4]], "fill": { "color": "#2e6db4" } },
-    "n": { "type": "text", "text": "N", "size": 0.4, "attach": { "object": "bar", "offset": [0.75, 0] } },
-    "s": { "type": "text", "text": "S", "size": 0.4, "attach": { "object": "bar", "offset": [-0.75, 0] } },
     "field": { "type": "vector-field", "of": "magnetic",
       "sources": [ { "type": "magnet", "object": "bar", "length": 2.4, "radius": 0.4 } ],
-      "draw": { "type": "lines", "width": 14, "height": 6.4, "count": 4, "tip_length": 0.22 },
+      "draw": { "type": "lines", "width": 14, "height": 6.4, "count": 8, "tip_length": 0.22 },
       "position": [0, 0, 0.01],
       "stroke": { "color": "#ffff00", "width": 0.03 } },
-    "rule": { "type": "text", "text": "Outside, north to south; inside, south to north", "size": 0.32, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 }
+    "rule": { "type": "text", "text": "Out of the north end (red), round, and back in at the south end (blue)", "size": 0.3, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 }
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [
       { "type": "write", "object": "heading" },
-      { "type": "create", "object": "bar" },
-      { "type": "write", "object": "n" },
-      { "type": "write", "object": "s" }
+      { "type": "create", "object": "bar" }
     ] },
     { "type": "play", "duration": 3, "animations": [{ "type": "create", "object": "field" }] },
     { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "rule", "to": 1 }] },
