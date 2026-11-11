@@ -184,8 +184,8 @@ impl Circuit {
                 }
                 Kind::Switch => {
                     let (pivot, contact) = (local(mid - half, 0.0), local(mid + half, 0.0));
-                    disc(&mut fills, pivot, CONTACT * s);
-                    disc(&mut fills, contact, CONTACT * s);
+                    circle(&mut fills, pivot, CONTACT * s);
+                    circle(&mut fills, contact, CONTACT * s);
                     let (cos, sin) = (30f32.to_radians().cos(), 30f32.to_radians().sin());
                     let open = pivot + (d * cos + n * sin) * 2.0 * half;
                     levers.push((i, [(pivot, contact), (pivot, open)]));
@@ -244,7 +244,7 @@ impl Circuit {
         }
         for (node, p) in network.nodes.iter().enumerate() {
             if degree[node] >= 3 {
-                disc(&mut fills, at(*p), JUNCTION * s);
+                circle(&mut fills, at(*p), JUNCTION * s);
             }
         }
         let drawn = taken
@@ -371,7 +371,7 @@ impl Circuit {
                     .body
                     .is_some_and(|(a, b)| u > a - radius && u < b + radius);
                 if !inside && u >= radius && u <= length - radius {
-                    disc(&mut path, run.from + d * u, radius);
+                    circle(&mut path, run.from + d * u, radius);
                 }
                 u += dots.spacing;
             }
@@ -454,11 +454,6 @@ fn strokes_through(path: &mut BezPath, points: &[Vec2]) {
 fn circle(path: &mut BezPath, center: Vec2, radius: f32) {
     let circle = kurbo::Circle::new(point(center), f64::from(radius));
     path.extend(kurbo::Shape::path_elements(&circle, 1e-4));
-}
-
-fn disc(path: &mut BezPath, center: Vec2, radius: f32) {
-    circle(path, center, radius);
-    path.close_path();
 }
 
 /// A filled plate: `along` half as thick along the run, `across` half as long across it.

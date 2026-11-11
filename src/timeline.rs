@@ -557,6 +557,11 @@ impl Colors {
                 color: Vec::new(),
             },
             Shape::Pattern(pattern) => Colors::of(&pattern.shape),
+            Shape::VectorField(field) => Colors {
+                stroke: Some(field.stroke.color),
+                fill: None,
+                color: Vec::new(),
+            },
             Shape::Trail(trail) => Colors {
                 stroke: Some(trail.stroke.color),
                 fill: None,
@@ -629,6 +634,11 @@ impl Colors {
             Shape::Trail(trail) => {
                 if let Some(color) = self.stroke {
                     trail.stroke.color = color;
+                }
+            }
+            Shape::VectorField(field) => {
+                if let Some(color) = self.stroke {
+                    field.stroke.color = color;
                 }
             }
             Shape::Mix(_)
@@ -894,6 +904,23 @@ impl Timeline {
         let Some(object_id) = change.transform_of() else {
             return Ok(());
         };
+        let scales = matches!(
+            change,
+            Change::Scale { .. }
+                | Change::Follow(Follow::Law {
+                    followed: Followed::Scale(_),
+                    ..
+                })
+        );
+        if scales && matches!(start.objects[object_id].shape, Shape::VectorField(_)) {
+            return Err(SceneError::new(
+                path.field("object"),
+                SceneErrorCode::Invalid,
+                format!(
+                    "`{object_id}` draws its field at the size the world gives it, so it is not scaled; move or rotate it, or move its field sources"
+                ),
+            ));
+        }
         self.guard_object(object_id, start, &path.field("object"))
     }
 

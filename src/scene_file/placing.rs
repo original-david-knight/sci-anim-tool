@@ -818,3 +818,181 @@ fn read_elements(
         })
         .collect()
 }
+
+impl ShapeFile {
+    /// A vector field's field sources, which `place_vector_fields` reads. `None` for any other
+    /// shape.
+    pub(super) fn field_sources(&self) -> Option<Vec<FieldSourceFile>> {
+        match self {
+            ShapeFile::VectorField { sources, .. } => Some(sources.clone()),
+            _ => None,
+        }
+    }
+}
+
+impl FieldSourceFile {
+    /// The field this type of field source makes, which is the only field it can be a source of.
+    fn makes(&self) -> vector_field::FieldOf {
+        match self {
+            FieldSourceFile::Charge { .. } => vector_field::FieldOf::Electric,
+            FieldSourceFile::Wire { .. }
+            | FieldSourceFile::Loop { .. }
+            | FieldSourceFile::Magnet { .. } => vector_field::FieldOf::Magnetic,
+        }
+    }
+
+    fn object(&self) -> &str {
+        match self {
+            FieldSourceFile::Charge { object, .. }
+            | FieldSourceFile::Wire { object, .. }
+            | FieldSourceFile::Loop { object, .. }
+            | FieldSourceFile::Magnet { object, .. } => object,
+        }
+    }
+
+    fn type_word(&self) -> &'static str {
+        match self {
+            FieldSourceFile::Charge { .. } => "charge",
+            FieldSourceFile::Wire { .. } => "wire",
+            FieldSourceFile::Loop { .. } => "loop",
+            FieldSourceFile::Magnet { .. } => "magnet",
+        }
+    }
+}
+
+/// Names each vector field's field sources once every object is read, and draws it where they
+/// stand at the start. Errors are at the field at fault: a field source of the other field's
+/// type, an object that is unknown, the vector field itself or not placed by its own transform, a
+/// wire with no direction, and a vector field with a `scale` of its own.
+pub(super) fn place_vector_fields(
+    objects: &mut BTreeMap<ObjectId, Object>,
+    fielded: Vec<(String, Vec<FieldSourceFile>)>,
+    errors: &mut Vec<SceneError>,
+) {
+    use vector_field::{Charge, FieldOf, FieldSource, MagneticSource, Sources};
+    for (id, files) in fielded {
+        let at = JsonPath::root().field("objects").field(&id);
+        let count = errors.len();
+        let Shape::VectorField(field) = &objects[id.as_str()].shape else {
+            unreachable!("only a vector field has field sources")
+        };
+        let of = field.sources.of();
+        let (field_word, takes) = match of {
+            FieldOf::Electric => ("an electric", "a `charge`"),
+            FieldOf::Magnetic => ("a magnetic", "a `wire`, a `loop` or a `magnet`"),
+        };
+        let mut charges = Vec::new();
+        let mut magnetic = Vec::new();
+        for (i, file) in files.iter().enumerate() {
+            let here = at.field("sources").index(i);
+            if file.makes() != of {
+                let made = match file.makes() {
+                    FieldOf::Electric => "an electric field",
+                    FieldOf::Magnetic => "a magnetic field",
+                };
+                errors.push(SceneError::new(here.field("type"), SceneErrorCode::Invalid, format!("a `{}` makes {made}, and `{id}` draws {field_word} field; name {takes}, or draw it in a vector field of its own", file.type_word())));
+                continue;
+            }
+            let name = file.object();
+            let Some((object, declared)) = objects.get_key_value(name) else {
+                let ids: Vec<String> = objects.keys().map(|k| format!("`{k}`")).collect();
+                errors.push(SceneError::new(
+                    here.field("object"),
+                    SceneErrorCode::UnknownObject,
+                    format!(
+                        "no object has the id `{name}`; the objects are {}",
+                        ids.join(", ")
+                    ),
+                ));
+                continue;
+            };
+            let why = if name == id {
+                Some(format!(
+                    "`{id}` cannot be its own field source; name the object drawn as the {}",
+                    file.type_word()
+                ))
+            } else if declared.placed_by != PlacedBy::Itself {
+                Some(format!(
+                    "`{name}` is placed by another object, and a field source is placed by its own transform; name an object with a position of its own"
+                ))
+            } else {
+                None
+            };
+            if let Some(why) = why {
+                errors.push(SceneError::new(
+                    here.field("object"),
+                    SceneErrorCode::Invalid,
+                    why,
+                ));
+                continue;
+            }
+            let object = object.clone();
+            match *file {
+                FieldSourceFile::Charge { charge, .. } => charges.push(FieldSource {
+                    object,
+                    source: Charge {
+                        charge: charge.get(),
+                    },
+                }),
+                FieldSourceFile::Wire {
+                    current, direction, ..
+                } => {
+                    let direction = glam::DVec3::from(direction.unwrap_or([0.0, 0.0, 1.0]));
+                    if !(direction.length() > 0.0 && direction.is_finite()) {
+                        errors.push(SceneError::new(here.field("direction"), SceneErrorCode::Invalid, "a wire's `direction` has no length; give it one, such as `[0, 0, 1]` for a wire seen end on"));
+                        continue;
+                    }
+                    magnetic.push(FieldSource {
+                        object,
+                        source: MagneticSource::Wire {
+                            current: current.get(),
+                            direction: direction.normalize(),
+                        },
+                    });
+                }
+                FieldSourceFile::Loop {
+                    radius, current, ..
+                } => magnetic.push(FieldSource {
+                    object,
+                    source: MagneticSource::Loop {
+                        radius: f64::from(radius.get()),
+                        current: current.get(),
+                    },
+                }),
+                FieldSourceFile::Magnet {
+                    length,
+                    radius,
+                    strength,
+                    ..
+                } => magnetic.push(FieldSource {
+                    object,
+                    source: MagneticSource::Magnet {
+                        length: f64::from(length.get()),
+                        radius: f64::from(radius.get()),
+                        strength: strength.get(),
+                    },
+                }),
+            }
+        }
+        let transform = objects[id.as_str()].transform;
+        if transform.scale != Vec3::ONE {
+            errors.push(SceneError::new(at.field("scale"), SceneErrorCode::Invalid, format!("`{id}` draws its field at the size the world gives it, so its `scale` stays 1; make its rectangle or grid bigger instead")));
+        }
+        if errors.len() != count {
+            continue;
+        }
+        let sources = match of {
+            FieldOf::Electric => Sources::Electric(charges.into()),
+            FieldOf::Magnetic => Sources::Magnetic(magnetic.into()),
+        };
+        let Shape::VectorField(field) = &objects[id.as_str()].shape else {
+            unreachable!("checked above")
+        };
+        let mut placed = vector_field::VectorField {
+            sources,
+            ..field.clone()
+        };
+        placed.drawing = Arc::new(placed.drawing_at(&transform, objects));
+        objects.get_mut(id.as_str()).expect("read above").shape = Shape::VectorField(placed);
+    }
+}

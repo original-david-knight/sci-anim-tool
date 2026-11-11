@@ -514,6 +514,9 @@ pub enum Shape {
     /// The world points an object passed through, drawn as a stroke that faces the camera. It
     /// has no transform of its own: its points are in the world.
     Trail(Trail),
+    /// The field of its field sources, drawn as field lines or arrows in its own space, worked
+    /// out again at every scene time from where their objects stand.
+    VectorField(crate::vector_field::VectorField),
 }
 
 impl Shape {
@@ -582,6 +585,7 @@ impl Shape {
             Shape::SkeletalFormula(formula) => formula.reach(),
             Shape::Circuit(circuit) => circuit.reach(),
             Shape::Pattern(pattern) => pattern.reach(),
+            Shape::VectorField(field) => field.reach(),
             Shape::Trail(trail) => {
                 trail
                     .points
@@ -1384,6 +1388,10 @@ impl Decimals {
 impl FiniteNumber {
     pub fn zero() -> Self {
         FiniteNumber(0.0)
+    }
+
+    pub fn one() -> Self {
+        FiniteNumber(1.0)
     }
 }
 

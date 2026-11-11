@@ -102,6 +102,7 @@ sci_anim has 31 object types. This list groups them by what they draw. The [scen
 - Motion: `trail`, the path an object leaves behind it.
 - Optics: `lens` and `mirror`, and `ray` and `image`, traced through them and through glass, a `polygon` or `circle` with a `refractive_index`, at every scene time.
 - Circuits: `circuit`, a schematic of batteries, resistors, bulbs, capacitors, inductors, switches and meters on a grid, whose currents and voltages a `simulate` solves.
+- Fields: `vector-field`, the electric field of charges or the magnetic field of wires, loops and magnets, drawn as field lines or arrows and worked out again at every scene time from where its field sources stand.
 
 ## The timeline is a list of steps
 

@@ -1,0 +1,25 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "The field of a positive and a negative charge", "size": 0.45, "position": [0, 3.6, 0] },
+    "plus": { "type": "circle", "radius": 0.3, "position": [-2, 0, 0], "fill": { "color": "#c0392b" } },
+    "plus_sign": { "type": "math", "tex": "+", "size": 0.5, "attach": { "object": "plus" } },
+    "minus": { "type": "circle", "radius": 0.3, "position": [2, 0, 0], "fill": { "color": "#2e6db4" } },
+    "minus_sign": { "type": "math", "tex": "-", "size": 0.5, "attach": { "object": "minus" } },
+    "field": { "type": "vector-field", "of": "electric",
+      "sources": [
+        { "type": "charge", "object": "plus", "charge": 1 },
+        { "type": "charge", "object": "minus", "charge": -1 }
+      ],
+      "draw": { "type": "lines", "width": 14, "height": 6.4, "per_charge": 12, "tip_length": 0.22 },
+      "stroke": { "color": "#ffff00", "width": 0.03 } },
+    "rule": { "type": "text", "text": "Lines leave the positive charge and end on the negative one", "size": 0.32, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "create", "object": "field" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "rule", "to": 1 }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "move", "object": "minus", "to": [1, 1.2, 0] }] },
+    { "type": "play", "duration": 2.5, "animations": [{ "type": "move", "object": "minus", "to": [2, 0, 0] }] },
+    { "type": "wait", "duration": 1 }
+  ]
+}

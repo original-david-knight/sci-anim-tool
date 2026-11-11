@@ -61,6 +61,7 @@ use crate::table::{CellAddress, CellContent, Rulings, Table};
 use crate::timeline::{Animation, Change, ChapterId, EasingCurve, Timeline};
 use crate::trail::Trail;
 use crate::typeset::{self, Layout, TypesetError};
+use crate::vector_field;
 
 mod animations;
 mod members;
@@ -671,6 +672,7 @@ impl SceneFile {
         let mut attaches = Vec::new();
         let mut ended = Vec::new();
         let mut lit = Vec::new();
+        let mut fielded = Vec::new();
         for (id, mut object) in others.into_iter().chain(plots) {
             let groups_file: BTreeMap<String, GroupAtoms> = match &mut object.shape {
                 ShapeFile::Molecule { groups, .. } | ShapeFile::SkeletalFormula { groups, .. } => {
@@ -684,6 +686,7 @@ impl SceneFile {
             let attach = object.attach.take();
             let ends = object.shape.take_ends();
             let light = object.shape.light();
+            let field_sources = object.shape.field_sources();
             match object.into_object(base, &objects) {
                 Ok(mut object) => {
                     if let Shape::Molecule {
@@ -717,6 +720,7 @@ impl SceneFile {
                     attaches.extend(attach.map(|a| (id.clone(), a)));
                     ended.extend(ends.map(|e| (id.clone(), e)));
                     lit.extend(light.map(|l| (id.clone(), l)));
+                    fielded.extend(field_sources.map(|s| (id.clone(), s)));
                     objects.insert(ObjectId::new(&id), object);
                 }
                 Err(Faults(faults)) => {
@@ -751,6 +755,7 @@ impl SceneFile {
         );
         place_by_light(&mut objects, lit, &attached, &placed_by_others, &mut errors);
         attach_all(&mut objects, attaches, &mut errors);
+        place_vector_fields(&mut objects, fielded, &mut errors);
         // The timeline resolves object ids against the start stage, so it needs every object.
         if !errors.is_empty() {
             return Err(errors);

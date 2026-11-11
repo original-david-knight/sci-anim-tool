@@ -49,6 +49,7 @@ mod table;
 mod timeline;
 mod trail;
 mod typeset;
+mod vector_field;
 mod video;
 
 use std::collections::{BTreeMap, VecDeque};
@@ -398,6 +399,10 @@ impl ColorsReport {
                 stroke: Some(trail.stroke.color.hex()),
                 ..ColorsReport::default()
             },
+            Shape::VectorField(field) => ColorsReport {
+                stroke: Some(field.stroke.color.hex()),
+                ..ColorsReport::default()
+            },
             Shape::Mix(_)
             | Shape::Molecule { .. }
             | Shape::SkeletalFormula(_)
@@ -470,6 +475,9 @@ enum ShapeDetail {
     },
     Trail {
         trail: trail::TrailReport,
+    },
+    VectorField {
+        vector_field: vector_field::VectorFieldReport,
     },
     Readout {
         glyphs: usize,
@@ -987,6 +995,26 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                                 bonds,
                                 groups,
                             },
+                        })
+                    }
+                    Shape::VectorField(field) => {
+                        let shows = staged.opacity.get() > 0.0 && staged.created.get() > 0.0;
+                        let crosses_objects = match (shows, field.stroke_path()) {
+                            (true, Some(path)) => plot::crossed_objects(
+                                &path,
+                                field.stroke.width.get(),
+                                glam::Mat2::IDENTITY,
+                                &plot::OnFrame {
+                                    plot_to_world: object_to_world,
+                                    camera: draw_list.camera,
+                                    scene_config: &scene.scene_config,
+                                },
+                                &shown_texts,
+                            ),
+                            _ => Vec::new(),
+                        };
+                        Some(ShapeDetail::VectorField {
+                            vector_field: field.report(&staged.transform, crosses_objects),
                         })
                     }
                     Shape::Circuit(circuit) => Some(ShapeDetail::Circuit {

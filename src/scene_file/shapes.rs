@@ -444,6 +444,10 @@ pub(super) fn shape(
             stroke: Some(stroke),
             fill: Some(Fill::solid(stroke.color)),
         },
+        // `place_vector_fields` names its field sources once every object is read.
+        ShapeFile::VectorField {
+            of, draw, stroke, ..
+        } => Shape::VectorField(read_vector_field(of, draw, stroke)?),
         ShapeFile::Polygon {
             points,
             stroke,
@@ -1044,6 +1048,9 @@ fn not_one_shape(shape: &ShapeFile) -> Option<&'static str> {
         }
         ShapeFile::Ray { .. } | ShapeFile::Image { .. } => {
             "a ray or an image is traced through its optics, which a copy cannot place; write a separate object for each"
+        }
+        ShapeFile::VectorField { .. } => {
+            "a `vector-field` draws many lines or arrows from its field sources, not one shape; write a separate `vector-field`"
         }
         ShapeFile::Circle {
             refractive_index: Some(_),
@@ -2198,4 +2205,101 @@ fn default_label(kind: &circuit::Kind) -> Option<String> {
         &number
     };
     Some(format!("{number}\\,{prefix}{unit}"))
+}
+
+/// The most arrows a vector field draws, each cut into triangles again at every frame.
+const MOST_FIELD_ARROWS: u64 = 4000;
+
+/// A vector field with what it draws read, and no field sources yet, which
+/// `place_vector_fields` names once every object is read. Each fault is at its field under
+/// `draw`: a line count of the other field, `seeds` beside one, and a grid of too many places.
+fn read_vector_field(
+    of: FieldOfFile,
+    draw: FieldDrawFile,
+    stroke: Stroke,
+) -> Result<vector_field::VectorField, Faults> {
+    use vector_field::{Draw, ShowsStrength, Sources, Starts};
+    let mut faults: Vec<(String, SceneErrorCode, String)> = Vec::new();
+    let draw = match draw {
+        FieldDrawFile::Lines {
+            width,
+            height,
+            per_charge,
+            count,
+            seeds,
+            tip_length,
+        } => {
+            let wrong = match of {
+                FieldOfFile::Electric => count.map(|_| ("count", "`count` sets how many lines each magnetic field source starts, and this field is electric; write `per_charge`")),
+                FieldOfFile::Magnetic => per_charge.map(|_| ("per_charge", "`per_charge` sets how many lines start on a unit of charge, and this field is magnetic; write `count`")),
+            };
+            faults.extend(wrong.map(|(field, message)| {
+                (
+                    format!("draw/{field}"),
+                    SceneErrorCode::Invalid,
+                    message.to_string(),
+                )
+            }));
+            if seeds.is_some() && (per_charge.is_some() || count.is_some()) {
+                let field = if per_charge.is_some() {
+                    "per_charge"
+                } else {
+                    "count"
+                };
+                faults.push((format!("draw/{field}"), SceneErrorCode::Invalid, format!("`seeds` start every line, so leave out `{field}`, or leave out `seeds` for lines started from the field sources")));
+            }
+            let starts = match (seeds, of) {
+                (Some(seeds), _) => Starts::Seeds(seeds.into_iter().map(DVec2::from).collect()),
+                (None, FieldOfFile::Electric) => {
+                    Starts::Automatic(per_charge.map_or(8.0, |p| f64::from(p.get())))
+                }
+                (None, FieldOfFile::Magnetic) => Starts::Automatic(f64::from(count.unwrap_or(6))),
+            };
+            Draw::Lines {
+                width: f64::from(width.get()),
+                height: f64::from(height.get()),
+                starts,
+                tip_length: f64::from(tip_length.get()),
+            }
+        }
+        FieldDrawFile::Arrows {
+            layout: FieldLayoutFile::Grid { counts, spacing },
+            length,
+            tip_length,
+            shows_strength,
+        } => {
+            let counts = counts.map(CopyCount::get);
+            let total: u64 = counts.iter().map(|&n| u64::from(n)).product();
+            if total > MOST_FIELD_ARROWS {
+                let [nx, ny, nz] = counts;
+                faults.push(("draw/layout/counts".to_string(), SceneErrorCode::OutOfRange, format!("a grid of {nx} by {ny} by {nz} is {total} arrows, and a vector field draws at most {MOST_FIELD_ARROWS}; use smaller `counts`")));
+            }
+            let length = length.map_or(0.8 * f64::from(spacing.get()), |l| f64::from(l.get()));
+            let tip_length = tip_length.map_or(length / 4.0, |t| f64::from(t.get()));
+            Draw::Arrows {
+                counts,
+                spacing: f64::from(spacing.get()),
+                length,
+                tip_length,
+                shows_strength: match shows_strength {
+                    ShowsStrengthFile::Opacity => ShowsStrength::Opacity,
+                    ShowsStrengthFile::Length => ShowsStrength::Length,
+                    ShowsStrengthFile::None => ShowsStrength::None,
+                },
+            }
+        }
+    };
+    if !faults.is_empty() {
+        return Err(Faults(faults));
+    }
+    let sources = match of {
+        FieldOfFile::Electric => Sources::Electric(Arc::from([])),
+        FieldOfFile::Magnetic => Sources::Magnetic(Arc::from([])),
+    };
+    Ok(vector_field::VectorField {
+        sources,
+        draw,
+        stroke,
+        drawing: Arc::default(),
+    })
 }

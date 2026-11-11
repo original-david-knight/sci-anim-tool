@@ -2,7 +2,7 @@
 
 Read `instructional-videos.md` first, and `solids.md` when the copies are solids.
 
-A `pattern` draws one shape at every copy of a layout. Use one when repetition is the point of the picture: the atoms of a crystal, the ticks of a ruler, a ring of charges, beads on a strand, an arrow at every point of a vector field. A pattern is one object, so one `rotate` turns the whole lattice, one `fade` fades every copy, and `inspect` reports it once, with each copy inside it.
+A `pattern` draws one shape at every copy of a layout. Use one when repetition is the point of the picture: the atoms of a crystal, the ticks of a ruler, a ring of charges, beads on a strand, an arrow at every point of a field given by a formula (for the field of charges, wires or magnets, a `vector-field` works it out: `fields.md`). A pattern is one object, so one `rotate` turns the whole lattice, one `fade` fades every copy, and `inspect` reports it once, with each copy inside it.
 
 ## Write a pattern
 
@@ -55,7 +55,7 @@ A pattern draws no text, so label the copies with separate `text` objects, and a
 | Dashed line | not a pattern: a `line` whose `stroke` has `"dash": [0.1, 0.1]` (`math.md`, sci_anim 0.14.0 or later) |
 | Ruler ticks every 0.5 | `line` from `[0, 0]` to `[0, 0.2]` in a grid of `[11, 1, 1]` at 0.5, with `"scale": { "y": "1 + step(-mod(i, 2))" }` for long ticks on whole numbers |
 | Clock hour ticks | `line` from `[0, -0.15]` to `[0, 0.15]` in a ring of 12, `"start_angle": 90`, `"rotation": { "z": "30*i" }` |
-| Vector field of v = (-y, x) | `arrow` from `[-0.2, 0]` to `[0.2, 0]` in a grid of `[9, 5, 1]`, `"rotation": { "z": "atan2(x, -y)*180/pi" }`, `"scale": { "x": "0.4 + 0.15*sqrt(x^2 + y^2)", "y": "0.4 + 0.15*sqrt(x^2 + y^2)" }` |
+| Vector field of a formula, v = (-y, x); for the field of charges, wires, loops or magnets, use a `vector-field` instead (`fields.md`), which works it out and follows its sources | `arrow` from `[-0.2, 0]` to `[0.2, 0]` in a grid of `[9, 5, 1]`, `"rotation": { "z": "atan2(x, -y)*180/pi" }`, `"scale": { "x": "0.4 + 0.15*sqrt(x^2 + y^2)", "y": "0.4 + 0.15*sqrt(x^2 + y^2)" }` |
 | Beads on a helix | `sphere` along a helix curve, `count` 20 |
 | Units pointing along a strand | a cone `revolution` along a helix curve with `"faces": "tangent"` and `"rotation": { "z": "-90" }` |
 | Simple cubic crystal | `sphere` in a grid of `[3, 3, 3]` |

@@ -180,7 +180,7 @@ _Avoid_: CA trace (for one of another atom name), backbone (a polymer chain's at
 
 **Tube**:
 A solid made by carrying a circle of a radius along a space curve, always square to the curve, on a frame that turns no more than the curve does, so it never twists. A disc closes each end, and a tube along a closed space curve closes on itself with no ends. A spring is drawn as a tube along a helix. Its cross-section is a circle; a cartoon carries one that changes along the curve. On 3D axes its curve is in their data coordinates, and it is cut into pieces where the curve leaves their box, each closed by a disc. `inspect` reports the world point at each end of its curve, and of each curve point of a curve through curve points.
-_Avoid_: pipe, cable, wire (a wire is a circuit's component), sweep (an arc's sweep is its angle), extrusion
+_Avoid_: pipe, cable, wire (a wire is a circuit's component or a field source), sweep (an arc's sweep is its angle), extrusion
 
 **Spring**:
 A solid that is a coil of `turns` turns of a `radius` about the straight line between its two ends, drawn as a tube along a helix, so it stretches and squashes as its ends move and keeps its turns.
@@ -192,7 +192,7 @@ _Avoid_: trace (an atom trace is a space curve through a PDB file's atoms), path
 
 **Pattern**:
 An object that draws one shape, a flat shape or a solid, at every copy of a layout. Each copy may take its own position, rotation, scale, color share and starting opacity from expressions in its index and place, and its pick of a palette. A pattern is one object, so one animation changes every copy, and it draws its copies as one picture: its scale and a copy's scale size the whole copy, stroke included.
-_Avoid_: array, loop (a loop of components is a circuit's), repeat, instances, clones, group (an atom group is a molecule's)
+_Avoid_: array, loop (a loop of components is a circuit's, and a loop of wire is a field source), repeat, instances, clones, group (an atom group is a molecule's)
 
 **Layout**:
 Where a pattern's copies go: a `grid` of counts along x, y and z at one spacing, centered on the pattern's position, a `ring` of copies around a circle in the pattern's own plane, or `along` a space curve, spaced evenly by length, where each copy may face the curve's tangent.
@@ -584,6 +584,24 @@ _Avoid_: electrons (they move the conventional way), particles, flow arrows, mar
 How long a capacitor or an inductor takes to close 1 - 1/e, about 63%, of the gap to where it settles: the capacitance times the resistance it meets, or the inductance over it. A simulation of a circuit refuses one shorter than four of its steps.
 _Avoid_: tau (alone, in a name), half-life, rise time, decay rate
 
+### Fields
+
+**Vector field**:
+An object that draws the electric field of charges, or the magnetic field of wires, loops and magnets, as field lines or as arrows, worked out again at every scene time from where its field sources' objects stand. Always written with "vector", since a field alone is a key of the scene file.
+_Avoid_: field (alone, for the object; a field is a key of the scene file), vector plot, quiver, flow field, StreamLines, ArrowVectorField
+
+**Field source**:
+One entry of a vector field's `sources`, placed at every scene time by the object it names: a `charge` for an electric field, or a `wire`, a `loop` or a `magnet` for a magnetic one. A magnet is an ideal solenoid, so a bar magnet, a solenoid and an electromagnet are all drawn with one.
+_Avoid_: source (alone, in prose; a source is a morph's), emitter, pole (a magnet's poles are its ends)
+
+**Field line**:
+A curve a vector field draws in its own plane that runs along the field everywhere, with a tip showing which way: from a positive charge to a negative one or the edge of its rectangle, or closing on itself around a wire or through a loop or a magnet.
+_Avoid_: streamline, flux line, line (alone; a line is an object), trace (an atom trace is a space curve)
+
+**Strength share**:
+How strong one of a vector field's arrows shows, from 0 to 1: one half plus half the base-ten logarithm of the field's strength there over the median of all its arrows' strengths, clamped. `shows_strength` turns it into the arrow's opacity or length.
+_Avoid_: magnitude (alone), intensity, weight (for a strength share)
+
 ### Plots
 
 **Axes**:
@@ -920,7 +938,7 @@ _Avoid_: pleated sheet, sheet (alone; a surface is a sheet), layer
 
 **Coil**:
 The parts of a chain in no helix and no β-strand, which a cartoon draws as a thin round tube.
-_Avoid_: loop (one stretch of coil between two others), random coil (an unfolded chain), turn (a rotate turns)
+_Avoid_: loop (one stretch of coil between two others; a loop of wire is a field source), random coil (an unfolded chain), turn (a rotate turns)
 
 **Cartoon**:
 The representation that draws a protein, DNA or RNA read from a PDB file as a textbook draws its fold: each chain's backbone as one tube through its amino acids' alpha carbons, `CA`, or its nucleotides' phosphorus atoms, `P`, whose cross-section is a thin circle along coil, a flat ribbon along each helix, its flat side facing out from the helix's axis, and a flat arrow along each β-strand, lying in its β-sheet's plane. It draws no atom as a ball, so every atom is hidden. A highlight lights the tube along each residue whose `CA` or `P` the atom group holds.

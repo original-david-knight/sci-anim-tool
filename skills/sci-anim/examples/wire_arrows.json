@@ -1,0 +1,37 @@
+{
+  "objects": {
+    "heading": { "type": "text", "text": "Around a wire, the field circles the current", "size": 0.45, "position": [0, 3.6, 0] },
+    "left_wire": { "type": "circle", "radius": 0.25, "position": [-2, 0, 0], "stroke": { "color": "#dddddd", "width": 0.04 } },
+    "out_dot": { "type": "dot", "radius": 0.07, "fill": { "color": "#dddddd" }, "attach": { "object": "left_wire" } },
+    "right_wire": { "type": "circle", "radius": 0.25, "position": [2, 0, 0], "stroke": { "color": "#dddddd", "width": 0.04 }, "opacity": 0 },
+    "in_cross": { "type": "math", "tex": "\\times", "size": 0.45, "color": "#dddddd", "attach": { "object": "right_wire" }, "opacity": 0 },
+    "one": { "type": "vector-field", "of": "magnetic",
+      "sources": [ { "type": "wire", "object": "left_wire", "current": 1 } ],
+      "draw": { "type": "arrows", "layout": { "type": "grid", "counts": [15, 7, 1], "spacing": 0.9 } },
+      "stroke": { "color": "#58c4dd", "width": 0.035 } },
+    "two": { "type": "vector-field", "of": "magnetic",
+      "sources": [
+        { "type": "wire", "object": "left_wire", "current": 1 },
+        { "type": "wire", "object": "right_wire", "current": -1 }
+      ],
+      "draw": { "type": "arrows", "layout": { "type": "grid", "counts": [15, 7, 1], "spacing": 0.9 } },
+      "stroke": { "color": "#58c4dd", "width": 0.035 }, "opacity": 0 },
+    "rule": { "type": "math", "tex": "B = \\frac{\\mu_0 I}{2 \\pi r}", "size": 0.45, "position": [0, -3.6, 0] },
+    "sum": { "type": "text", "text": "Opposite currents: the fields add between the wires", "size": 0.32, "color": "#bbbbbb", "position": [0, -3.6, 0], "opacity": 0 }
+  },
+  "timeline": [
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "create", "object": "left_wire" }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "one" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "rule" }] },
+    { "type": "wait", "duration": 1 },
+    { "type": "play", "duration": 1.5, "animations": [
+      { "type": "fade", "object": "right_wire", "to": 1 },
+      { "type": "fade", "object": "in_cross", "to": 1 },
+      { "type": "fade", "object": "one", "to": 0 },
+      { "type": "fade", "object": "two", "to": 1 },
+      { "type": "fade", "object": "rule", "to": 0 }
+    ] },
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "sum", "to": 1 }] },
+    { "type": "wait", "duration": 1.5 }
+  ]
+}

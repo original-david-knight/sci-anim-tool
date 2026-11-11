@@ -1729,3 +1729,25 @@ fn a_trail_is_judged_by_the_text_its_stroke_runs_through() {
         checked.stdout
     );
 }
+
+#[test]
+fn a_vector_field_is_judged_by_the_text_its_lines_run_through_and_may_leave_the_frame() {
+    // The charge's four lines run out along the axes, past the frame. "clear" lies inside the
+    // field's box but off its lines, and "crossed" on the line along +x.
+    let objects = r#"
+        "q": { "type": "dot", "radius": 0.1 },
+        "field": { "type": "vector-field", "of": "electric",
+          "sources": [ { "type": "charge", "object": "q", "charge": 1 } ],
+          "draw": { "type": "lines", "width": 20, "height": 20, "per_charge": 4 } },
+        "clear": { "type": "text", "text": "clear", "size": 0.6, "position": [2, 2, 0] },
+        "crossed": { "type": "text", "text": "crossed", "size": 0.6, "position": [2.5, 0, 0] }"#;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    assert_eq!(
+        fault_lines(&checked),
+        [r#"t=0 (the only frame): "field" runs through "crossed""#],
+        "{}",
+        checked.stdout
+    );
+}

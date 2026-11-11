@@ -708,6 +708,7 @@ fn read_linear_map(
             (Shape::Molecule { .. }, _) => Some("is a molecule, and a linear map carries flat shapes, dots, text, math and axes in the world's xy plane; move, scale or rotate it instead".to_string()),
             (Shape::Pattern(_), _) => Some("is a pattern, whose copies may be solids; move, scale or rotate it instead".to_string()),
             (Shape::Trail(trail), _) => Some(format!("is a trail, drawn where `{}` has been; name `{}` instead", trail.object, trail.object)),
+            (Shape::VectorField(_), _) => Some("is a vector field, drawn from where its field sources stand; name their objects instead, or move or rotate it".to_string()),
             (Shape::Axes3d(_), _) => Some("is 3D axes, which stand in space, not in the world's xy plane; move, scale or rotate them instead".to_string()),
             (_, PlacedBy::Axes(axes)) => Some(format!("is a plot, which is placed by its axes `{axes}`; name `{axes}` instead, and the plot goes with them")),
             (_, PlacedBy::Attachment(attachment)) => Some(format!("is attached to `{}` and sits beside it; name `{}` instead, and `{object_id}` stays beside it wherever the map carries it", attachment.object, attachment.object)),
@@ -1570,6 +1571,7 @@ fn read_carry(
             Shape::Solid { .. } => "a prism or a revolution",
             Shape::Molecule { .. } => "a molecule",
             Shape::Pattern(_) => "a pattern, whose copies are many curves",
+            Shape::VectorField(_) => "a vector field, whose lines or arrows are many curves",
             Shape::Flat { .. } | Shape::Mix(_) => unreachable!("a flat shape has a curve, and a mix is staged only while a morph plays"),
         };
         SceneError::new(at, SceneErrorCode::NoCurve, format!("`{along_id}` is {what}, which has no one curve to carry along; carry along a flat shape, a plot or a tube"))
@@ -1611,6 +1613,7 @@ fn tube_morph(
             Shape::Pattern(_) => "a pattern",
             Shape::Table(_) => "a table",
             Shape::SkeletalFormula(_) => "a skeletal formula",
+            Shape::VectorField(_) => "a vector field",
             _ => "axes, 3D axes or a number line",
         };
         return refuse(format!(
@@ -1737,7 +1740,8 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                 | Shape::Axes3d(_)
                 | Shape::Sphere { .. }
                 | Shape::Solid { .. }
-                | Shape::Pattern(_) => None,
+                | Shape::Pattern(_)
+                | Shape::VectorField(_) => None,
                 Shape::Mix(_) => unreachable!("a mix is staged only while a morph plays"),
             };
             if let Some((code, why)) = cannot_create {
@@ -1805,6 +1809,7 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                         Shape::Sphere { .. } | Shape::Solid { .. } => "a solid; fade it out and the other in instead",
                         Shape::Molecule { .. } => "a molecule; a `reaction` turns a molecule into another",
                         Shape::Pattern(_) => "a pattern; fade it out and the other in instead",
+                        Shape::VectorField(_) => "a vector field, drawn again from its field sources at every scene time; move them, or fade it out and the other in instead",
                         _ => "axes, 3D axes or a number line; a morph reshapes flat shapes, text, math and plots",
                     };
                     SceneError::new(path.field(field), SceneErrorCode::NotMorphable, format!("a morph reshapes a flat shape, text, math, a plot or a tube through curve points, and `{id}` is {what}"))
@@ -1971,6 +1976,17 @@ fn into_change(change: ChangeFile, start: &Stage, path: &JsonPath) -> Result<Cha
                         .find_map(|(field, c)| c.map(|_| field))
                     {
                         return refuse(field, "is a trail, whose one color is its `stroke`");
+                    }
+                }
+                Shape::VectorField(_) => {
+                    if let Some(field) = [("fill", fill), ("color", color)]
+                        .into_iter()
+                        .find_map(|(field, c)| c.map(|_| field))
+                    {
+                        return refuse(
+                            field,
+                            "is a vector field, whose one color is its `stroke`; its tips are filled in it",
+                        );
                     }
                 }
                 Shape::Flat {
