@@ -1144,8 +1144,8 @@ fn overlap(a: &Value, b: &Value) -> Option<(i64, i64)> {
     // the other box from side to side, once it is more than half a pixel across. The renderer
     // samples each pixel at four points a quarter pixel apart, so a box no wider than that covers
     // at most two samples across and lays at most half a pixel of ink: the faint fringe
-    // antialiasing draws at any edge, and an overlap of 0 whole pixels. A polygon waiting at a
-    // scale near 0 to grow is one.
+    // antialiasing draws at any edge, and an overlap of 0 whole pixels. A population pyramid's
+    // cohort of almost no one, drawn at a scale near 0, is one.
     let crosses = |overlap: f64, axis: usize| {
         overlap > TOLERANCE
             || (overlap > FRINGE

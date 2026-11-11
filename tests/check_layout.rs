@@ -1676,8 +1676,8 @@ fn a_line_at_most_half_a_pixel_across_through_text_is_antialiasing() {
 
 #[test]
 fn a_polygon_collapsed_to_a_sliver_under_a_title_is_no_fault() {
-    // A population pyramid's cohort waits at scale 0.001 to grow: 0.26 pixels across, as in a
-    // 3840 by 2160 lesson that sci_anim 0.25.1 passed.
+    // A population pyramid's oldest cohort, of almost no one, at scale 0.001: 0.26 pixels across,
+    // as in a 3840 by 2160 lesson that sci_anim 0.25.1 passed.
     let objects = r##"
         "cohort": { "type": "polygon", "points": [[0, -0.5], [5.4, -0.5], [5.4, 0.5], [0, 0.5]], "position": [0.5, 0, 0], "scale": [0.001, 1, 1], "fill": { "color": "#b4bdce" } },
         "title": { "type": "text", "text": "Nigeria, 2024", "size": 0.42, "position": [0, 0, 0.1] }"##;
