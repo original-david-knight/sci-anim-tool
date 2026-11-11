@@ -585,7 +585,7 @@ A tick label or axis label of a plot's axes that the plot's stroke, at its full 
 _Avoid_: collision (for a label; a collision is two bodies meeting), overlap, clash, intersection (for a label)
 
 **Crossed object**:
-A text or math object whose glyphs a plot's stroke, at its full width, runs into on the frame at one scene time, while both show. `inspect` names each one on the plot in `crosses_objects`. A stroke that passes between two glyphs crosses neither.
+A text or math object whose glyphs the stroke of a plot, a ray or a trail, at its full width, runs into on the frame at one scene time, while both show. `inspect` names each one on the plot, ray or trail in `crosses_objects`, and `check-layout` judges those strokes by it, not by their boxes. A stroke that passes between two glyphs crosses neither.
 _Avoid_: collision (for an object; a collision is two bodies meeting), overlap, clash, intersection (for an object)
 
 **Plot**:

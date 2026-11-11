@@ -1642,3 +1642,46 @@ fn a_thin_straight_line_through_text_is_a_fault() {
         checked.stdout
     );
 }
+
+#[test]
+fn text_beside_a_slope_is_judged_by_the_polygon_not_its_box() {
+    // The ramp's box holds both white texts; only "on" lies on the light triangle itself.
+    let objects = r##"
+        "ramp": { "type": "polygon", "points": [[-3, -1], [3, -1], [-3, 2]], "fill": { "color": "#eeeeee" } },
+        "above": { "type": "text", "text": "above", "size": 0.3, "position": [1.5, 1.2, 0] },
+        "on": { "type": "text", "text": "on", "size": 0.3, "position": [-2, -0.5, 0] }"##;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.iter().all(|line| !line.contains("\"above\""))
+            && faults.iter().any(|line| line.contains("\"on\"")),
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_trail_is_judged_by_the_text_its_stroke_runs_through() {
+    // The dot's arc goes up and over "under", which lies inside the trail's box, off its stroke,
+    // and ends through "crossed".
+    let objects = r#"
+        "ball": { "type": "dot", "radius": 0.05, "position": [-3, -2, 0] },
+        "arc": { "type": "trail", "object": "ball" },
+        "under": { "type": "text", "text": "under", "size": 0.3, "position": [0, -1.5, 0] },
+        "crossed": { "type": "text", "text": "crossed", "size": 0.3, "position": [2.8, -1.6, 0] }"#;
+    let timeline = r#"{ "type": "play", "duration": 1, "animations": [{ "type": "follow", "object": "ball", "law": { "x": "-3 + 6*t", "y": "-2 + 12*t - 12*t^2", "z": "0" } }] }"#;
+
+    let checked = check_layout(&scene(objects, timeline), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.iter().all(|line| !line.contains("\"under\""))
+            && faults
+                .iter()
+                .any(|line| line.ends_with(r#""arc" runs through "crossed""#)),
+        "{}",
+        checked.stdout
+    );
+}

@@ -778,11 +778,29 @@ fn inspect(scene: &Scene, scene_time: SceneTime) -> Inspection {
                     }
                     Shape::Trail(trail) => {
                         let newest = trail.points.last().copied();
+                        let shows = staged.opacity.get() > 0.0 && staged.created.get() > 0.0;
+                        let stroke: Vec<glam::Vec2> =
+                            trail.points.iter().map(|p| p.truncate()).collect();
+                        let crosses_objects = match (shows, path::Path::through(&stroke)) {
+                            (true, Some(path)) => plot::crossed_objects(
+                                &path,
+                                trail.stroke.width.get(),
+                                glam::Mat2::IDENTITY,
+                                &plot::OnFrame {
+                                    plot_to_world: glam::Mat4::IDENTITY,
+                                    camera: draw_list.camera,
+                                    scene_config: &scene.scene_config,
+                                },
+                                &shown_texts,
+                            ),
+                            _ => Vec::new(),
+                        };
                         Some(ShapeDetail::Trail {
                             trail: trail::TrailReport {
                                 point_count: trail.points.len(),
                                 newest,
                                 newest_pixels: newest.and_then(to_pixels),
+                                crosses_objects,
                             },
                         })
                     }

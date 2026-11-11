@@ -1338,6 +1338,7 @@ fn behind(
             }
         } else if holds_center(pixel_box(inspected), center)
             && !off_the_disc(text, inspected, declared)
+            && !off_the_polygon(text, inspected, declared, true)
         {
             surfaces.extend(surface_colors(&inspected["colors"], declared));
         }
@@ -1349,6 +1350,75 @@ fn behind(
         );
     }
     colors
+}
+
+/// Whether a text's box, or with `center` its center, lies off a polygon with no x or
+/// y turn and no plane map, in the world, though it lies in the polygon's box: above a ramp's
+/// slope, or beside a tipped plank.
+fn off_the_polygon(text: &Value, polygon: &Value, declared: &Value, center: bool) -> bool {
+    let rotation = &polygon["rotation"];
+    if declared["type"] != "polygon"
+        || number(&rotation[0]) != 0.0
+        || number(&rotation[1]) != 0.0
+        || !polygon["plane_map"].is_null()
+    {
+        return false;
+    }
+    let Some(points) = declared["points"].as_array() else {
+        return false;
+    };
+    let turn = number(&rotation[2]).to_radians();
+    let corners: Vec<[f64; 2]> = points
+        .iter()
+        .map(|p| {
+            let x = number(&p[0]) * number(&polygon["scale"][0]);
+            let y = number(&p[1]) * number(&polygon["scale"][1]);
+            [
+                number(&polygon["position"][0]) + x * turn.cos() - y * turn.sin(),
+                number(&polygon["position"][1]) + x * turn.sin() + y * turn.cos(),
+            ]
+        })
+        .collect();
+    let world = &text["bounding_box"]["world"];
+    let (mut min, mut max) = (
+        [0, 1].map(|axis| number(&world["min"][axis])),
+        [0, 1].map(|axis| number(&world["max"][axis])),
+    );
+    if center {
+        min = [0, 1].map(|axis| (min[axis] + max[axis]) / 2.0);
+        max = min;
+    }
+    !box_meets_corners(min, max, &corners)
+}
+
+/// Whether the box from `min` to `max` and the polygon through `corners` share any point.
+fn box_meets_corners(min: [f64; 2], max: [f64; 2], corners: &[[f64; 2]]) -> bool {
+    let in_box = |p: &[f64; 2]| (0..2).all(|axis| min[axis] <= p[axis] && p[axis] <= max[axis]);
+    let in_polygon = |p: [f64; 2]| {
+        let mut inside = false;
+        for (i, a) in corners.iter().enumerate() {
+            let b = corners[(i + 1) % corners.len()];
+            if (a[1] > p[1]) != (b[1] > p[1])
+                && p[0] < a[0] + (p[1] - a[1]) / (b[1] - a[1]) * (b[0] - a[0])
+            {
+                inside = !inside;
+            }
+        }
+        inside
+    };
+    let box_corners = [min, [max[0], min[1]], max, [min[0], max[1]]];
+    let crosses = |a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]| {
+        let side = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
+            (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+        };
+        side(a, b, c) * side(a, b, d) <= 0.0 && side(c, d, a) * side(c, d, b) <= 0.0
+    };
+    corners.iter().any(in_box)
+        || box_corners.iter().any(|c| in_polygon(*c))
+        || (0..corners.len()).any(|i| {
+            let (a, b) = (corners[i], corners[(i + 1) % corners.len()]);
+            (0..4).any(|k| crosses(a, b, box_corners[k], box_corners[(k + 1) % 4]))
+        })
 }
 
 /// Whether a text's center, in the world, lies off the disc of a circle with no x or y turn whose
@@ -2124,6 +2194,7 @@ fn layout_faults(
             .as_array()
             .into_iter()
             .chain(inspected["ray"]["crosses_objects"].as_array())
+            .chain(inspected["trail"]["crosses_objects"].as_array())
             .flatten();
         for text_id in crossed {
             let text_id = as_written(text_id);
@@ -2295,11 +2366,10 @@ fn layout_faults(
                     continue;
                 }
             }
-            if [a, b]
-                .iter()
-                .any(|o| o.get("plot").is_some() || o.get("ray").is_some())
-            {
-                // A plot or a ray reports the text its stroke runs through, in crosses_objects,
+            if [a, b].iter().any(|o| {
+                o.get("plot").is_some() || o.get("ray").is_some() || o.get("trail").is_some()
+            }) {
+                // A plot, a ray or a trail reports the text its stroke runs through, in crosses_objects,
                 // above, and meets the lenses and glass it passes on purpose.
                 continue;
             }
@@ -2319,6 +2389,14 @@ fn layout_faults(
                 && inside(inner, outer)
             {
                 // An object attached to another and wholly inside it, such as a number in its box, sits there on purpose.
+                continue;
+            }
+            let off_a_polygon = [(first, a), (second, b)].into_iter().any(|(id, o)| {
+                let (_, text) = other(id);
+                text.get("glyphs").is_some()
+                    && off_the_polygon(text, o, &declared_objects[id], false)
+            });
+            if off_a_polygon {
                 continue;
             }
             if let Some((width, height)) = overlap(a, b) {

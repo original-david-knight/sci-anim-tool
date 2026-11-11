@@ -7,6 +7,9 @@
     "weight": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [0, -1.2, 0] }, "tip_length": 0.2, "stroke": { "color": "#83c167", "width": 0.04 } },
     "normal": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [0.4581, 0.9824, 0] }, "tip_length": 0.2, "stroke": { "color": "#ffff00", "width": 0.04 } },
     "friction": { "type": "arrow", "from": { "object": "block" }, "to": { "object": "block", "offset": [-0.4985, 0.2325, 0] }, "tip_length": 0.15, "stroke": { "color": "#fc6255", "width": 0.04 } },
+    "normal_label": { "type": "math", "tex": "\\vec{N}\\ \\text{normal force}", "size": 0.36, "color": "#ffff00", "align": "left", "position": [3.3, 0.2, 0] },
+    "weight_label": { "type": "math", "tex": "m\\vec{g}\\ \\text{weight}", "size": 0.36, "color": "#83c167", "align": "left", "position": [3.3, -0.5, 0] },
+    "friction_label": { "type": "math", "tex": "\\vec{f}\\ \\text{friction}", "size": 0.36, "color": "#fc6255", "align": "left", "position": [3.3, -1.2, 0] },
     "path": { "type": "trail", "object": "block", "stroke": { "color": "#58c4dd", "width": 0.03 } },
 
     "law": { "type": "math", "tex": "a = g(\\sin 25^\\circ - \\mu \\cos 25^\\circ) \\approx 2.36\\,\\text{m/s}^2", "size": 0.42, "position": [2.6, 2.4, 0] },
@@ -15,7 +18,7 @@
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }] },
-    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "law" }, { "type": "write", "object": "speed_label" }, { "type": "write", "object": "speed" }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "law" }, { "type": "write", "object": "speed_label" }, { "type": "write", "object": "speed" }, { "type": "write", "object": "weight_label" }, { "type": "write", "object": "normal_label" }, { "type": "write", "object": "friction_label" }] },
     { "type": "play", "duration": 2.3, "animations": [
       { "type": "simulate",
         "bodies": { "block": { "mass": 1, "friction": 0.2 }, "ramp": { "fixed": true } },
