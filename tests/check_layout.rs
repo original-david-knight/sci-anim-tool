@@ -1603,3 +1603,42 @@ fn a_ray_is_judged_by_the_text_its_stroke_runs_through_and_may_leave_the_frame()
         checked.stdout
     );
 }
+
+#[test]
+fn a_ray_is_checked_at_every_frame_time_of_a_move_it_follows() {
+    // The ray falls straight down from the moving dot, so it crosses "label" only while the dot
+    // passes over it, between the move's start, middle and end.
+    let objects = r#"
+        "lens": { "type": "lens", "focal_length": 1, "height": 1, "position": [3.5, 3, 0] },
+        "source": { "type": "dot", "radius": 0.05, "position": [-3, 1.5, 0] },
+        "ray": { "type": "ray", "from": { "object": "source" }, "angle": -90, "optics": ["lens"], "length": 3 },
+        "label": { "type": "text", "text": "x", "size": 0.3, "position": [-1.6, 0, 0] }"#;
+    let timeline = r#"{ "type": "play", "duration": 1, "animations": [{ "type": "move", "object": "source", "to": [3, 1.5, 0], "easing_curve": "linear" }] }"#;
+
+    let checked = check_layout(&scene(objects, timeline), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.len() == 1
+            && faults[0].contains(r#"of move 0 of step 0"#)
+            && faults[0].ends_with(r#""ray" runs through "label""#),
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_thin_straight_line_through_text_is_a_fault() {
+    let objects = r##"
+        "rule": { "type": "line", "from": [0, -2], "to": [0, 2], "stroke": { "color": "#ffffff", "width": 0.02 } },
+        "word": { "type": "text", "text": "crossed", "size": 0.6, "position": [0, 0, 0] }"##;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    let faults = fault_lines(&checked);
+    assert!(
+        faults.len() == 1 && faults[0].contains(r#""rule" and "word" overlap by"#),
+        "{}",
+        checked.stdout
+    );
+}

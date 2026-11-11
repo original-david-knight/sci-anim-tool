@@ -92,10 +92,11 @@ enum Command {
     },
     /// Prints the JSON Schema of a scene file.
     Schema,
-    /// Checks a scene file's layout at every step, animation span and follow's frame time, and
-    /// prints each layout fault on a line of its own. Writes stages.txt, what shows at each
-    /// checked scene time in words, and contact sheets of the step times. Exits 0 with no fault,
-    /// 1 when it prints one, and 2 when it cannot check, with the error report on stderr.
+    /// Checks a scene file's layout at every step, animation span and frame time of a follow, a
+    /// simulation or an animation beside a ray, and prints each layout fault on a line of its own.
+    /// Writes stages.txt, what shows at each checked scene time in words, and contact sheets of the
+    /// step times. Exits 0 with no fault, 1 when it prints one, and 2 when it cannot check, with
+    /// the error report on stderr.
     CheckLayout(CheckLayoutFlags),
     /// Installs the sci-anim skill this binary carries, the one that matches its version.
     Skill {

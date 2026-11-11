@@ -3,9 +3,11 @@
 //!
 //! It checks the middle and end of every play step, the end of every other step and chapter, the
 //! stage just before a step's fades to 0 begin, the start, middle and end of every animation's
-//! span, and every frame time of each follow's span, since a law or a carry can take an object
-//! anywhere between three checked scene times. At each it reads the stage as `inspect` prints it
-//! and prints each layout fault: an object the frame cuts off, text over another object, a plot
+//! span, and every frame time of each follow's and simulation's span, since a law, a carry or a
+//! simulation can take an object anywhere between three checked scene times, and in a scene with a
+//! ray or an image of every other animation's span too, since a ray swings as anything it is traced
+//! from or through moves. At each it reads the stage as `inspect` prints it and prints each layout
+//! fault: an object the frame cuts off, text over another object, a plot
 //! through a tick label or axis label, a caption over its molecule's atoms, an attached object
 //! showing while its molecule is faded out, text too small or too faint to read, two texts too
 //! close to read apart, two atoms that pass through each other in a reaction, two unbonded atoms
@@ -86,7 +88,7 @@ pub struct CheckLayoutFlags {
     #[arg(long)]
     no_sheet: bool,
     /// Checks only the ends of steps and chapters: no play step's middle, no animation's span
-    /// and no follow's frame times.
+    /// and no frame times of follows, simulations or animations beside rays.
     #[arg(long)]
     ends_only: bool,
     /// Two object ids whose overlap is on purpose. Give it once for each pair.
@@ -414,8 +416,6 @@ pub fn check_layout(flags: &CheckLayoutFlags) -> Result<bool, Vec<ToolError>> {
         let (at, found) = result?;
         record(found, &at, true);
     }
-    let follow_frames = frames.iter().filter(|frame| frame.of_follow).count();
-    let simulation_frames = frames.iter().filter(|frame| frame.of_simulation).count();
 
     for (fault, at) in never_shown(&lesson) {
         faults.add(fault, at);
@@ -430,13 +430,24 @@ pub fn check_layout(flags: &CheckLayoutFlags) -> Result<bool, Vec<ToolError>> {
         ));
     }
     let any_fault = !faults.found.is_empty();
-    let frame_times = match (follow_frames, simulation_frames) {
-        (0, 0) => String::new(),
-        (follows, 0) => format!(" and {follows} frame times of follows"),
-        (0, simulations) => format!(" and {simulations} frame times of simulations"),
-        (follows, simulations) => {
-            format!(", {follows} frame times of follows and {simulations} of simulations")
-        }
+    let counts: Vec<String> = [
+        (SpanOf::Follow, "follows"),
+        (SpanOf::Simulation, "simulations"),
+        (SpanOf::Light, "animations beside rays"),
+    ]
+    .into_iter()
+    .map(|(of, words)| (frames.iter().filter(|f| f.of.contains(&of)).count(), words))
+    .filter(|(count, _)| *count > 0)
+    .enumerate()
+    .map(|(i, (count, words))| match i {
+        0 => format!("{count} frame times of {words}"),
+        _ => format!("{count} of {words}"),
+    })
+    .collect();
+    let frame_times = match counts.as_slice() {
+        [] => String::new(),
+        [only] => format!(" and {only}"),
+        [most @ .., last] => format!(", {} and {last}", most.join(", ")),
     };
     let checked = format!("{} checked scene times", checked_times.len()) + &frame_times;
     if !any_fault && unverified.found.is_empty() {
@@ -752,13 +763,23 @@ struct FrameSpan {
     of: SpanOf,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum SpanOf {
     Follow,
     Simulation,
+    /// Any other animation's span in a scene with a ray or an image, since a ray traced through
+    /// a moving object can swing anywhere between three checked scene times.
+    Light,
 }
 
-/// Each follow and simulation in words, with its span.
+/// Each follow and simulation in words, with its span, and in a scene with a ray or an image
+/// every other animation too.
 fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
+    let traces_light = lesson.file["objects"].as_object().is_some_and(|objects| {
+        objects
+            .values()
+            .any(|object| object["type"] == "ray" || object["type"] == "image")
+    });
     let what = |animation: &Value| {
         if animation.get("along").is_some() {
             return format!(
@@ -791,8 +812,10 @@ fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
                 });
             }
             if animation["type"] == "simulate" {
-                let variables: Vec<String> = animation["variables"]
-                    .as_object()
+                let variables: Vec<String> = animation
+                    .get("variables")
+                    .or_else(|| animation.get("bodies"))
+                    .and_then(Value::as_object)
                     .map(|variables| variables.keys().cloned().collect())
                     .unwrap_or_default();
                 spans.push(FrameSpan {
@@ -804,22 +827,32 @@ fn frame_spans(lesson: &Lesson) -> Vec<FrameSpan> {
                     last,
                     of: SpanOf::Simulation,
                 });
+            } else if traces_light && animation["type"] != "follow" {
+                spans.push(FrameSpan {
+                    wording: format!(
+                        "{} {number} of {wording}",
+                        animation["type"].as_str().unwrap_or_default()
+                    ),
+                    first,
+                    last,
+                    of: SpanOf::Light,
+                });
             }
         }
     }
     spans
 }
 
-/// A frame time of one or more follows or simulations, worded as the first of them in the lesson.
+/// A frame time of one or more follows, simulations or animations beside rays, worded as the first
+/// of them in the lesson.
 struct FrameTime {
     stage_time: SceneTime,
     wording: String,
-    of_follow: bool,
-    of_simulation: bool,
+    of: BTreeSet<SpanOf>,
 }
 
-/// Every frame time of every follow's and simulation's span, in order and each once. Follows that
-/// run at once share their frame times, and a stage is the same whichever follow it is checked for.
+/// Every frame time of every span in `spans`, in order and each once. Follows that run at once
+/// share their frame times, and a stage is the same whichever follow it is checked for.
 fn frame_times(scene: &Scene, spans: &[FrameSpan]) -> Result<Vec<FrameTime>, Vec<ToolError>> {
     let mut times: BTreeMap<u64, FrameTime> = BTreeMap::new();
     for FrameSpan {
@@ -837,13 +870,9 @@ fn frame_times(scene: &Scene, spans: &[FrameSpan]) -> Result<Vec<FrameTime>, Vec
                 .or_insert_with(|| FrameTime {
                     stage_time,
                     wording: wording.clone(),
-                    of_follow: false,
-                    of_simulation: false,
+                    of: BTreeSet::new(),
                 });
-            match of {
-                SpanOf::Follow => frame.of_follow = true,
-                SpanOf::Simulation => frame.of_simulation = true,
-            }
+            frame.of.insert(*of);
         }
     }
     Ok(times.into_values().collect())
@@ -1106,7 +1135,14 @@ fn overlap(a: &Value, b: &Value) -> Option<(i64, i64)> {
     let (a, b) = (pixel_box(a), pixel_box(b));
     let width = a.max[0].min(b.max[0]) - a.min[0].max(b.min[0]);
     let height = a.max[1].min(b.max[1]) - a.min[1].max(b.min[1]);
-    (width > TOLERANCE && height > TOLERANCE).then(|| {
+    // A stroke thinner than the tolerance, such as a straight line, overlaps where it crosses
+    // the other box from side to side.
+    let crosses = |overlap: f64, axis: usize| {
+        overlap > TOLERANCE
+            || (overlap > 0.0
+                && overlap >= (a.max[axis] - a.min[axis]).min(b.max[axis] - b.min[axis]) - 0.01)
+    };
+    (crosses(width, 0) && crosses(height, 1)).then(|| {
         (
             width.round_ties_even() as i64,
             height.round_ties_even() as i64,

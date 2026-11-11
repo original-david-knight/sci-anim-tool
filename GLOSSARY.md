@@ -673,7 +673,7 @@ One thing wrong with the picture that the layout check prints, with the run of c
 _Avoid_: problem (the word the printed lines use, kept for their readers), issue, warning, scene error
 
 **Checked scene time**:
-A scene time the layout check reads the stage at: the middle and end of a step, the end of a chapter, the moment before a step's fades to 0 begin, the start, middle and end of an animation's span, and every frame time of a follow's span. Times within a millisecond are one. Step ends, chapter ends and the scene's duration are kept to the nanosecond, so steps of 0.7 and 0.1 seconds end at 0.8, not at their float sum. The layout check writes each checked scene time with six significant digits, or more where six would round past the scene's end, so `inspect` and `frame` take back every one it writes.
+A scene time the layout check reads the stage at: the middle and end of a step, the end of a chapter, the moment before a step's fades to 0 begin, the start, middle and end of an animation's span, and every frame time of the span of a follow, a simulation, or in a scene with a ray or an image any other animation. Times within a millisecond are one. Step ends, chapter ends and the scene's duration are kept to the nanosecond, so steps of 0.7 and 0.1 seconds end at 0.8, not at their float sum. The layout check writes each checked scene time with six significant digits, or more where six would round past the scene's end, so `inspect` and `frame` take back every one it writes.
 _Avoid_: sample (a sound's), probe, checkpoint
 
 **Contact sheet**:

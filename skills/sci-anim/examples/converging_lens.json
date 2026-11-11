@@ -6,7 +6,7 @@
     "near_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [-2, 0] } },
     "far_f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#58c4dd" }, "attach": { "object": "lens", "offset": [2, 0] } },
     "near_f": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [-2, -0.4] } },
-    "far_f": { "type": "math", "tex": "F'", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [2, -0.4] } },
+    "far_f": { "type": "math", "tex": "F'", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "lens", "offset": [2, 0.4] } },
 
     "foot": { "type": "dot", "radius": 0.05, "position": [-5, 0, 0], "fill": { "color": "#fc6255" } },
     "candle": { "type": "arrow", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 0.8, 0] }, "tip_length": 0.25, "stroke": { "color": "#fc6255", "width": 0.05 } },
@@ -25,7 +25,10 @@
     { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "center" }] },
     { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "focal" }] },
     { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "image", "to": 1 }, { "type": "write", "object": "law" }] },
-    { "type": "play", "duration": 5, "animations": [{ "type": "move", "object": "foot", "to": [-1.2, 0, 0] }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "move", "object": "foot", "to": [-3, 0, 0] }] },
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "focal", "to": 0 }, { "type": "fade", "object": "image", "to": 0 }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "move", "object": "foot", "to": [-1.2, 0, 0] }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "focal", "to": 1 }, { "type": "fade", "object": "image", "to": 1 }] },
     { "type": "wait", "duration": 1.5 }
   ]
 }

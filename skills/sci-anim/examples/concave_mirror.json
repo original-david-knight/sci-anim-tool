@@ -5,8 +5,8 @@
     "mirror": { "type": "mirror", "focal_length": 2, "height": 4.6, "position": [3, 0, 0], "stroke": { "color": "#ece6e2", "width": 0.05 } },
     "f_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#ece6e2" }, "attach": { "object": "mirror", "offset": [-2, 0] } },
     "c_dot": { "type": "dot", "radius": 0.06, "fill": { "color": "#ece6e2" }, "attach": { "object": "mirror", "offset": [-4, 0] } },
-    "f_label": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-2, -0.4] } },
-    "c_label": { "type": "math", "tex": "C", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-4, -0.4] } },
+    "f_label": { "type": "math", "tex": "F", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-2, -1] } },
+    "c_label": { "type": "math", "tex": "C", "size": 0.35, "color": "#aaaaaa", "attach": { "object": "mirror", "offset": [-4.3, -0.65] } },
     "foot": { "type": "dot", "radius": 0.05, "position": [-4, 0, 0], "fill": { "color": "#fc6255" } },
     "candle": { "type": "arrow", "from": { "object": "foot" }, "to": { "object": "foot", "offset": [0, 1, 0] }, "tip_length": 0.22, "stroke": { "color": "#fc6255", "width": 0.05 } },
     "parallel": { "type": "ray", "from": { "object": "foot", "offset": [0, 1, 0] }, "principal": "parallel", "optics": ["mirror"], "length": 7, "back_trace": true, "stroke": { "color": "#ffff00", "width": 0.03 } },
@@ -22,7 +22,9 @@
     { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "focal" }] },
     { "type": "play", "duration": 1.5, "animations": [{ "type": "create", "object": "center" }] },
     { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "image", "to": 1 }] },
-    { "type": "play", "duration": 5, "animations": [{ "type": "move", "object": "foot", "to": [1.8, 0, 0] }] },
+    { "type": "play", "duration": 0.5, "animations": [{ "type": "fade", "object": "focal", "to": 0 }, { "type": "fade", "object": "center", "to": 0 }, { "type": "fade", "object": "image", "to": 0 }] },
+    { "type": "play", "duration": 3, "animations": [{ "type": "move", "object": "foot", "to": [1.8, 0, 0] }] },
+    { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "focal", "to": 1 }, { "type": "fade", "object": "center", "to": 1 }, { "type": "fade", "object": "image", "to": 1 }] },
     { "type": "wait", "duration": 1 }
   ]
 }

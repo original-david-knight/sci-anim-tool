@@ -7,8 +7,8 @@
     "left": { "type": "polygon", "points": [[-0.3, -0.3], [0.3, -0.3], [0.3, 0.3], [-0.3, 0.3]], "position": [-1.5, -0.62, 0], "fill": { "color": "#58c4dd" } },
     "right": { "type": "polygon", "points": [[-0.3, -0.3], [0.3, -0.3], [0.3, 0.3], [-0.3, 0.3]], "position": [2.4, -0.62, 0], "fill": { "color": "#fc6255" } },
     "left_mass": { "type": "math", "tex": "2\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "left", "offset": [0, 0.6] } },
-    "right_mass": { "type": "math", "tex": "1.25\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "right", "offset": [0, 0.6] } },
-    "heavier": { "type": "math", "tex": "2\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "right", "offset": [0, 0.6] }, "opacity": 0 },
+    "right_mass": { "type": "math", "tex": "1.25\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "right", "offset": [0.95, 0] } },
+    "heavier": { "type": "math", "tex": "2\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "right", "offset": [0.95, 0] }, "opacity": 0 },
 
     "balance": { "type": "math", "tex": "2 \\cdot 1.5 = 1.25 \\cdot 2.4", "size": 0.45, "position": [0, 2.3, 0] },
     "unbalance": { "type": "math", "tex": "2 \\cdot 1.5 < 2 \\cdot 2.4", "size": 0.45, "position": [0, 2.3, 0], "opacity": 0 },

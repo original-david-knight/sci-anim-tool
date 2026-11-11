@@ -1,23 +1,25 @@
 {
   "objects": {
     "heading": { "type": "text", "text": "Refraction, and total internal reflection", "size": 0.5, "position": [0, 3.5, 0] },
-    "glass": { "type": "polygon", "points": [[-7, -3.9], [7, -3.9], [7, 0], [-7, 0]], "fill": { "color": "#58c4dd", "opacity": 0.18 }, "stroke": { "color": "#58c4dd", "width": 0.03 }, "refractive_index": 1.5 },
-    "air_label": { "type": "math", "tex": "n_1 = 1", "size": 0.4, "position": [5.6, 0.5, 0] },
-    "glass_label": { "type": "math", "tex": "n_2 = 1.5", "size": 0.4, "position": [5.6, -0.6, 0] },
-    "normal": { "type": "line", "from": [-3, 2.4], "to": [-3, -2.4], "stroke": { "color": "#888888", "width": 0.02, "dash": [0.12, 0.1] } },
+    "glass": { "type": "polygon", "points": [[-7, -3.9], [3.1, -3.9], [7, 0], [-7, 0]], "fill": { "color": "#58c4dd", "opacity": 0.18 }, "stroke": { "color": "#58c4dd", "width": 0.03 }, "refractive_index": 1.5 },
+    "air_label": { "type": "math", "tex": "n_1 = 1", "size": 0.4, "position": [-5.8, 0.45, 0] },
+    "glass_label": { "type": "math", "tex": "n_2 = 1.5", "size": 0.4, "position": [-5.8, -0.55, 0] },
+    "normal": { "type": "line", "from": [-3, 1.9], "to": [-3, -1.9], "stroke": { "color": "#888888", "width": 0.02, "dash": [0.12, 0.1] } },
     "emitter": { "type": "dot", "radius": 0.1, "position": [-5.2, 2.6, 0], "fill": { "color": "#ffff00" } },
     "into_glass": { "type": "ray", "from": { "object": "emitter" }, "through": [-3, 0], "optics": ["glass"], "length": 3, "stroke": { "color": "#ffff00", "width": 0.035 } },
-    "snell": { "type": "math", "tex": "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", "size": 0.45, "position": [-1.2, 1.9, 0] },
+    "theta_1": { "type": "math", "tex": "\\theta_1", "size": 0.35, "position": [-3.34, 0.94, 0] },
+    "theta_2": { "type": "math", "tex": "\\theta_2", "size": 0.35, "position": [-2.6, -1.45, 0] },
+    "snell": { "type": "math", "tex": "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2", "size": 0.45, "position": [-0.2, 2.5, 0] },
 
     "source": { "type": "dot", "radius": 0.1, "position": [1.5, -3.2, 0], "fill": { "color": "#ff862f" } },
     "aim": { "type": "dot", "radius": 0.04, "position": [2.2, 0, 0], "fill": { "color": "#ff862f" } },
-    "from_glass": { "type": "ray", "from": { "object": "source" }, "through": { "object": "aim" }, "optics": ["glass"], "length": 2.6, "stroke": { "color": "#ff862f", "width": 0.035 }, "opacity": 0 },
-    "critical": { "type": "math", "tex": "\\theta_c = \\sin^{-1}\\frac{1}{1.5} \\approx 41.8^\\circ", "size": 0.45, "position": [3.4, 1.9, 0], "opacity": 0 }
+    "from_glass": { "type": "ray", "from": { "object": "source" }, "through": { "object": "aim" }, "optics": ["glass"], "length": 2, "stroke": { "color": "#ff862f", "width": 0.035 }, "opacity": 0 },
+    "critical": { "type": "math", "tex": "\\theta_c = \\sin^{-1}\\frac{1}{1.5} \\approx 41.8^\\circ", "size": 0.45, "position": [4.6, 2.5, 0] }
   },
   "timeline": [
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "heading" }, { "type": "fade", "object": "glass", "to": 1 }] },
     { "type": "play", "duration": 1, "animations": [{ "type": "write", "object": "air_label" }, { "type": "write", "object": "glass_label" }, { "type": "create", "object": "normal" }] },
-    { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "into_glass" }, { "type": "write", "object": "snell", "start": 0.8 }] },
+    { "type": "play", "duration": 2, "animations": [{ "type": "create", "object": "into_glass" }, { "type": "write", "object": "theta_1", "start": 0.6 }, { "type": "write", "object": "theta_2", "start": 1 }, { "type": "write", "object": "snell", "start": 1.2 }] },
     { "type": "play", "duration": 3, "animations": [{ "type": "move", "object": "emitter", "to": [-6.4, 1.2, 0] }] },
     { "type": "play", "duration": 1, "animations": [{ "type": "fade", "object": "from_glass", "to": 1 }, { "type": "write", "object": "critical" }] },
     { "type": "play", "duration": 5, "animations": [{ "type": "move", "object": "aim", "to": [5.6, 0, 0] }] },
