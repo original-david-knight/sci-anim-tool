@@ -55,7 +55,7 @@ fn validate_lists_every_error_at_once_at_its_field() {
     );
     assert_eq!(
         messages[5],
-        r#""sphear" is not one of "circle", "dot", "sphere", "prism", "revolution", "tube", "surface", "line", "arrow", "spring", "trail", "lens", "mirror", "ray", "image", "readout", "polygon", "arc", "path", "text", "math", "table", "axes", "3d-axes", "number-line", "function-plot", "point-plot", "bar-plot", "molecule", "skeletal-formula", "pattern""#
+        r#""sphear" is not one of "circle", "dot", "sphere", "prism", "revolution", "tube", "surface", "line", "arrow", "spring", "trail", "lens", "mirror", "ray", "image", "circuit", "readout", "polygon", "arc", "path", "text", "math", "table", "axes", "3d-axes", "number-line", "function-plot", "point-plot", "bar-plot", "molecule", "skeletal-formula", "pattern""#
     );
     assert!(
         run.json["errors"]
