@@ -9,7 +9,7 @@
     "a_mass": { "type": "math", "tex": "2\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "a", "offset": [0, -0.75] } },
     "b_mass": { "type": "math", "tex": "1\\text{ kg}", "size": 0.3, "color": "#ece6e2", "attach": { "object": "b", "offset": [0, -0.75] } },
     "a_tip": { "type": "dot", "radius": 0.012, "position": [-3.3, 1.75, 0], "fill": { "color": "#ffff00" } },
-    "b_tip": { "type": "dot", "radius": 0.012, "position": [0.5, 1.75, 0], "fill": { "color": "#ffff00" } },
+    "b_tip": { "type": "dot", "radius": 0.012, "position": [0.5, 1.75, 0], "fill": { "color": "#ffff00" }, "opacity": 0 },
     "a_velocity": { "type": "arrow", "from": { "object": "a", "offset": [0, 0.65, 0] }, "to": { "object": "a_tip" }, "tip_length": 0.18, "stroke": { "color": "#ffff00", "width": 0.04 } },
     "b_velocity": { "type": "arrow", "from": { "object": "b", "offset": [0, 0.65, 0] }, "to": { "object": "b_tip" }, "tip_length": 0.18, "stroke": { "color": "#ffff00", "width": 0.04 } },
     "elastic_momentum_label": { "type": "math", "tex": "p =", "size": 0.36, "align": "right", "position": [2.6, 2.4, 0] },
@@ -39,6 +39,7 @@
           { "object": "elastic_momentum", "value": "a.px + b.px" },
           { "object": "elastic_energy", "value": "a.ke + b.ke" }
         ] },
+      { "type": "fade", "object": "b_tip", "to": 1, "start": 1.32, "end": 1.42 },
       { "type": "simulate", "gravity": 0,
         "bodies": { "c": { "mass": 2, "velocity": [3, 0] }, "d": { "mass": 1, "restitution": 0 } },
         "sets": [

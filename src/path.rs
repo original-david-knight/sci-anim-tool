@@ -174,6 +174,15 @@ impl Path {
         Path::new(path)
     }
 
+    /// An open path through `points` in order, or `None` for fewer than two points or no length.
+    pub fn through(points: &[Vec2]) -> Option<Path> {
+        let (first, rest) = points.split_first()?;
+        let mut path = BezPath::new();
+        path.move_to(point(*first));
+        rest.iter().for_each(|p| path.line_to(point(*p)));
+        Path::new(path).ok()
+    }
+
     /// A circle about the origin, starting at `(radius, 0)` and going counterclockwise.
     pub fn circle(radius: f32) -> Result<Path, PathError> {
         Path::circle_at(Vec2::ZERO, radius)

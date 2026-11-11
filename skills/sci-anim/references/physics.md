@@ -125,7 +125,7 @@ A `trail` draws the world points its `object` passed through, as a stroke that f
 - A trail is not created. It grows as its object moves, so it shows nothing before the object moves. Fade it in and out, and recolor its `stroke`.
 - A trail has no `position`, `rotation` or `scale` (`placed_by_trail`). Its object is not a plot or another trail (`invalid`).
 - Its points stay where the object was in the world: a trail of a data point does not move with its axes.
-- `inspect` reports `trail.point_count`, `trail.newest`, the point the object stands at, and `trail.newest_pixels`, with the trail's bounding box.
+- `inspect` reports `trail.point_count`, `trail.newest`, the point the object stands at, `trail.newest_pixels`, and `trail.crosses_objects`, the text its stroke runs through, with the trail's bounding box. `check-layout` judges a trail by the text it runs through, not by its box, so a label inside a projectile's arc is clear.
 
 ## A number that counts: readouts
 
