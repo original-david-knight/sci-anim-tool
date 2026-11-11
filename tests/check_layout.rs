@@ -1643,6 +1643,50 @@ fn a_thin_straight_line_through_text_is_a_fault() {
     );
 }
 
+/// The check of a 400 by 400 scene with a vertical line through a title, its stroke `pixels`
+/// across. A world unit is 48.28 pixels there.
+fn line_through_a_title(pixels: f64) -> Checked {
+    let objects = format!(
+        r##"
+        "divider": {{ "type": "line", "from": [0.5, -1], "to": [0.5, 1], "stroke": {{ "color": "#ffffff", "width": {} }} }},
+        "title": {{ "type": "text", "text": "Nigeria, 2024", "size": 0.42, "position": [0, 0, 0.1] }}"##,
+        pixels / 48.2843
+    );
+    check_layout(&scene(&objects, ""), &["--no-sheet"])
+}
+
+#[test]
+fn a_line_more_than_half_a_pixel_across_through_text_is_a_fault() {
+    let checked = line_through_a_title(0.55);
+
+    assert_eq!(
+        fault_lines(&checked),
+        [r#"t=0 (the only frame): "divider" and "title" overlap by 1 x 18 pixels"#],
+        "{}",
+        checked.stdout
+    );
+}
+
+#[test]
+fn a_line_at_most_half_a_pixel_across_through_text_is_antialiasing() {
+    let checked = line_through_a_title(0.45);
+
+    assert_eq!(checked.exit_code, 0, "{}", checked.stdout);
+}
+
+#[test]
+fn a_polygon_collapsed_to_a_sliver_under_a_title_is_no_fault() {
+    // A population pyramid's oldest cohort, of almost no one, at scale 0.001: 0.26 pixels across,
+    // as in a 3840 by 2160 lesson that sci_anim 0.25.1 passed.
+    let objects = r##"
+        "cohort": { "type": "polygon", "points": [[0, -0.5], [5.4, -0.5], [5.4, 0.5], [0, 0.5]], "position": [0.5, 0, 0], "scale": [0.001, 1, 1], "fill": { "color": "#b4bdce" } },
+        "title": { "type": "text", "text": "Nigeria, 2024", "size": 0.42, "position": [0, 0, 0.1] }"##;
+
+    let checked = check_layout(&scene(objects, ""), &["--no-sheet"]);
+
+    assert_eq!(checked.exit_code, 0, "{}", checked.stdout);
+}
+
 #[test]
 fn text_beside_a_slope_is_judged_by_the_polygon_not_its_box() {
     // The ramp's box holds both white texts; only "on" lies on the light triangle itself.

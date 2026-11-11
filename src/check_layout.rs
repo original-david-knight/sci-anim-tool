@@ -42,6 +42,8 @@ const TILE_WIDTH: f64 = 480.0;
 const PAGE_TILES: usize = 16;
 /// A few pixels of touching boxes are antialiasing and glyph side bearings, not an overlap.
 const TOLERANCE: f64 = 3.0;
+/// The widest box, in pixels, that draws only an antialiased fringe, not a line.
+const FRINGE: f64 = 0.5;
 /// The smallest readable em as a share of the frame's height: text size 0.3 at the default camera.
 const SMALLEST_EM: f64 = 0.034;
 /// The least contrast between text and background that reads at a glance, as WCAG measures it.
@@ -1139,10 +1141,14 @@ fn overlap(a: &Value, b: &Value) -> Option<(i64, i64)> {
     let width = a.max[0].min(b.max[0]) - a.min[0].max(b.min[0]);
     let height = a.max[1].min(b.max[1]) - a.min[1].max(b.min[1]);
     // A stroke thinner than the tolerance, such as a straight line, overlaps where it crosses
-    // the other box from side to side.
+    // the other box from side to side, once it is more than half a pixel across. The renderer
+    // samples each pixel at four points a quarter pixel apart, so a box no wider than that covers
+    // at most two samples across and lays at most half a pixel of ink: the faint fringe
+    // antialiasing draws at any edge, and an overlap of 0 whole pixels. A population pyramid's
+    // cohort of almost no one, drawn at a scale near 0, is one.
     let crosses = |overlap: f64, axis: usize| {
         overlap > TOLERANCE
-            || (overlap > 0.0
+            || (overlap > FRINGE
                 && overlap >= (a.max[axis] - a.min[axis]).min(b.max[axis] - b.min[axis]) - 0.01)
     };
     (crosses(width, 0) && crosses(height, 1)).then(|| {
