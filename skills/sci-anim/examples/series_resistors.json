@@ -1,7 +1,7 @@
 {
   "objects": {
     "heading": { "type": "text", "text": "Resistors in series share one current", "size": 0.5, "position": [0, 3.5, 0] },
-    "circuit": { "type": "circuit", "position": [-6.2, -2.4, 0], "spacing": 1.2, "current_dots": { "speed": 0.6 },
+    "circuit": { "type": "circuit", "position": [-5.6, -2.4, 0], "spacing": 1.2, "current_dots": { "speed": 0.6 },
       "components": [
         { "id": "B", "kind": "battery", "emf": 12, "from": [0, 0], "to": [0, 3] },
         { "id": "R1", "kind": "resistor", "resistance": 2, "from": [0, 3], "to": [2, 3], "label": "R_1 = 2\\,\\Omega" },
