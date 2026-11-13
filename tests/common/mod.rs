@@ -34,40 +34,31 @@ fn dibs() -> Option<PathBuf> {
 
 /// The built binary with `args`, to which a test may add more. A command that draws runs under
 /// dibs when it is installed, so a test never draws beside another program's render, and
-/// directly when it is not.
+/// directly when it is not. Under a lease that already holds the GPU, dibs starts it at once.
+/// `--quiet` keeps dibs's waiting lines out of the stderr a test reads, and `--with-parent` drops
+/// a queued command when the test that asked for it is killed.
 pub fn command(args: &[&str]) -> Command {
     let binary = env!("CARGO_BIN_EXE_sci_anim");
-    // A program that holds the older lock file around this test sets GPU_LOCK_HELD alone. Asking
-    // dibs for the GPU there would wait on the lock that program holds.
-    let lock_file_held = std::env::var_os("GPU_LOCK_HELD").is_some_and(|held| !held.is_empty())
-        && std::env::var_os("DIBS_LEASE").is_none();
-    let Some(dibs) = dibs().filter(|_| draws(args) && !lock_file_held) else {
+    let Some(dibs) = dibs().filter(|_| draws(args)) else {
         let mut command = Command::new(binary);
         command.args(args);
         return command;
     };
     let mut command = Command::new(dibs);
     command
-        .args(["run", "--gpu", "--priority", "10", "--label"])
+        .args([
+            "run",
+            "--gpu",
+            "--priority",
+            "10",
+            "--quiet",
+            "--with-parent",
+        ])
+        .arg("--label")
         .arg(format!("sci_anim test: {}", args[0]))
         .args(["--", binary])
         .args(args);
     command
-}
-
-/// Whether a line on a command's stderr is one dibs printed while it waited for the GPU.
-pub fn from_dibs(line: &str) -> bool {
-    line.starts_with("dibs: ")
-}
-
-/// A command's stderr without the lines dibs printed before the command started.
-pub fn command_stderr(stderr: Vec<u8>) -> String {
-    let stderr = String::from_utf8(stderr).expect("utf-8 stderr");
-    let mut rest = stderr.as_str();
-    while from_dibs(rest) {
-        rest = rest.split_once('\n').map_or("", |(_, after)| after);
-    }
-    rest.to_string()
 }
 
 /// Runs the built binary the way an agent does. Panics unless stdout is exactly one JSON value.
@@ -76,7 +67,7 @@ pub fn sci_anim(args: &[&str]) -> Run {
     let stdout = String::from_utf8(out.stdout).expect("utf-8 stdout");
     let json = serde_json::from_str(&stdout)
         .unwrap_or_else(|e| panic!("stdout is one JSON value: {e}\n{stdout}"));
-    let stderr = command_stderr(out.stderr);
+    let stderr = String::from_utf8(out.stderr).expect("utf-8 stderr");
     Run {
         exit_code: out.status.code().expect("an exit code"),
         stdout,

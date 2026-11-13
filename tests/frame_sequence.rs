@@ -326,7 +326,7 @@ fn png_write_failure_cleans_owned_files_and_never_reports_finished() {
         !directory.exists(),
         "the partial PNG, incomplete marker and empty directory are removed"
     );
-    let render_updates = common::command_stderr(out.stderr);
+    let render_updates = String::from_utf8(out.stderr).unwrap();
     assert!(
         render_updates.contains("\"update\":\"drawing\""),
         "{render_updates}"
@@ -354,8 +354,8 @@ fn an_abrupt_stop_leaves_an_incomplete_directory_that_cannot_be_reused() {
     .unwrap();
     let first_update = BufReader::new(child.stderr.take().unwrap())
         .lines()
-        .map(Result::unwrap)
-        .find(|line| !common::from_dibs(line))
+        .next()
+        .unwrap()
         .unwrap();
     assert!(
         first_update.contains("\"frames_drawn\":0"),
@@ -403,5 +403,5 @@ fn transparent_mp4_is_rejected_before_gpu_ffmpeg_or_destination_writes() {
     );
     assert_eq!(std::fs::read(mp4).unwrap(), b"earlier video");
     assert!(!dir.path().join(".out.mp4.partial").exists());
-    assert_eq!(common::command_stderr(out.stderr), "");
+    assert_eq!(String::from_utf8(out.stderr).unwrap(), "");
 }

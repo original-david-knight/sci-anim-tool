@@ -32,7 +32,7 @@ fn check_layout(scene: &str, flags: &[&str]) -> Checked {
     Checked {
         exit_code: run.status.code().expect("an exit code"),
         stdout: String::from_utf8(run.stdout).unwrap(),
-        stderr: common::command_stderr(run.stderr),
+        stderr: String::from_utf8(run.stderr).unwrap(),
         stages: std::fs::read_to_string(stages).unwrap_or_default(),
         out,
         _dir: dir,
