@@ -150,7 +150,7 @@ fn render_with_updates_prints_no_finished_update_when_ffmpeg_fails() {
     .output()
     .unwrap();
     let report: Value = serde_json::from_slice(&out.stdout).unwrap();
-    let updates = render_updates(&common::command_stderr(out.stderr));
+    let updates = render_updates(&String::from_utf8(out.stderr).unwrap());
 
     assert_eq!(out.status.code(), Some(2));
     assert_eq!(report["errors"][0]["kind"], "ffmpeg");
@@ -235,10 +235,7 @@ fn render_writes_each_render_update_whole_in_one_write() {
     let mut writes = Vec::new();
     let mut buffer = [0; 4096];
     while let Ok(length) = ours.recv(&mut buffer) {
-        let write = String::from_utf8(buffer[..length].to_vec()).unwrap();
-        if !common::from_dibs(&write) {
-            writes.push(write);
-        }
+        writes.push(String::from_utf8(buffer[..length].to_vec()).unwrap());
     }
 
     assert_eq!(exit.code(), Some(0));

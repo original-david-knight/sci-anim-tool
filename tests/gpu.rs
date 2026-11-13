@@ -94,25 +94,22 @@ fn run_through_the_helper() {
     assert_eq!(run.exit_code, 2, "{}", run.stdout);
     assert_eq!(run.json["errors"][0]["kind"], "io");
     assert_eq!(run.json["errors"][0]["file"], MISSING);
-    assert_eq!(
-        run.stderr, "",
-        "the lines dibs prints while it waits are left out"
-    );
+    assert_eq!(run.stderr, "", "dibs prints nothing while it waits");
 }
 
 const MISSING: &str = "/no/such/scene.json";
 
 /// Runs `args` through the test helper in a process with `env` set, whose PATH holds only a `dibs`
-/// that says it waits, records its arguments and runs the command, or nothing when
-/// `dibs_installed` is false. Returns the arguments dibs was given, or none when the command ran
-/// without it.
+/// that records its arguments, says it waits unless told `--quiet` as the real one does, and runs
+/// the command, or nothing when `dibs_installed` is false. Returns the arguments dibs was given,
+/// or none when the command ran without it.
 fn through_the_helper(args: &[&str], dibs_installed: bool, env: &[(&str, &str)]) -> Option<String> {
     let bin = tempfile::tempdir().unwrap();
     if dibs_installed {
         let dibs = bin.path().join("dibs");
         std::fs::write(
             &dibs,
-            "#!/bin/sh\necho 'dibs: waiting: another program holds the GPU' >&2\nprintf '%s\\n' \"$@\" > \"${0%/*}/dibs-args\"\nwhile [ \"$1\" != -- ]; do shift; done\nshift\nDIBS_LEASE=fake GPU_LOCK_HELD=1 exec \"$@\"\n",
+            "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"${0%/*}/dibs-args\"\ncase \" $* \" in *' --quiet '*) ;; *) echo 'dibs: waiting: another program holds the GPU' >&2 ;; esac\nwhile [ \"$1\" != -- ]; do shift; done\nshift\nDIBS_LEASE=fake exec \"$@\"\n",
         )
         .unwrap();
         std::fs::set_permissions(&dibs, std::os::unix::fs::PermissionsExt::from_mode(0o755))
@@ -120,7 +117,6 @@ fn through_the_helper(args: &[&str], dibs_installed: bool, env: &[(&str, &str)])
     }
     let out = std::process::Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "run_through_the_helper", "--ignored"])
-        .env_remove("GPU_LOCK_HELD")
         .env_remove("DIBS_LEASE")
         .env("PATH", bin.path())
         .env("RUN_THROUGH_THE_HELPER", args.join("\n"))
@@ -138,22 +134,30 @@ fn through_the_helper(args: &[&str], dibs_installed: bool, env: &[(&str, &str)])
 
 const FRAME: [&str; 6] = ["frame", MISSING, "-t", "0", "-o", "/no/such/f.png"];
 
-#[test]
-fn a_drawing_command_runs_under_dibs_when_it_is_installed() {
-    let dibs_args = through_the_helper(&FRAME, true, &[]);
-
+/// The arguments dibs is given for `FRAME`, one a line.
+fn frame_under_dibs() -> String {
     let mut expected = vec![
         "run",
         "--gpu",
         "--priority",
         "10",
+        "--quiet",
+        "--with-parent",
         "--label",
         "sci_anim test: frame",
         "--",
         env!("CARGO_BIN_EXE_sci_anim"),
     ];
     expected.extend(FRAME);
-    assert_eq!(dibs_args, Some(expected.join("\n") + "\n"));
+    expected.join("\n") + "\n"
+}
+
+#[test]
+fn a_drawing_command_runs_under_dibs_when_it_is_installed() {
+    assert_eq!(
+        through_the_helper(&FRAME, true, &[]),
+        Some(frame_under_dibs())
+    );
 }
 
 #[test]
@@ -166,22 +170,10 @@ fn a_drawing_command_runs_directly_where_dibs_is_not_installed() {
     assert_eq!(through_the_helper(&FRAME, false, &[]), None);
 }
 
-/// A program that holds the older lock file sets `GPU_LOCK_HELD` alone, and dibs would wait on it.
-#[test]
-fn a_drawing_command_inside_a_holder_of_the_lock_file_runs_directly() {
-    assert_eq!(
-        through_the_helper(&FRAME, true, &[("GPU_LOCK_HELD", "1")]),
-        None
-    );
-}
-
 #[test]
 fn a_drawing_command_inside_a_dibs_lease_runs_under_dibs() {
-    let dibs_args = through_the_helper(
-        &FRAME,
-        true,
-        &[("GPU_LOCK_HELD", "1"), ("DIBS_LEASE", "outer")],
+    assert_eq!(
+        through_the_helper(&FRAME, true, &[("DIBS_LEASE", "outer")]),
+        Some(frame_under_dibs())
     );
-
-    assert!(dibs_args.is_some_and(|args| args.starts_with("run\n--gpu\n")));
 }
