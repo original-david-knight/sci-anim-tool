@@ -4,7 +4,6 @@
 mod common;
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use common::{read_rgba, scene, scene_file, sci_anim};
 
@@ -22,22 +21,18 @@ struct Checked {
 fn check_layout(scene: &str, flags: &[&str]) -> Checked {
     let (dir, path) = scene_file(scene);
     let out = dir.path().join("check");
-    let turn = common::gpu_turn();
-    let run = Command::new(env!("CARGO_BIN_EXE_sci_anim"))
-        .env(common::GPU_HELD_ENV, "1")
-        .arg("check-layout")
+    let run = common::command(&["check-layout"])
         .arg(&path)
         .arg("--out")
         .arg(&out)
         .args(flags)
         .output()
         .expect("the binary runs");
-    drop(turn);
     let stages: PathBuf = out.join("stages.txt");
     Checked {
         exit_code: run.status.code().expect("an exit code"),
         stdout: String::from_utf8(run.stdout).unwrap(),
-        stderr: String::from_utf8(run.stderr).unwrap(),
+        stderr: common::command_stderr(run.stderr),
         stages: std::fs::read_to_string(stages).unwrap_or_default(),
         out,
         _dir: dir,

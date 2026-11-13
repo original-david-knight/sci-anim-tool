@@ -1,4 +1,5 @@
-//! Runs `sci_anim frame` with and without `--gpu` on whatever GPUs the machine has.
+//! Runs `sci_anim frame` with and without `--gpu` on whatever GPUs the machine has, and checks
+//! that the test helper runs a drawing command under dibs only when it is installed.
 
 mod common;
 
@@ -77,33 +78,110 @@ fn a_kind_gpu_does_not_take_is_a_usage_error() {
     );
 }
 
-/// A test's drawing command waits while another program, such as a video build, holds the
-/// machine's GPU lock, and draws once it is let go. A command a holder of the lock starts does not
-/// wait on its own parent.
+/// Runs the binary through the test helper with the arguments in `RUN_THROUGH_THE_HELPER`, one a
+/// line, on a scene file that is not there. Only `through_the_helper` runs it, in a process of its
+/// own, since the helper reads the process's PATH and environment.
 #[test]
-fn a_drawing_command_waits_for_the_machines_gpu_lock() {
-    let dir = tempfile::tempdir().unwrap();
-    let lock = dir.path().join("gpu.lock");
-    let build = std::fs::File::create(&lock).unwrap();
-    build.lock().unwrap();
-    drop(common::gpu_turn_at(&lock, true));
+#[ignore = "run by through_the_helper in a process of its own"]
+fn run_through_the_helper() {
+    let Ok(args) = std::env::var("RUN_THROUGH_THE_HELPER") else {
+        return;
+    };
+    let args: Vec<&str> = args.lines().collect();
 
-    let (drew, drawn) = std::sync::mpsc::channel();
-    let waiting = lock.clone();
-    let test = std::thread::spawn(move || {
-        let _turn = common::gpu_turn_at(&waiting, false);
-        drew.send(()).unwrap();
-    });
-    assert!(
-        drawn
-            .recv_timeout(std::time::Duration::from_millis(500))
-            .is_err(),
-        "a test drew while a build held the GPU"
+    let run = sci_anim(&args);
+
+    assert_eq!(run.exit_code, 2, "{}", run.stdout);
+    assert_eq!(run.json["errors"][0]["kind"], "io");
+    assert_eq!(run.json["errors"][0]["file"], MISSING);
+    assert_eq!(
+        run.stderr, "",
+        "the lines dibs prints while it waits are left out"
     );
-    drop(build);
-    drawn
-        .recv_timeout(std::time::Duration::from_secs(30))
-        .expect("the test draws once the build lets the GPU go");
-    test.join().unwrap();
-    assert!(common::gpu_lock_file().ends_with("gpu.lock"));
+}
+
+const MISSING: &str = "/no/such/scene.json";
+
+/// Runs `args` through the test helper in a process with `env` set, whose PATH holds only a `dibs`
+/// that says it waits, records its arguments and runs the command, or nothing when
+/// `dibs_installed` is false. Returns the arguments dibs was given, or none when the command ran
+/// without it.
+fn through_the_helper(args: &[&str], dibs_installed: bool, env: &[(&str, &str)]) -> Option<String> {
+    let bin = tempfile::tempdir().unwrap();
+    if dibs_installed {
+        let dibs = bin.path().join("dibs");
+        std::fs::write(
+            &dibs,
+            "#!/bin/sh\necho 'dibs: waiting: another program holds the GPU' >&2\nprintf '%s\\n' \"$@\" > \"${0%/*}/dibs-args\"\nwhile [ \"$1\" != -- ]; do shift; done\nshift\nDIBS_LEASE=fake GPU_LOCK_HELD=1 exec \"$@\"\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&dibs, std::os::unix::fs::PermissionsExt::from_mode(0o755))
+            .unwrap();
+    }
+    let out = std::process::Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "run_through_the_helper", "--ignored"])
+        .env_remove("GPU_LOCK_HELD")
+        .env_remove("DIBS_LEASE")
+        .env("PATH", bin.path())
+        .env("RUN_THROUGH_THE_HELPER", args.join("\n"))
+        .envs(env.iter().copied())
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    std::fs::read_to_string(bin.path().join("dibs-args")).ok()
+}
+
+const FRAME: [&str; 6] = ["frame", MISSING, "-t", "0", "-o", "/no/such/f.png"];
+
+#[test]
+fn a_drawing_command_runs_under_dibs_when_it_is_installed() {
+    let dibs_args = through_the_helper(&FRAME, true, &[]);
+
+    let mut expected = vec![
+        "run",
+        "--gpu",
+        "--priority",
+        "10",
+        "--label",
+        "sci_anim test: frame",
+        "--",
+        env!("CARGO_BIN_EXE_sci_anim"),
+    ];
+    expected.extend(FRAME);
+    assert_eq!(dibs_args, Some(expected.join("\n") + "\n"));
+}
+
+#[test]
+fn a_command_that_does_not_draw_runs_without_dibs() {
+    assert_eq!(through_the_helper(&["validate", MISSING], true, &[]), None);
+}
+
+#[test]
+fn a_drawing_command_runs_directly_where_dibs_is_not_installed() {
+    assert_eq!(through_the_helper(&FRAME, false, &[]), None);
+}
+
+/// A program that holds the older lock file sets `GPU_LOCK_HELD` alone, and dibs would wait on it.
+#[test]
+fn a_drawing_command_inside_a_holder_of_the_lock_file_runs_directly() {
+    assert_eq!(
+        through_the_helper(&FRAME, true, &[("GPU_LOCK_HELD", "1")]),
+        None
+    );
+}
+
+#[test]
+fn a_drawing_command_inside_a_dibs_lease_runs_under_dibs() {
+    let dibs_args = through_the_helper(
+        &FRAME,
+        true,
+        &[("GPU_LOCK_HELD", "1"), ("DIBS_LEASE", "outer")],
+    );
+
+    assert!(dibs_args.is_some_and(|args| args.starts_with("run\n--gpu\n")));
 }
