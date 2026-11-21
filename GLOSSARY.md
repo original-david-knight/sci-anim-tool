@@ -6,6 +6,10 @@ sci_anim turns a scene file into an animation of math or science, such as a plot
 
 ### Scenes
 
+**Shot**:
+The video a scene makes.
+_Avoid_: clip (for a shot; a video clip is an object), movie
+
 **Scene**:
 The complete description of one animation. It holds the scene config, the camera, the objects and the timeline.
 _Avoid_: project (for a scene; a project is a repository, as in project level), composition, script, construct
@@ -20,7 +24,7 @@ _Avoid_: settings, options, config (alone)
 
 **Background**:
 What lies behind every object in a frame: an opaque color, or nothing when the frame is transparent.
-_Avoid_: backdrop
+_Avoid_: matte, clear color, backdrop (for the background)
 
 **Stage**:
 The camera and objects of a scene as they stand at one scene time. A scene declares its start stage, and the timeline changes it.
@@ -46,7 +50,7 @@ _Avoid_: geometry, primitive, kind (for a shape)
 
 **Transform**:
 An object's position, rotation and scale.
-_Avoid_: pose, placement, transform (for changing one shape into another, which is a morph), transform (for what a linear map does, which changes a plane map)
+_Avoid_: pose (for a transform), placement (for a transform; geo_anim's placement maps a GeoPoint and bio_anim's places atoms or actors), transform (for changing one shape into another, which is a morph), transform (for what a linear map does, which changes a plane map)
 
 **Material**:
 How an object's surface looks under light, such as its color, roughness, metalness and opacity.
@@ -138,7 +142,7 @@ _Avoid_: winding rule, fill-rule, clip rule
 
 **Camera**:
 The viewpoint the scene is seen from. Every scene has one camera, and the timeline can animate it. A flat scene is a scene whose camera looks straight at objects that have no depth.
-_Avoid_: view, viewport, eye
+_Avoid_: viewer, viewport, eye (for the camera), view (for the camera; bio_anim's view is where its camera looks at one frame)
 
 ### Solids
 
@@ -426,10 +430,10 @@ _Avoid_: render list, batch, command list
 
 **Scene time**:
 The number of seconds since the start of a scene. The command-line flag is `--scene-time`, and `-t` is its short form.
-_Avoid_: t (alone, except as the `-t` flag; a law's `t` is law time), timestamp, frame number
+_Avoid_: t (alone, except as the `-t` flag; a law's `t` is law time), timestamp (for a scene time), frame number, playback time, video time
 
 **Span**:
-The part of its step an animation plays over, from its `start` to its `end` in seconds from the start of the step. The default is the whole step. A narrated step sets a span to start on the word that names the change. A reserved region's span is instead a run of scene time, from START to END in scene seconds, both included, given as `@START-END` after its box. Its default is the whole scene.
+The part of its step an animation plays over, from its `start` to its `end` in seconds from the start of the step (whereas geo_anim gives `start` and `duration`). The default is the whole step. A narrated step sets a span to start on the word that names the change. A reserved region's span is instead a run of scene time, from START to END in scene seconds, both included, given as `@START-END` after its box. Its default is the whole scene.
 _Avoid_: window, interval (for a span), range (an axis range is an axes'), offset (an attachment's)
 
 **Progress**:
@@ -454,7 +458,7 @@ _Avoid_: audio, soundtrack, track (a track is one value's changes), sample (for 
 
 **Frame**:
 One image of a scene at one scene time.
-_Avoid_: still, snapshot, screenshot
+_Avoid_: still, snapshot, screenshot, picture (for a frame), frame settings
 
 **Frame time**:
 A scene time a frame is drawn at: frame `i` at `i / fps`. `validate` evaluates a law at every frame time of its span and at its end, and `stages` reports every frame time between two scene times.
@@ -474,7 +478,7 @@ _Avoid_: associated alpha
 
 **Frame sequence**:
 Every frame of a scene in scene time order, stored as numbered images at the scene config's frame rate.
-_Avoid_: image sequence, PNG sequence
+_Avoid_: frame folder, image sequence (for a frame sequence), PNG sequence
 
 **Readback**:
 A frame the GPU has drawn, copied into memory the processor can read, still in the GPU's color format with its rows padded. `frames` turns each readback into a frame and a PNG on a thread of its own while the GPU draws the next frames.
@@ -482,7 +486,7 @@ _Avoid_: download, staging buffer, capture
 
 **Render**:
 Turning a whole scene into a video file or a frame sequence.
-_Avoid_: export, build, compile, frame (one image, not a video)
+_Avoid_: export (for a render; bio_anim's export writes frame metadata), build, compile, frame (one image, not a video)
 
 **Video**:
 One file that holds every frame of a scene in scene time order at the scene config's frame rate, with its sounds when present.
@@ -717,7 +721,7 @@ Where a field sits in a scene file, written as a JSON Pointer such as `/objects/
 _Avoid_: location, pointer (alone), key path, field path
 
 **Bounding box**:
-The smallest box, lined up with the axes, around an object at one scene time, in world units and in pixels of the frame. It is the whole object's box even while the object is hidden, faded or not yet created, and under a plane map the box of the shape the map makes. An object with nothing to draw has none. A tick label or axis label of an axes object has its own, around its glyphs.
+The smallest box, lined up with the axes, around an object at one scene time, in world units and in pixels of the frame (a pure frame-pixel rectangle in geo_anim and bio_anim is a pixel box). It is the whole object's box even while the object is hidden, faded or not yet created, and under a plane map the box of the shape the map makes. An object with nothing to draw has none. A tick label or axis label of an axes object has its own, around its glyphs.
 _Avoid_: bounds, extent, aabb, rect
 
 **Layout check**:
